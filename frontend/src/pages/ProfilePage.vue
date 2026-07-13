@@ -18,19 +18,11 @@
       <div class="bg-white rounded-2xl p-4 shadow-card space-y-3">
         <div class="flex items-center justify-between">
           <h2 class="text-sm font-semibold text-text-secondary uppercase tracking-wide">我的家庭</h2>
-          <button v-if="family && family.members && family.members.length > 1" @click="leaveFamily" class="text-xs text-red-400 font-medium">退出家庭</button>
+          <button v-if="family && family.members.length > 1" @click="leaveFamily" class="text-xs text-red-400 font-medium">退出家庭</button>
         </div>
 
-        <div v-if="!family" class="text-center py-2">
-          <p class="text-text-secondary text-sm mb-3">加入其他家庭，共享宝宝数据</p>
-          <div class="flex gap-2">
-            <input v-model="joinCode" placeholder="输入邀请码" maxlength="6" class="flex-1 px-3 py-2 border border-border-color rounded-xl text-sm focus:outline-none focus:border-primary" />
-            <button @click="joinFamily" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-xl btn-press">加入</button>
-          </div>
-        </div>
-
-        <div v-else class="space-y-3">
-          <!-- 邀请码 -->
+        <!-- 当前家庭信息 -->
+        <div v-if="family" class="space-y-3">
           <div class="bg-bg-secondary rounded-xl p-3">
             <div class="text-xs text-text-secondary mb-1">邀请码</div>
             <div class="flex items-center justify-between">
@@ -39,7 +31,6 @@
             </div>
           </div>
 
-          <!-- 家庭成员 -->
           <div>
             <div class="text-xs text-text-secondary mb-2">家庭成员 ({{ family.members.length }}人)</div>
             <div class="flex flex-wrap gap-2">
@@ -54,6 +45,15 @@
           <button @click="regenerateCode" class="w-full py-2 text-sm text-primary font-medium rounded-xl border border-primary/30 btn-press">
             重新生成邀请码
           </button>
+        </div>
+
+        <!-- 加入其他家庭（始终显示） -->
+        <div class="border-t border-border-color pt-3">
+          <p class="text-xs text-text-secondary mb-2">加入其他家庭后，你和你的宝宝数据将切换到新家庭</p>
+          <div class="flex gap-2">
+            <input v-model="joinCode" placeholder="输入对方的邀请码" maxlength="6" class="flex-1 px-3 py-2 border border-border-color rounded-xl text-sm focus:outline-none focus:border-primary uppercase" />
+            <button @click="joinFamily" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-xl btn-press">加入</button>
+          </div>
         </div>
       </div>
 
@@ -130,8 +130,15 @@ async function loadFamily() {
 
 async function joinFamily() {
   if (!joinCode.value.trim()) return
+  const code = joinCode.value.trim().toUpperCase()
+
+  // 如果用户有家庭成员，先确认
+  if (family.value && family.value.members.length > 1) {
+    if (!confirm(`加入新家庭后，将退出当前家庭。\n\n你的宝宝数据会跟随你到新家庭，原家庭成员将无法看到你的数据。\n确定继续？`)) return
+  }
+
   try {
-    await familyAPI.join(joinCode.value.trim().toUpperCase())
+    await familyAPI.join(code)
     joinCode.value = ''
     await loadFamily()
     await app.loadBabies()

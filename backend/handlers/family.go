@@ -55,7 +55,7 @@ func GetMyFamily(c *gin.Context) {
 	})
 }
 
-// JoinFamily 通过邀请码加入家庭
+// JoinFamily 通过邀请码加入家庭（自动切换到新家庭）
 func JoinFamily(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 
@@ -65,7 +65,6 @@ func JoinFamily(c *gin.Context) {
 		return
 	}
 
-	// 查找家庭
 	var familyID int64
 	err := database.DB.QueryRow(
 		"SELECT id FROM families WHERE invite_code = ?",
@@ -76,17 +75,9 @@ func JoinFamily(c *gin.Context) {
 		return
 	}
 
-	// 检查是否已在其他家庭
-	var currentFamilyID int64
-	database.DB.QueryRow("SELECT COALESCE(family_id, 0) FROM users WHERE id = ?", userID).Scan(&currentFamilyID)
-	if currentFamilyID > 0 && currentFamilyID != familyID {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "你已加入其他家庭，请先退出"})
-		return
-	}
-
 	database.DB.Exec("UPDATE users SET family_id = ? WHERE id = ?", familyID, userID)
 
-	c.JSON(http.StatusOK, gin.H{"message": "加入成功"})
+	c.JSON(http.StatusOK, gin.H{"message": "加入成功", "family_id": familyID})
 }
 
 // LeaveFamily 退出家庭
