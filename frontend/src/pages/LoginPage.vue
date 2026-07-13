@@ -9,9 +9,9 @@
 
     <!-- 表单 -->
     <div class="w-full max-w-xs space-y-4">
-      <div v-if="isRegister" class="space-y-1">
-        <label class="text-sm text-text-secondary">用户名</label>
-        <input v-model="form.username" type="text" placeholder="2-20位字符"
+      <div class="space-y-1">
+        <label class="text-sm text-text-secondary">{{ isRegister ? '用户名' : '用户名' }}</label>
+        <input v-model="form.username" type="text" :placeholder="isRegister ? '2-20位字符' : '输入用户名'"
           class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary placeholder-text-secondary/50 focus:border-primary transition-colors" />
       </div>
 
