@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: #FAFAFA;
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+body {
+  min-height: 100dvh;
+}
+
+#app {
+  min-height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  background: #FAFAFA;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* 输入框聚焦样式 */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+}
+
+/* 按钮点击反馈 */
+.btn-press {
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.btn-press:active {
+  transform: scale(0.96);
+}
+
+/* 页面切换动画 */
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.2s ease-out;
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateX(20px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+/* Toast 动画 */
+.toast-enter-active, .toast-leave-active {
+  transition: all 0.3s ease;
+}
+.toast-enter-from, .toast-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+/* 卡片出现动画 */
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.card-in {
+  animation: card-in 0.3s ease-out both;
+}
+
+/* 数字字体 */
+.font-num {
+  font-family: "DIN Alternate", "Roboto Mono", "SF Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 安全区域适配 */
+.pb-safe {
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+.pt-safe {
+  padding-top: max(0px, env(safe-area-inset-top));
+}
