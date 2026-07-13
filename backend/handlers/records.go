@@ -5,6 +5,7 @@ import (
 	"baby-care-tracker/models"
 	"fmt"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
@@ -110,6 +111,10 @@ func GetRecords(c *gin.Context) {
 
 	if records == nil {
 		records = []models.Record{}
+	} else {
+		sort.Slice(records, func(i, j int) bool {
+			return records[i].OccurredAt > records[j].OccurredAt
+		})
 	}
 
 	c.JSON(http.StatusOK, records)

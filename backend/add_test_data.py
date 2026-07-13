@@ -18,8 +18,8 @@ if not babies:
     conn.close()
     exit()
 
-feeding_types = ['breast', 'bottle', 'mixed']
-diaper_types = ['wet', 'dirty', 'both']
+feeding_types = ['breast', 'bottle', 'formula']
+diaper_types = ['pee', 'poop', 'mixed']
 now = datetime.now()
 
 for baby_id, name, birth_date, user_id in babies:

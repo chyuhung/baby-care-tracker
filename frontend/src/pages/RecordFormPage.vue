@@ -191,6 +191,22 @@ const form = reactive({
   occurred_at: nowDatetime(),
 })
 
+function resetFormDefaults() {
+  if (recordType.value === 'diaper') {
+    form.type = 'pee'
+    form.duration_minutes = 0
+    form.amount_ml = 0
+    form.side = 'left'
+    form.brand = ''
+  } else {
+    form.type = 'breast'
+    form.duration_minutes = 15
+    form.amount_ml = 0
+    form.side = 'left'
+    form.brand = ''
+  }
+}
+
 async function loadLatest() {
   const baby = app.currentBaby()
   if (!baby) return
@@ -276,6 +292,7 @@ async function doDelete() {
 }
 
 onMounted(async () => {
+  resetFormDefaults()
   if (!isEdit.value) {
     form.occurred_at = nowDatetime()
     if (recordType.value === 'feeding') {

@@ -139,9 +139,7 @@
             <h4 class="text-sm font-semibold text-text-secondary mb-2">🍼 每日喂奶 (ml·次)</h4>
             <div class="flex items-end gap-1 h-32 bg-gray-50 rounded-lg p-2">
               <div v-for="(d, i) in trendData" :key="i" class="flex-1 flex flex-col items-center gap-1">
-                <div class="w-full bg-primary rounded-t transition-all relative flex items-start justify-center pt-1" :style="{ height: Math.max(d.total_ml / 30, 4) + 'px' }">
-                  <span class="text-[10px] text-white font-bold leading-none" v-if="d.total_ml > 0">{{ d.feeding_count }}次</span>
-                </div>
+                <div class="w-full bg-primary rounded-t transition-all" :style="{ height: Math.max(d.total_ml / 30, 4) + 'px' }"></div>
                 <span class="text-xs text-text-secondary">{{ d.date.slice(5) }}</span>
               </div>
             </div>
@@ -194,7 +192,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { babyAPI, recordAPI } from '@/api'
@@ -210,6 +208,8 @@ const recordToDelete = ref<any>(null)
 const showTrendModal = ref(false)
 const trendData = ref<any[]>([])
 const selectedBabyId = ref<number | null>(null)
+const tick = ref(0)
+let tickTimer: number | null = null
 
 // 只显示今天和昨天
 const displayRecords = computed(() => {
@@ -254,8 +254,8 @@ function getTimeAgo(isoString: string | null) {
   return { text, isLong, minutes: diffMins }
 }
 
-const lastFeedingAgo = computed(() => getTimeAgo(stats.value.last_feeding))
-const lastDiaperAgo = computed(() => getTimeAgo(stats.value.last_diaper))
+const lastFeedingAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_feeding) })
+const lastDiaperAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_diaper) })
 
 async function loadData() {
   const baby = app.currentBaby()
@@ -329,8 +329,10 @@ function onRecordChange() { loadData() }
 onMounted(() => {
   loadData()
   window.addEventListener('app:record-changed', onRecordChange)
+  tickTimer = window.setInterval(() => { tick.value++ }, 10000)
 })
 onUnmounted(() => {
   window.removeEventListener('app:record-changed', onRecordChange)
+  if (tickTimer !== null) clearInterval(tickTimer)
 })
 </script>
