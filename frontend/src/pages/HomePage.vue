@@ -65,8 +65,8 @@
             </div>
             <div v-if="lastFeedingAgo" class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
-              <span class="text-xs font-medium text-text-secondary">
-                {{ lastFeedingAgo }}
+              <span class="text-xs font-medium" :class="lastFeedingAgo.isLong ? 'text-orange-500' : 'text-text-secondary'">
+                {{ lastFeedingAgo.text }}
               </span>
             </div>
             <!-- 新增喂奶入口 -->
@@ -88,8 +88,8 @@
             </div>
             <div v-if="lastDiaperAgo" class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
-              <span class="text-xs font-medium text-text-secondary">
-                {{ lastDiaperAgo }}
+              <span class="text-xs font-medium" :class="lastDiaperAgo.isLong ? 'text-orange-500' : 'text-text-secondary'">
+                {{ lastDiaperAgo.text }}
               </span>
             </div>
             <!-- 新增尿布入口 -->
@@ -205,6 +205,9 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, reactive } from 'vue'
+
+const tick = ref(0)
+let tickTimer: number | null = null
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { babyAPI, recordAPI } from '@/api'
@@ -258,15 +261,25 @@ const todayDateText = computed(() => {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${weekDays[d.getDay()]}`
 })
 
-function formatTime(isoString: string | null) {
+function getTimeAgo(isoString: string | null) {
   if (!isoString) return null
-  const d = new Date(isoString)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  const last = new Date(isoString)
+  const now = new Date()
+  const diffMs = now.getTime() - last.getTime()
+  if (diffMs < 0) return null
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMins / 60)
+  const diffDays = Math.floor(diffHours / 24)
+  let text = ''
+  if (diffDays > 0) text = `${diffDays}天${diffHours % 24}小时前`
+  else if (diffHours > 0) text = `${diffHours}小时${diffMins % 60}分钟前`
+  else if (diffMins > 0) text = `${diffMins}分钟前`
+  else text = '刚刚'
+  return { text, isLong: diffHours >= 4, minutes: diffMins }
 }
 
-const lastFeedingAgo = computed(() => formatTime(stats.value.last_feeding))
-const lastDiaperAgo = computed(() => formatTime(stats.value.last_diaper))
+const lastFeedingAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_feeding) })
+const lastDiaperAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_diaper) })
 
 async function loadData() {
   // 等待宝宝列表加载完成
@@ -354,9 +367,11 @@ onMounted(() => {
   loadData()
   window.addEventListener('record-created', onRecordCreated)
   window.addEventListener('record-deleted', onRecordDeleted)
+  tickTimer = window.setInterval(() => { tick.value++ }, 10000)
 })
 onUnmounted(() => {
   window.removeEventListener('record-created', onRecordCreated)
   window.removeEventListener('record-deleted', onRecordDeleted)
+  if (tickTimer !== null) clearInterval(tickTimer)
 })
 </script>
