@@ -258,6 +258,10 @@ const lastFeedingAgo = computed(() => { tick.value; return getTimeAgo(stats.valu
 const lastDiaperAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_diaper) })
 
 async function loadData() {
+  // 等待宝宝列表加载完成
+  if (app.babies.length === 0) {
+    await app.loadBabies()
+  }
   const baby = app.currentBaby()
   if (!baby) return
   selectedBabyId.value = baby.id

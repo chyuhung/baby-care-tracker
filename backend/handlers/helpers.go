@@ -3,10 +3,30 @@ package handlers
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
+
+// parseTime 解析各种 ISO 格式的时间字符串
+func parseTime(s string) time.Time {
+	// 有时区信息（含 Z 或 ±HH:MM）→ 直接解析为 UTC
+	if strings.ContainsAny(s, "Zz") || len(s) > 19 {
+		for _, layout := range []string{time.RFC3339Nano, time.RFC3339} {
+			t, err := time.Parse(layout, s)
+			if err == nil {
+				return t
+			}
+		}
+	}
+	// 无时区信息（旧数据，存储为 server local time）→ 按 local 解析再转 UTC
+	t, err := time.ParseInLocation("2006-01-02T15:04:05", s, time.Local)
+	if err == nil {
+		return t.UTC()
+	}
+	return time.Time{}
+}
 
 // getTzOffset 从请求头中获取客户端时区偏移（分钟），默认0（UTC）
 func getTzOffset(c *gin.Context) int {

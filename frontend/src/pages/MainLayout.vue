@@ -15,8 +15,8 @@ import { useAppStore } from '@/stores/app'
 import { onMounted } from 'vue'
 
 const app = useAppStore()
-onMounted(() => {
-  app.loadBabies()
+onMounted(async () => {
+  await app.loadBabies()
   app.connectWebSocket()
 })
 </script>

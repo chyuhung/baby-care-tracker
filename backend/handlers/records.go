@@ -111,7 +111,9 @@ func GetRecords(c *gin.Context) {
 		records = []models.Record{}
 	} else {
 		sort.Slice(records, func(i, j int) bool {
-			return records[i].OccurredAt > records[j].OccurredAt
+			ti := parseTime(records[i].OccurredAt)
+			tj := parseTime(records[j].OccurredAt)
+			return ti.After(tj)
 		})
 	}
 
