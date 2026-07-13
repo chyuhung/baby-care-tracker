@@ -10,6 +10,8 @@ Family group sharing, timezone fix, record performance optimization
 - Timezone: client sends `X-Timezone-Offset` header; backend uses Go-calculated UTC ranges instead of SQLite `localtime` modifier; `nowDatetime()` returns local time, `utcToLocalDatetime()` for edit loading
 - Backend record sorting: `parseTime()` helper converts strings to `time.Time` for correct sort (handles RFC3339 and legacy local-time strings)
 - Record performance: WebSocket dispatches `record-created` / `record-deleted` events with payload; pages update local array directly instead of re-fetching all records
+- Trend chart: migrated to Go-side aggregation using `parseTime()` + `time.FixedZone` — fetches raw records, groups by local date, avoids SQLite `date()` timezone quirks
+- Time display: replaced relative times ("X小时前") with absolute format (`MM-DD HH:mm`) in home/timeline; removed `tick` timer
 
 ### Known Issues
 - `vue-tsc` typecheck fails on Node.js v24 — not a code issue

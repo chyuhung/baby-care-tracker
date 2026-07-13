@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { babyAPI } from '@/api'
 import { useAuthStore } from './auth'
 
@@ -28,6 +28,21 @@ export const useAppStore = defineStore('app', () => {
   let ws: WebSocket | null = null
 
   const currentBaby = () => babies.value.find(b => b.id === currentBabyId.value) || babies.value[0]
+
+  // 主题：根据当前宝宝性别切换
+  const theme = computed(() => {
+    const g = currentBaby()?.gender
+    if (g === 'female') return 'female'
+    if (g === 'male') return 'male'
+    return 'neutral'
+  })
+
+  // 各性别的默认头像色（与主题呼应）
+  function defaultAvatarColor(gender: string): string {
+    if (gender === 'female') return '#FF7EB3'
+    if (gender === 'male') return '#4D9DFD'
+    return '#7C6CFF'
+  }
 
   async function loadBabies() {
     const res = await babyAPI.list()
@@ -79,8 +94,8 @@ export const useAppStore = defineStore('app', () => {
   }
 
   return {
-    babies, currentBabyId, toasts, wsConnected,
+    babies, currentBabyId, toasts, wsConnected, theme,
     currentBaby, loadBabies, setCurrentBaby, showToast,
-    connectWebSocket, disconnectWebSocket,
+    connectWebSocket, disconnectWebSocket, defaultAvatarColor,
   }
 })

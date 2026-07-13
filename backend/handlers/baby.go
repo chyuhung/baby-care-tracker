@@ -3,8 +3,10 @@ package handlers
 import (
 	"baby-care-tracker/database"
 	"baby-care-tracker/models"
+	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -245,12 +247,13 @@ func GetTrendStats(c *gin.Context) {
 
 	startDate := daysAgoUTC(tzOffset, 7)
 
-	// 查询7天内的喂奶数据
+	// 在 Go 中按客户端时区分组，避免 SQLite date() 函数对时区修饰符支持不一致
+	loc := time.FixedZone("user", tzOffset*60)
+
+	// 查询7天内的喂奶原始数据
 	feedingRows, err := database.DB.Query(`
-		SELECT date(occurred_at) as d, COUNT(*) as cnt, COALESCE(SUM(amount_ml), 0) as ml
-		FROM feeding_records
+		SELECT occurred_at, amount_ml FROM feeding_records
 		WHERE baby_id = ? AND occurred_at >= ?
-		GROUP BY date(occurred_at)
 	`, babyID, startDate)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
@@ -260,19 +263,26 @@ func GetTrendStats(c *gin.Context) {
 
 	feedingMap := make(map[string]*DailyStats)
 	for feedingRows.Next() {
-		var date string
-		var ds DailyStats
-		if feedingRows.Scan(&date, &ds.FeedingCount, &ds.TotalMl) == nil {
-			feedingMap[date] = &ds
+		var occurredAt string
+		var ml int
+		if feedingRows.Scan(&occurredAt, &ml) != nil {
+			continue
 		}
+		t := parseTime(occurredAt).In(loc)
+		date := fmt.Sprintf("%d-%02d-%02d", t.Year(), t.Month(), t.Day())
+		ds, ok := feedingMap[date]
+		if !ok {
+			ds = &DailyStats{}
+			feedingMap[date] = ds
+		}
+		ds.FeedingCount++
+		ds.TotalMl += ml
 	}
 
-	// 查询7天内的尿布数据
+	// 查询7天内的尿布原始数据
 	diaperRows, err := database.DB.Query(`
-		SELECT date(occurred_at) as d, COUNT(*) as cnt
-		FROM diaper_records
+		SELECT occurred_at FROM diaper_records
 		WHERE baby_id = ? AND occurred_at >= ?
-		GROUP BY date(occurred_at)
 	`, babyID, startDate)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
@@ -282,11 +292,13 @@ func GetTrendStats(c *gin.Context) {
 
 	diaperMap := make(map[string]int)
 	for diaperRows.Next() {
-		var date string
-		var cnt int
-		if diaperRows.Scan(&date, &cnt) == nil {
-			diaperMap[date] = cnt
+		var occurredAt string
+		if diaperRows.Scan(&occurredAt) != nil {
+			continue
 		}
+		t := parseTime(occurredAt).In(loc)
+		date := fmt.Sprintf("%d-%02d-%02d", t.Year(), t.Month(), t.Day())
+		diaperMap[date]++
 	}
 
 	var trends []DailyStats

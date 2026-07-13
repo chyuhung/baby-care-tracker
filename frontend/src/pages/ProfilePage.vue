@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col min-h-screen">
-    <header class="pt-safe bg-white px-4 py-3 border-b border-border-color">
+    <header class="app-header pt-safe px-4 py-3 border-b border-border-color">
       <h1 class="text-lg font-bold text-text-primary">我的</h1>
     </header>
 

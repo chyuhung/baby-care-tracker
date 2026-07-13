@@ -1,14 +1,14 @@
 <template>
   <div class="flex flex-col min-h-screen">
     <!-- Header -->
-    <header class="pt-safe bg-white px-4 pb-3 border-b border-border-color">
+    <header class="app-header pt-safe px-4 pb-3 border-b border-border-color">
       <div class="flex items-center justify-between">
         <div>
           <h1 class="text-lg font-bold text-text-primary">
             {{ app.currentBaby()?.name ? `${app.currentBaby()?.name} 的记录` : '宝宝护理' }}
           </h1>
           <p v-if="app.currentBaby()?.birth_date" class="text-xs text-text-secondary mt-0.5">
-            {{ ageText }}
+            {{ ageText }} · {{ todayDateText }}
           </p>
         </div>
         <div class="flex items-center gap-2">
@@ -65,8 +65,8 @@
             </div>
             <div v-if="lastFeedingAgo" class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
-              <span class="text-xs font-medium" :class="lastFeedingAgo.isLong ? 'text-orange-500' : 'text-text-secondary'">
-                {{ lastFeedingAgo.text }}
+              <span class="text-xs font-medium text-text-secondary">
+                {{ lastFeedingAgo }}
               </span>
             </div>
             <!-- 新增喂奶入口 -->
@@ -81,21 +81,20 @@
             <div class="text-xs text-text-secondary mb-1">今日尿布</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-bold font-num" style="color: #FF6B6B">{{ stats.diaper_count }}</span>
+                <span class="text-3xl font-bold font-num text-diaper">{{ stats.diaper_count }}</span>
                 <span class="text-sm text-text-secondary">次</span>
               </div>
               <div class="text-3xl">🧷</div>
             </div>
             <div v-if="lastDiaperAgo" class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
-              <span class="text-xs font-medium" :class="lastDiaperAgo.isLong ? 'text-orange-500' : 'text-text-secondary'">
-                {{ lastDiaperAgo.text }}
+              <span class="text-xs font-medium text-text-secondary">
+                {{ lastDiaperAgo }}
               </span>
             </div>
             <!-- 新增尿布入口 -->
             <button @click.stop="goToAddDiaper"
-              class="mt-3 w-full py-2 text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1"
-              style="background: #FF6B6B">
+              class="mt-3 w-full py-2 bg-diaper text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
               <span class="text-base">＋</span> 尿布
             </button>
           </div>
@@ -175,7 +174,7 @@
                 <div class="flex items-end gap-1" style="height:110px">
                   <div v-for="(d, i) in trendData" :key="'d'+i" class="flex-1 flex flex-col items-center justify-end h-full relative">
                     <span class="text-[10px] text-text-secondary font-medium leading-tight">{{ d.diaper_count }}</span>
-                    <div class="w-full rounded-t transition-all" :style="{ height: Math.max((d.diaper_count / maxDiaperCount) * 110, 3) + 'px', background: '#FF6B6B' }"></div>
+                    <div class="w-full bg-diaper rounded-t transition-all" :style="{ height: Math.max((d.diaper_count / maxDiaperCount) * 110, 3) + 'px' }"></div>
                   </div>
                 </div>
                 <div class="flex gap-1 mt-0.5">
@@ -223,8 +222,7 @@ const trendData = ref<any[]>([])
 const maxFeedingMl = computed(() => Math.max(...trendData.value.map(d => d.total_ml || 0), 1))
 const maxDiaperCount = computed(() => Math.max(...trendData.value.map(d => d.diaper_count || 0), 1))
 const selectedBabyId = ref<number | null>(null)
-const tick = ref(0)
-let tickTimer: number | null = null
+
 
 // 只显示今天和昨天
 const displayRecords = computed(() => {
@@ -253,26 +251,22 @@ const ageText = computed(() => {
   return `${diff}天`
 })
 
-function getTimeAgo(isoString: string | null) {
+const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+const todayDateText = computed(() => {
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${weekDays[d.getDay()]}`
+})
+
+function formatTime(isoString: string | null) {
   if (!isoString) return null
-  const last = new Date(isoString)
-  const now = new Date()
-  const diffMs = now.getTime() - last.getTime()
-  if (diffMs < 0) return null
-  const diffMins = Math.floor(diffMs / 60000)
-  const diffHours = Math.floor(diffMins / 60)
-  const diffDays = Math.floor(diffHours / 24)
-  let text = ''
-  if (diffDays > 0) text = `${diffDays}天${diffHours % 24}小时前`
-  else if (diffHours > 0) text = `${diffHours}小时${diffMins % 60}分钟前`
-  else if (diffMins > 0) text = `${diffMins}分钟前`
-  else text = '刚刚'
-  const isLong = diffHours >= 4
-  return { text, isLong, minutes: diffMins }
+  const d = new Date(isoString)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
-const lastFeedingAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_feeding) })
-const lastDiaperAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_diaper) })
+const lastFeedingAgo = computed(() => formatTime(stats.value.last_feeding))
+const lastDiaperAgo = computed(() => formatTime(stats.value.last_diaper))
 
 async function loadData() {
   // 等待宝宝列表加载完成
@@ -360,11 +354,9 @@ onMounted(() => {
   loadData()
   window.addEventListener('record-created', onRecordCreated)
   window.addEventListener('record-deleted', onRecordDeleted)
-  tickTimer = window.setInterval(() => { tick.value++ }, 10000)
 })
 onUnmounted(() => {
   window.removeEventListener('record-created', onRecordCreated)
   window.removeEventListener('record-deleted', onRecordDeleted)
-  if (tickTimer !== null) clearInterval(tickTimer)
 })
 </script>

@@ -36,9 +36,9 @@
         <label class="text-sm text-text-secondary block mb-3">性别</label>
         <div class="flex gap-3">
           <button v-for="g in genders" :key="g.value"
-            @click="form.gender = g.value"
-            :class="['flex-1 py-3 rounded-xl font-medium text-sm transition-colors btn-press',
-              form.gender === g.value ? 'bg-primary text-white' : 'bg-white border border-border-color text-text-secondary']">
+            @click="selectGender(g.value)"
+            :class="['flex-1 py-3 rounded-xl font-medium text-sm transition-colors btn-press border',
+              form.gender === g.value ? 'bg-primary text-white border-primary shadow-card' : 'bg-white border-border-color text-text-secondary']">
             {{ g.emoji }} {{ g.label }}
           </button>
         </div>
@@ -87,7 +87,7 @@ const loading = ref(false)
 const error = ref('')
 const showDelete = ref(false)
 
-const colors = ['#6C63FF', '#FF6B6B', '#4ECDC4', '#FFB6C1', '#FFD93D', '#A8E6CF', '#74B9FF', '#FDA7DF']
+const colors = ['#FF7EB3', '#4D9DFD', '#7C6CFF', '#43C59E', '#FFD93D', '#FF9F68', '#74B9FF', '#FDA7DF']
 const genders = [
   { value: 'male', label: '男孩', emoji: '👦' },
   { value: 'female', label: '女孩', emoji: '👧' },
@@ -98,8 +98,14 @@ const form = reactive({
   name: '',
   birth_date: '',
   gender: '',
-  avatar_color: '#6C63FF',
+  avatar_color: '#7C6CFF',
 })
+
+// 选择性别时自动套用对应主题默认头像色
+function selectGender(v: string) {
+  form.gender = v
+  form.avatar_color = app.defaultAvatarColor(v)
+}
 
 async function loadBaby() {
   if (!isEdit.value) return

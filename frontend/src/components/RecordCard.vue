@@ -1,5 +1,5 @@
 <template>
-  <div v-if="record.record_type === 'feeding'" class="bg-white rounded-xl p-4 shadow-card flex items-start gap-3 cursor-pointer" @click="$emit('edit')">
+  <div v-if="record.record_type === 'feeding'" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer active:scale-[0.99] transition-transform" @click="$emit('edit')">
     <div class="w-1.5 h-12 rounded-full bg-primary flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -21,8 +21,8 @@
     </button>
   </div>
 
-  <div v-else class="bg-white rounded-xl p-4 shadow-card flex items-start gap-3 cursor-pointer" @click="$emit('edit')">
-    <div class="w-1.5 h-12 rounded-full bg-secondary flex-shrink-0" style="background: #FF6B6B"></div>
+  <div v-else class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer active:scale-[0.99] transition-transform" @click="$emit('edit')">
+    <div class="w-1.5 h-12 rounded-full bg-diaper flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
         <span class="text-sm font-semibold text-text-primary">{{ diaperTypeLabel }}</span>
@@ -54,16 +54,8 @@ const diaperTypeLabel = computed(() => diaperTypeMap[d.value.type] || d.value.ty
 const sideLabel = computed(() => sideMap[f.value.side] || f.value.side)
 
 const timeAgo = computed(() => {
-  const date = new Date(props.record.occurred_at)
-  const now = new Date()
-  const diff = Math.floor((now.getTime() - date.getTime()) / 1000)
-  if (diff < 60) return '刚刚'
-  if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`
-  if (diff < 86400) {
-    const hours = Math.floor(diff / 3600)
-    const mins = Math.floor((diff % 3600) / 60)
-    return mins > 0 ? `${hours}小时${mins}分钟前` : `${hours}小时前`
-  }
-  return date.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  const d = new Date(props.record.occurred_at)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 })
 </script>
