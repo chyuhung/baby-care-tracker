@@ -133,45 +133,58 @@
             </svg>
           </button>
         </div>
-        <div class="p-4 space-y-4 overflow-y-auto max-h-[60vh]">
-          <!-- 每日总奶量 + 喂奶次数 -->
+        <div class="px-4 py-3 overflow-y-auto max-h-[60vh] space-y-5">
+          <!-- 每日奶量 -->
           <div>
-            <h4 class="text-sm font-semibold text-text-secondary mb-2">🍼 每日喂奶 (ml·次)</h4>
-            <div class="flex items-end gap-1 h-32 bg-gray-50 rounded-lg p-2">
-              <div v-for="(d, i) in trendData" :key="i" class="flex-1 flex flex-col items-center gap-1">
-                <div class="w-full bg-primary rounded-t transition-all" :style="{ height: Math.max(d.total_ml / 30, 4) + 'px' }"></div>
-                <span class="text-xs text-text-secondary">{{ d.date.slice(5) }}</span>
+            <h4 class="text-sm font-semibold text-text-secondary mb-2">🍼 每日奶量 (ml)</h4>
+            <div class="flex gap-1">
+              <!-- Y轴 -->
+              <div class="flex flex-col justify-between text-[10px] text-text-secondary text-right pr-1 shrink-0" style="height:130px">
+                <span>{{ maxFeedingMl }}</span>
+                <span>{{ Math.round(maxFeedingMl / 2) }}</span>
+                <span>0</span>
+              </div>
+              <!-- 柱形图 -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-end gap-1" style="height:110px">
+                  <div v-for="(d, i) in trendData" :key="'f'+i" class="flex-1 flex flex-col items-center justify-end h-full relative">
+                    <span class="text-[10px] text-text-secondary font-medium leading-tight">{{ d.total_ml }}</span>
+                    <div class="w-full bg-primary rounded-t transition-all" :style="{ height: Math.max((d.total_ml / maxFeedingMl) * 110, 3) + 'px' }"></div>
+                  </div>
+                </div>
+                <div class="flex gap-1 mt-0.5">
+                  <div v-for="(d, i) in trendData" :key="'fl'+i" class="flex-1 text-center">
+                    <span class="text-[10px] text-text-secondary">{{ d.date.slice(5) }}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          <!-- 尿布次数 -->
+          <!-- 每日尿布次数 -->
           <div>
             <h4 class="text-sm font-semibold text-text-secondary mb-2">🧷 每日尿布次数</h4>
-            <div class="flex items-end gap-1 h-32 bg-gray-50 rounded-lg p-2">
-              <div v-for="(d, i) in trendData" :key="i" class="flex-1 flex flex-col items-center gap-1">
-                <div class="w-full rounded-t transition-all" :style="{ height: Math.max(d.diaper_count * 10, 4) + 'px', background: '#FF6B6B' }"></div>
-                <span class="text-xs text-text-secondary">{{ d.date.slice(5) }}</span>
+            <div class="flex gap-1">
+              <!-- Y轴 -->
+              <div class="flex flex-col justify-between text-[10px] text-text-secondary text-right pr-1 shrink-0" style="height:130px">
+                <span>{{ maxDiaperCount }}</span>
+                <span>{{ Math.round(maxDiaperCount / 2) }}</span>
+                <span>0</span>
+              </div>
+              <!-- 柱形图 -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-end gap-1" style="height:110px">
+                  <div v-for="(d, i) in trendData" :key="'d'+i" class="flex-1 flex flex-col items-center justify-end h-full relative">
+                    <span class="text-[10px] text-text-secondary font-medium leading-tight">{{ d.diaper_count }}</span>
+                    <div class="w-full rounded-t transition-all" :style="{ height: Math.max((d.diaper_count / maxDiaperCount) * 110, 3) + 'px', background: '#FF6B6B' }"></div>
+                  </div>
+                </div>
+                <div class="flex gap-1 mt-0.5">
+                  <div v-for="(d, i) in trendData" :key="'dl'+i" class="flex-1 text-center">
+                    <span class="text-[10px] text-text-secondary">{{ d.date.slice(5) }}</span>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          <!-- 数据表格 -->
-          <div class="bg-gray-50 rounded-lg overflow-hidden">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="border-b border-gray-200">
-                  <th class="px-3 py-2 text-left text-text-secondary font-medium">日期</th>
-                  <th class="px-3 py-2 text-center text-text-secondary font-medium">奶量(次)</th>
-                  <th class="px-3 py-2 text-center text-text-secondary font-medium">尿布</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(d, i) in trendData" :key="i" class="border-b border-gray-100">
-                  <td class="px-3 py-2 text-text-primary">{{ d.date }}</td>
-                  <td class="px-3 py-2 text-center text-text-primary">{{ d.total_ml }}ml · {{ d.feeding_count }}次</td>
-                  <td class="px-3 py-2 text-center text-text-primary">{{ d.diaper_count }}次</td>
-                </tr>
-              </tbody>
-            </table>
           </div>
         </div>
       </div>
@@ -207,6 +220,8 @@ const showDeleteConfirm = ref(false)
 const recordToDelete = ref<any>(null)
 const showTrendModal = ref(false)
 const trendData = ref<any[]>([])
+const maxFeedingMl = computed(() => Math.max(...trendData.value.map(d => d.total_ml || 0), 1))
+const maxDiaperCount = computed(() => Math.max(...trendData.value.map(d => d.diaper_count || 0), 1))
 const selectedBabyId = ref<number | null>(null)
 const tick = ref(0)
 let tickTimer: number | null = null
