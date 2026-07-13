@@ -24,8 +24,8 @@ func generateInviteCode() string {
 	return string(code)
 }
 
-// ensureUserHasFamily 确保用户有所属家庭，没有则自动创建
-func ensureUserHasFamily(userID int64) (int64, error) {
+// EnsureUserHasFamily 确保用户有所属家庭，没有则自动创建
+func EnsureUserHasFamily(userID int64) (int64, error) {
 	var familyID int64
 	err := database.DB.QueryRow("SELECT family_id FROM users WHERE id = ?", userID).Scan(&familyID)
 	if err != nil || familyID == 0 {
@@ -144,7 +144,7 @@ func Login(c *gin.Context) {
 	}
 
 	// 确保用户有家庭（兼容旧数据）
-	ensureUserHasFamily(user.ID)
+	EnsureUserHasFamily(user.ID)
 
 	// 重新查询完整用户信息
 	database.DB.QueryRow(

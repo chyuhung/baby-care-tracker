@@ -206,6 +206,7 @@ func JWTAuth() gin.HandlerFunc {
 		}
 
 		c.Set("user_id", int64(uid))
+		handlers.EnsureUserHasFamily(int64(uid))
 		c.Next()
 	}
 }
