@@ -9,12 +9,31 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetBabies 获取当前用户的所有宝宝
+// checkBabyFamily 检查宝宝是否属于当前用户的家庭
+func checkBabyFamily(babyID, userID int64) bool {
+	var familyID int64
+	database.DB.QueryRow(
+		"SELECT u.family_id FROM babies b JOIN users u ON b.user_id = u.id WHERE b.id = ?",
+		babyID,
+	).Scan(&familyID)
+	if familyID == 0 {
+		return false
+	}
+	var userFamilyID int64
+	database.DB.QueryRow("SELECT family_id FROM users WHERE id = ?", userID).Scan(&userFamilyID)
+	return familyID == userFamilyID
+}
+
+// GetBabies 获取当前家庭的所有宝宝
 func GetBabies(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 
 	rows, err := database.DB.Query(
-		"SELECT id, user_id, name, birth_date, gender, avatar_color, created_at FROM babies WHERE user_id = ? ORDER BY created_at DESC",
+		`SELECT b.id, b.user_id, b.name, b.birth_date, b.gender, b.avatar_color, b.created_at
+		FROM babies b
+		JOIN users u ON b.user_id = u.id
+		WHERE u.family_id = (SELECT family_id FROM users WHERE id = ?)
+		ORDER BY b.created_at DESC`,
 		userID,
 	)
 	if err != nil {
@@ -90,10 +109,7 @@ func UpdateBaby(c *gin.Context) {
 		return
 	}
 
-	// 验证归属
-	var ownerID int64
-	database.DB.QueryRow("SELECT user_id FROM babies WHERE id = ?", babyID).Scan(&ownerID)
-	if ownerID != userID {
+	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限操作"})
 		return
 	}
@@ -126,9 +142,7 @@ func DeleteBaby(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 
-	var ownerID int64
-	database.DB.QueryRow("SELECT user_id FROM babies WHERE id = ?", babyID).Scan(&ownerID)
-	if ownerID != userID {
+	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限操作"})
 		return
 	}
@@ -152,9 +166,7 @@ func GetStats(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 
-	var ownerID int64
-	database.DB.QueryRow("SELECT user_id FROM babies WHERE id = ?", babyID).Scan(&ownerID)
-	if ownerID != userID {
+	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
 		return
 	}
@@ -216,10 +228,7 @@ func GetTrendStats(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 
-	// 验证归属
-	var ownerID int64
-	database.DB.QueryRow("SELECT user_id FROM babies WHERE id = ?", babyID).Scan(&ownerID)
-	if ownerID != userID {
+	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限操作"})
 		return
 	}

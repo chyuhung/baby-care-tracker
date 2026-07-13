@@ -14,6 +14,49 @@
         </div>
       </div>
 
+      <!-- 家庭信息 -->
+      <div class="bg-white rounded-2xl p-4 shadow-card space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-text-secondary uppercase tracking-wide">我的家庭</h2>
+          <button v-if="family && family.members && family.members.length > 1" @click="leaveFamily" class="text-xs text-red-400 font-medium">退出家庭</button>
+        </div>
+
+        <div v-if="!family" class="text-center py-2">
+          <p class="text-text-secondary text-sm mb-3">加入其他家庭，共享宝宝数据</p>
+          <div class="flex gap-2">
+            <input v-model="joinCode" placeholder="输入邀请码" maxlength="6" class="flex-1 px-3 py-2 border border-border-color rounded-xl text-sm focus:outline-none focus:border-primary" />
+            <button @click="joinFamily" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-xl btn-press">加入</button>
+          </div>
+        </div>
+
+        <div v-else class="space-y-3">
+          <!-- 邀请码 -->
+          <div class="bg-bg-secondary rounded-xl p-3">
+            <div class="text-xs text-text-secondary mb-1">邀请码</div>
+            <div class="flex items-center justify-between">
+              <span class="text-lg font-bold tracking-widest text-primary select-all">{{ family.invite_code }}</span>
+              <button @click="copyCode" class="text-xs text-primary font-medium">复制</button>
+            </div>
+          </div>
+
+          <!-- 家庭成员 -->
+          <div>
+            <div class="text-xs text-text-secondary mb-2">家庭成员 ({{ family.members.length }}人)</div>
+            <div class="flex flex-wrap gap-2">
+              <div v-for="m in family.members" :key="m.id" class="flex items-center gap-1.5 bg-bg-secondary rounded-full px-3 py-1.5 text-sm">
+                <span>👤</span>
+                <span>{{ m.username }}</span>
+                <span v-if="m.id === auth.user?.id" class="text-xs text-text-secondary">(我)</span>
+              </div>
+            </div>
+          </div>
+
+          <button @click="regenerateCode" class="w-full py-2 text-sm text-primary font-medium rounded-xl border border-primary/30 btn-press">
+            重新生成邀请码
+          </button>
+        </div>
+      </div>
+
       <!-- 宝宝列表 -->
       <div class="space-y-3">
         <div class="flex items-center justify-between">
@@ -30,7 +73,6 @@
         </div>
 
         <div v-for="baby in app.babies" :key="baby.id">
-          <!-- 宝宝卡片 -->
           <div class="bg-white rounded-2xl p-4 shadow-card">
             <div class="flex items-center gap-3" @click="router.push(`/baby/${baby.id}/edit`)">
               <div class="w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white cursor-pointer" :style="{ background: baby.avatar_color }">
@@ -55,13 +97,84 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
+import { familyAPI } from '@/api'
+
+interface FamilyMember {
+  id: number
+  username: string
+}
+
+interface Family {
+  id: number
+  invite_code: string
+  members: FamilyMember[]
+}
 
 const router = useRouter()
 const auth = useAuthStore()
 const app = useAppStore()
+
+const family = ref<Family | null>(null)
+const joinCode = ref('')
+
+async function loadFamily() {
+  try {
+    const res = await familyAPI.getMyFamily()
+    family.value = { ...res.data.family, members: res.data.members }
+  } catch {}
+}
+
+async function joinFamily() {
+  if (!joinCode.value.trim()) return
+  try {
+    await familyAPI.join(joinCode.value.trim().toUpperCase())
+    joinCode.value = ''
+    await loadFamily()
+    await app.loadBabies()
+    app.showToast('已加入家庭', 'success')
+  } catch (e: any) {
+    app.showToast(e.response?.data?.error || '加入失败', 'error')
+  }
+}
+
+async function leaveFamily() {
+  if (!confirm('确定退出当前家庭？')) return
+  try {
+    await familyAPI.leave()
+    family.value = null
+    await app.loadBabies()
+    app.showToast('已退出家庭', 'success')
+  } catch (e: any) {
+    app.showToast(e.response?.data?.error || '退出失败', 'error')
+  }
+}
+
+async function regenerateCode() {
+  try {
+    const res = await familyAPI.regenerateCode()
+    family.value!.invite_code = res.data.invite_code
+    app.showToast('邀请码已更新', 'success')
+  } catch (e: any) {
+    app.showToast(e.response?.data?.error || '操作失败', 'error')
+  }
+}
+
+function copyCode() {
+  if (!family.value) return
+  navigator.clipboard.writeText(family.value.invite_code).then(() => {
+    app.showToast('已复制邀请码', 'success')
+  }).catch(() => {
+    app.showToast('复制失败', 'error')
+  })
+}
+
+onMounted(() => {
+  loadFamily()
+})
 
 function logout() {
   app.disconnectWebSocket()

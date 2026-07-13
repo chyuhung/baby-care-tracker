@@ -126,6 +126,11 @@ func main() {
 			protected.POST("/babies/:id/diaper", handlers.CreateDiaper)
 			protected.PUT("/records/:id", handlers.UpdateRecord)
 			protected.DELETE("/records/:id", handlers.DeleteRecord)
+
+			protected.GET("/family", handlers.GetMyFamily)
+			protected.POST("/family/join", handlers.JoinFamily)
+			protected.POST("/family/leave", handlers.LeaveFamily)
+			protected.POST("/family/regenerate-code", handlers.RegenerateInviteCode)
 		}
 	}
 

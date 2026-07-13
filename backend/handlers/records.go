@@ -19,10 +19,7 @@ func GetRecords(c *gin.Context) {
 	recordType := c.Query("type") // optional filter
 	daysStr := c.Query("days")     // optional: 最近N天
 
-	// 验证宝宝归属
-	var ownerID int64
-	database.DB.QueryRow("SELECT user_id FROM babies WHERE id = ?", babyID).Scan(&ownerID)
-	if ownerID != userID {
+	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
 		return
 	}
@@ -125,9 +122,7 @@ func GetRecordsCount(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 
-	var ownerID int64
-	database.DB.QueryRow("SELECT user_id FROM babies WHERE id = ?", babyID).Scan(&ownerID)
-	if ownerID != userID {
+	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
 		return
 	}
@@ -149,9 +144,7 @@ func CreateFeeding(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 
-	var ownerID int64
-	database.DB.QueryRow("SELECT user_id FROM babies WHERE id = ?", babyID).Scan(&ownerID)
-	if ownerID != userID {
+	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
 		return
 	}
@@ -207,9 +200,7 @@ func CreateDiaper(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 
-	var ownerID int64
-	database.DB.QueryRow("SELECT user_id FROM babies WHERE id = ?", babyID).Scan(&ownerID)
-	if ownerID != userID {
+	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
 		return
 	}
@@ -269,13 +260,13 @@ func UpdateRecord(c *gin.Context) {
 	c.ShouldBindJSON(&req)
 
 	// 验证归属
-	var ownerID int64
+	var babyID int64
 	if recordType == "diaper" {
-		database.DB.QueryRow("SELECT user_id FROM diaper_records WHERE id = ?", recordID).Scan(&ownerID)
+		database.DB.QueryRow("SELECT baby_id FROM diaper_records WHERE id = ?", recordID).Scan(&babyID)
 	} else {
-		database.DB.QueryRow("SELECT user_id FROM feeding_records WHERE id = ?", recordID).Scan(&ownerID)
+		database.DB.QueryRow("SELECT baby_id FROM feeding_records WHERE id = ?", recordID).Scan(&babyID)
 	}
-	if ownerID != userID {
+	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
 		return
 	}
@@ -296,13 +287,13 @@ func DeleteRecord(c *gin.Context) {
 	recordType := c.Query("type")
 
 	// 验证归属
-	var ownerID int64
+	var babyID int64
 	if recordType == "diaper" {
-		database.DB.QueryRow("SELECT user_id FROM diaper_records WHERE id = ?", recordID).Scan(&ownerID)
+		database.DB.QueryRow("SELECT baby_id FROM diaper_records WHERE id = ?", recordID).Scan(&babyID)
 	} else {
-		database.DB.QueryRow("SELECT user_id FROM feeding_records WHERE id = ?", recordID).Scan(&ownerID)
+		database.DB.QueryRow("SELECT baby_id FROM feeding_records WHERE id = ?", recordID).Scan(&babyID)
 	}
-	if ownerID != userID {
+	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
 		return
 	}
@@ -326,9 +317,7 @@ func GetLatestFeeding(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 
-	var ownerID int64
-	database.DB.QueryRow("SELECT user_id FROM babies WHERE id = ?", babyID).Scan(&ownerID)
-	if ownerID != userID {
+	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
 		return
 	}

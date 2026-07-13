@@ -2,12 +2,32 @@ package models
 
 import "time"
 
+// Family 家庭组
+type Family struct {
+	ID         int64     `json:"id"`
+	InviteCode string    `json:"invite_code"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+// FamilyMember 家庭成员
+type FamilyMember struct {
+	ID       int64  `json:"id"`
+	UserID   int64  `json:"user_id"`
+	Username string `json:"username"`
+}
+
 // User 用户
 type User struct {
 	ID           int64     `json:"id"`
 	Username     string    `json:"username"`
 	PasswordHash string    `json:"-"`
+	FamilyID     *int64    `json:"family_id"`
 	CreatedAt    time.Time `json:"created_at"`
+}
+
+// JoinFamilyRequest 加入家庭请求
+type JoinFamilyRequest struct {
+	InviteCode string `json:"invite_code" binding:"required"`
 }
 
 // Baby 宝宝

@@ -69,4 +69,12 @@ export const recordAPI = {
     api.delete(`/records/${id}?type=${type}`),
 }
 
+// 家庭
+export const familyAPI = {
+  getMyFamily: () => api.get('/family'),
+  join: (inviteCode: string) => api.post('/family/join', { invite_code: inviteCode }),
+  leave: () => api.post('/family/leave'),
+  regenerateCode: () => api.post('/family/regenerate-code'),
+}
+
 export default api

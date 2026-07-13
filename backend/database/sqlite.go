@@ -32,10 +32,17 @@ func InitDB(dbPath string) error {
 
 func createTables() error {
 	schema := `
+	CREATE TABLE IF NOT EXISTS families (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		invite_code TEXT UNIQUE NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+	);
+
 	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		username TEXT UNIQUE NOT NULL,
 		password_hash TEXT NOT NULL,
+		family_id INTEGER REFERENCES families(id),
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);
 
@@ -86,5 +93,12 @@ func createTables() error {
 	`
 
 	_, err := DB.Exec(schema)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Migration: add family_id column if it doesn't exist (for existing databases)
+	DB.Exec("ALTER TABLE users ADD COLUMN family_id INTEGER REFERENCES families(id)")
+
+	return nil
 }
