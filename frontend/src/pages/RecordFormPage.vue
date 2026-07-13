@@ -161,8 +161,23 @@ const pageTitle = computed(() => {
 
 const nowDatetime = () => {
   const d = new Date()
-  d.setSeconds(0, 0)
-  return d.toISOString().slice(0, 16)
+  const y = d.getFullYear()
+  const M = String(d.getMonth() + 1).padStart(2, '0')
+  const D = String(d.getDate()).padStart(2, '0')
+  const h = String(d.getHours()).padStart(2, '0')
+  const m = String(d.getMinutes()).padStart(2, '0')
+  return `${y}-${M}-${D}T${h}:${m}`
+}
+
+// 把 UTC ISO 字符串转为本地 datetime-local 格式
+function utcToLocalDatetime(utcIso: string) {
+  const d = new Date(utcIso)
+  const y = d.getFullYear()
+  const M = String(d.getMonth() + 1).padStart(2, '0')
+  const D = String(d.getDate()).padStart(2, '0')
+  const h = String(d.getHours()).padStart(2, '0')
+  const m = String(d.getMinutes()).padStart(2, '0')
+  return `${y}-${M}-${D}T${h}:${m}`
 }
 
 const feedingTypes = [
@@ -241,11 +256,11 @@ async function loadRecord() {
         form.side = d.side || 'left'
         form.brand = d.brand || ''
         form.note = d.note || ''
-        form.occurred_at = d.occurred_at?.slice(0, 16) || nowDatetime()
+        form.occurred_at = d.occurred_at ? utcToLocalDatetime(d.occurred_at) : nowDatetime()
       } else {
         form.type = r.data.type
         form.note = r.data.note || ''
-        form.occurred_at = r.occurred_at?.slice(0, 16) || nowDatetime()
+        form.occurred_at = r.occurred_at ? utcToLocalDatetime(r.occurred_at) : nowDatetime()
       }
     }
   } catch {}

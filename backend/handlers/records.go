@@ -31,11 +31,12 @@ func GetRecords(c *gin.Context) {
 	totalCount += diaperCount
 	c.Header("X-Total-Count", strconv.Itoa(totalCount))
 
-	// 构建日期筛选条件
+	tzOffset := getTzOffset(c)
 	daysFilter := ""
 	if daysStr != "" {
 		if days, err := strconv.Atoi(daysStr); err == nil && days > 0 {
-			daysFilter = fmt.Sprintf(" AND occurred_at >= datetime('now', '-%d days', 'localtime')", days)
+			start := daysAgoUTC(tzOffset, days)
+			daysFilter = fmt.Sprintf(" AND occurred_at >= '%s'", start)
 		}
 	}
 
@@ -156,7 +157,7 @@ func CreateFeeding(c *gin.Context) {
 	}
 
 	if req.OccurredAt == "" {
-		req.OccurredAt = time.Now().Format("2006-01-02T15:04:05")
+		req.OccurredAt = time.Now().UTC().Format("2006-01-02T15:04:05Z")
 	}
 
 	result, err := database.DB.Exec(
@@ -212,7 +213,7 @@ func CreateDiaper(c *gin.Context) {
 	}
 
 	if req.OccurredAt == "" {
-		req.OccurredAt = time.Now().Format("2006-01-02T15:04:05")
+		req.OccurredAt = time.Now().UTC().Format("2006-01-02T15:04:05Z")
 	}
 
 	result, err := database.DB.Exec(

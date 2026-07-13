@@ -7,12 +7,13 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// 请求拦截器：附加 JWT
+// 请求拦截器：附加 JWT 和时区偏移
 api.interceptors.request.use((config) => {
   const auth = useAuthStore()
   if (auth.token) {
     config.headers.Authorization = `Bearer ${auth.token}`
   }
+  config.headers['X-Timezone-Offset'] = String(-new Date().getTimezoneOffset())
   return config
 })
 

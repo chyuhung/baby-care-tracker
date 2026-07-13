@@ -171,18 +171,21 @@ func GetStats(c *gin.Context) {
 		return
 	}
 
+	tzOffset := getTzOffset(c)
+	todayStart, todayEnd := todayDateRange(tzOffset)
+
 	// 今日喂奶次数
 	var feedingCount int
 	database.DB.QueryRow(
-		"SELECT COUNT(*) FROM feeding_records WHERE baby_id = ? AND date(occurred_at, 'localtime') = date('now', 'localtime')",
-		babyID,
+		"SELECT COUNT(*) FROM feeding_records WHERE baby_id = ? AND occurred_at >= ? AND occurred_at < ?",
+		babyID, todayStart, todayEnd,
 	).Scan(&feedingCount)
 
 	// 今日尿布次数
 	var diaperCount int
 	database.DB.QueryRow(
-		"SELECT COUNT(*) FROM diaper_records WHERE baby_id = ? AND date(occurred_at, 'localtime') = date('now', 'localtime')",
-		babyID,
+		"SELECT COUNT(*) FROM diaper_records WHERE baby_id = ? AND occurred_at >= ? AND occurred_at < ?",
+		babyID, todayStart, todayEnd,
 	).Scan(&diaperCount)
 
 	// 最后一次喂奶
@@ -202,8 +205,8 @@ func GetStats(c *gin.Context) {
 	// 今日总喂奶量
 	var totalMl int
 	database.DB.QueryRow(
-		"SELECT COALESCE(SUM(amount_ml), 0) FROM feeding_records WHERE baby_id = ? AND date(occurred_at, 'localtime') = date('now', 'localtime') AND amount_ml > 0",
-		babyID,
+		"SELECT COALESCE(SUM(amount_ml), 0) FROM feeding_records WHERE baby_id = ? AND occurred_at >= ? AND occurred_at < ? AND amount_ml > 0",
+		babyID, todayStart, todayEnd,
 	).Scan(&totalMl)
 
 	c.JSON(http.StatusOK, gin.H{
@@ -233,51 +236,68 @@ func GetTrendStats(c *gin.Context) {
 		return
 	}
 
-	// 查询最近7天的数据
-	rows, err := database.DB.Query(`
-		WITH dates AS (
-			SELECT date('now', '-6 days', 'localtime') as date
-			UNION ALL SELECT date('now', '-5 days', 'localtime')
-			UNION ALL SELECT date('now', '-4 days', 'localtime')
-			UNION ALL SELECT date('now', '-3 days', 'localtime')
-			UNION ALL SELECT date('now', '-2 days', 'localtime')
-			UNION ALL SELECT date('now', '-1 days', 'localtime')
-			UNION ALL SELECT date('now', 'localtime')
-		)
-		SELECT 
-			d.date,
-			COALESCE(f.cnt, 0) as feeding_count,
-			COALESCE(dp.cnt, 0) as diaper_count,
-			COALESCE(f.ml, 0) as total_ml
-		FROM dates d
-		LEFT JOIN (
-			SELECT date(occurred_at, 'localtime') as d, COUNT(*) as cnt, SUM(amount_ml) as ml
-			FROM feeding_records 
-			WHERE baby_id = ?
-			GROUP BY date(occurred_at, 'localtime')
-		) f ON d.date = f.d
-		LEFT JOIN (
-			SELECT date(occurred_at, 'localtime') as d, COUNT(*) as cnt
-			FROM diaper_records 
-			WHERE baby_id = ?
-			GROUP BY date(occurred_at, 'localtime')
-		) dp ON d.date = dp.d
-		ORDER BY d.date ASC
-	`, babyID, babyID)
+	tzOffset := getTzOffset(c)
+	dates := lastNDates(tzOffset, 7)
+	if len(dates) == 0 {
+		c.JSON(http.StatusOK, []DailyStats{})
+		return
+	}
 
+	startDate := daysAgoUTC(tzOffset, 7)
+
+	// 查询7天内的喂奶数据
+	feedingRows, err := database.DB.Query(`
+		SELECT date(occurred_at) as d, COUNT(*) as cnt, COALESCE(SUM(amount_ml), 0) as ml
+		FROM feeding_records
+		WHERE baby_id = ? AND occurred_at >= ?
+		GROUP BY date(occurred_at)
+	`, babyID, startDate)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
 		return
 	}
-	defer rows.Close()
+	defer feedingRows.Close()
+
+	feedingMap := make(map[string]*DailyStats)
+	for feedingRows.Next() {
+		var date string
+		var ds DailyStats
+		if feedingRows.Scan(&date, &ds.FeedingCount, &ds.TotalMl) == nil {
+			feedingMap[date] = &ds
+		}
+	}
+
+	// 查询7天内的尿布数据
+	diaperRows, err := database.DB.Query(`
+		SELECT date(occurred_at) as d, COUNT(*) as cnt
+		FROM diaper_records
+		WHERE baby_id = ? AND occurred_at >= ?
+		GROUP BY date(occurred_at)
+	`, babyID, startDate)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
+		return
+	}
+	defer diaperRows.Close()
+
+	diaperMap := make(map[string]int)
+	for diaperRows.Next() {
+		var date string
+		var cnt int
+		if diaperRows.Scan(&date, &cnt) == nil {
+			diaperMap[date] = cnt
+		}
+	}
 
 	var trends []DailyStats
-	for rows.Next() {
-		var ds DailyStats
-		if err := rows.Scan(&ds.Date, &ds.FeedingCount, &ds.DiaperCount, &ds.TotalMl); err != nil {
-			continue
-		}
-		trends = append(trends, ds)
+	for _, date := range dates {
+		f := feedingMap[date]
+		trends = append(trends, DailyStats{
+			Date:         date,
+			FeedingCount: func() int { if f != nil { return f.FeedingCount }; return 0 }(),
+			DiaperCount:  diaperMap[date],
+			TotalMl:      func() int { if f != nil { return f.TotalMl }; return 0 }(),
+		})
 	}
 
 	c.JSON(http.StatusOK, trends)
