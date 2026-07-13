@@ -25,11 +25,17 @@
             {{ group.label }}
           </h3>
           <div class="space-y-2">
-            <RecordCard v-for="(r, i) in group.records" :key="r.id"
+            <RecordCard v-for="(r, i) in group.records" :key="r.record_type + '-' + r.id"
               :record="r" :style="{ animationDelay: `${i * 40}ms` }" class="card-in"
               @edit="editRecord(r)" @delete="deleteRecord(r)" />
           </div>
         </div>
+
+        <!-- 加载更多 -->
+        <button v-if="hasMore" @click="loadMore"
+          class="w-full py-3 bg-white text-primary text-sm font-medium rounded-xl shadow-card btn-press">
+          {{ loadingMore ? '加载中...' : `加载更多 (近 ${days}天)` }}
+        </button>
       </div>
     </main>
 
@@ -59,9 +65,13 @@ const router = useRouter()
 const route = useRoute()
 const records = ref<any[]>([])
 const loading = ref(false)
+const loadingMore = ref(false)
 const activeFilter = ref('')
 const showDeleteConfirm = ref(false)
 const recordToDelete = ref<any>(null)
+const days = ref(7)
+const totalCount = ref(0)
+const loadedCount = ref(0)
 
 const filters = [
   { label: '全部', value: '' },
@@ -100,16 +110,30 @@ const groupedRecords = computed(() => {
   return groups
 })
 
-async function loadRecords() {
+const hasMore = computed(() => loadedCount.value < totalCount.value)
+
+async function loadRecords(reset: boolean = true) {
   const baby = app.currentBaby()
   if (!baby) return
-  loading.value = true
+  if (reset) loading.value = true
+  else loadingMore.value = true
   try {
-    const res = await recordAPI.list(baby.id)
+    const [res, countRes] = await Promise.all([
+      recordAPI.list(baby.id, undefined, days.value),
+      recordAPI.count(baby.id),
+    ])
     records.value = res.data
+    totalCount.value = countRes.data.total
+    loadedCount.value = res.data.length
   } catch {} finally {
     loading.value = false
+    loadingMore.value = false
   }
+}
+
+function loadMore() {
+  days.value += 7
+  loadRecords(false)
 }
 
 function editRecord(r: any) {
@@ -127,13 +151,14 @@ async function confirmDelete() {
     await recordAPI.delete(recordToDelete.value.id, recordToDelete.value.record_type)
     app.showToast('已删除', 'success')
     showDeleteConfirm.value = false
+    days.value = 7
     loadRecords()
   } catch {
     app.showToast('删除失败', 'error')
   }
 }
 
-function onRecordChange() { loadRecords() }
+function onRecordChange() { days.value = 7; loadRecords() }
 onMounted(() => { loadRecords(); window.addEventListener('app:record-changed', onRecordChange) })
 onUnmounted(() => { window.removeEventListener('app:record-changed', onRecordChange) })
 </script>

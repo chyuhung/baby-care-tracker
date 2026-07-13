@@ -191,8 +191,6 @@ const form = reactive({
   occurred_at: nowDatetime(),
 })
 
-const initialForm = { ...form }
-
 async function loadLatest() {
   const baby = app.currentBaby()
   if (!baby) return

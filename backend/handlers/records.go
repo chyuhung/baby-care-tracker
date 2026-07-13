@@ -3,6 +3,7 @@ package handlers
 import (
 	"baby-care-tracker/database"
 	"baby-care-tracker/models"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -15,6 +16,7 @@ func GetRecords(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 	recordType := c.Query("type") // optional filter
+	daysStr := c.Query("days")     // optional: 最近N天
 
 	// 验证宝宝归属
 	var ownerID int64
@@ -24,13 +26,28 @@ func GetRecords(c *gin.Context) {
 		return
 	}
 
+	var totalCount int
+	database.DB.QueryRow("SELECT COUNT(*) FROM feeding_records WHERE baby_id = ?", babyID).Scan(&totalCount)
+	var diaperCount int
+	database.DB.QueryRow("SELECT COUNT(*) FROM diaper_records WHERE baby_id = ?", babyID).Scan(&diaperCount)
+	totalCount += diaperCount
+	c.Header("X-Total-Count", strconv.Itoa(totalCount))
+
+	// 构建日期筛选条件
+	daysFilter := ""
+	if daysStr != "" {
+		if days, err := strconv.Atoi(daysStr); err == nil && days > 0 {
+			daysFilter = fmt.Sprintf(" AND occurred_at >= datetime('now', '-%d days', 'localtime')", days)
+		}
+	}
+
 	var records []models.Record
 
 	// 喂奶记录
 	if recordType == "" || recordType == "feeding" {
 		rows, err := database.DB.Query(
 			`SELECT id, baby_id, user_id, type, duration_minutes, amount_ml, side, brand, note, occurred_at, created_at
-			FROM feeding_records WHERE baby_id = ? ORDER BY occurred_at DESC LIMIT 200`,
+			FROM feeding_records WHERE baby_id = ?`+daysFilter+` ORDER BY occurred_at DESC LIMIT 500`,
 			babyID,
 		)
 		if err == nil {
@@ -39,7 +56,9 @@ func GetRecords(c *gin.Context) {
 				var r models.FeedingRecord
 				var note, brand, side string
 				var duration, amount int
-				rows.Scan(&r.ID, &r.BabyID, &r.UserID, &r.Type, &duration, &amount, &side, &brand, &note, &r.OccurredAt, &r.CreatedAt)
+				if err := rows.Scan(&r.ID, &r.BabyID, &r.UserID, &r.Type, &duration, &amount, &side, &brand, &note, &r.OccurredAt, &r.CreatedAt); err != nil {
+					continue
+				}
 				r.Note = note
 				r.Brand = brand
 				r.Side = side
@@ -63,7 +82,7 @@ func GetRecords(c *gin.Context) {
 	if recordType == "" || recordType == "diaper" {
 		rows, err := database.DB.Query(
 			`SELECT id, baby_id, user_id, type, note, occurred_at, created_at
-			FROM diaper_records WHERE baby_id = ? ORDER BY occurred_at DESC LIMIT 200`,
+			FROM diaper_records WHERE baby_id = ?`+daysFilter+` ORDER BY occurred_at DESC LIMIT 500`,
 			babyID,
 		)
 		if err == nil {
@@ -71,7 +90,9 @@ func GetRecords(c *gin.Context) {
 			for rows.Next() {
 				var r models.DiaperRecord
 				var note string
-				rows.Scan(&r.ID, &r.BabyID, &r.UserID, &r.Type, &note, &r.OccurredAt, &r.CreatedAt)
+				if err := rows.Scan(&r.ID, &r.BabyID, &r.UserID, &r.Type, &note, &r.OccurredAt, &r.CreatedAt); err != nil {
+					continue
+				}
 				r.Note = note
 				r.RecordType = "diaper"
 				records = append(records, models.Record{
@@ -92,6 +113,30 @@ func GetRecords(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, records)
+}
+
+// GetRecordsCount 获取宝宝记录总数
+func GetRecordsCount(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+
+	var ownerID int64
+	database.DB.QueryRow("SELECT user_id FROM babies WHERE id = ?", babyID).Scan(&ownerID)
+	if ownerID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
+		return
+	}
+
+	var feedingCount int
+	database.DB.QueryRow("SELECT COUNT(*) FROM feeding_records WHERE baby_id = ?", babyID).Scan(&feedingCount)
+	var diaperCount int
+	database.DB.QueryRow("SELECT COUNT(*) FROM diaper_records WHERE baby_id = ?", babyID).Scan(&diaperCount)
+
+	c.JSON(http.StatusOK, gin.H{
+		"feeding_count": feedingCount,
+		"diaper_count":  diaperCount,
+		"total":          feedingCount + diaperCount,
+	})
 }
 
 // CreateFeeding 创建喂奶记录
@@ -276,6 +321,13 @@ func GetLatestFeeding(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 
+	var ownerID int64
+	database.DB.QueryRow("SELECT user_id FROM babies WHERE id = ?", babyID).Scan(&ownerID)
+	if ownerID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
+		return
+	}
+
 	var record models.FeedingRecord
 	var note, brand, side string
 	var duration, amount int
@@ -285,12 +337,10 @@ func GetLatestFeeding(c *gin.Context) {
 	).Scan(&record.Type, &duration, &amount, &side, &brand, &note)
 
 	if err != nil {
-		_ = userID
 		c.JSON(http.StatusOK, nil)
 		return
 	}
 
-	_ = userID
 	c.JSON(http.StatusOK, gin.H{
 		"type":             record.Type,
 		"duration_minutes": duration,

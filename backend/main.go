@@ -121,6 +121,7 @@ func main() {
 			protected.GET("/babies/:id/latest-feeding", handlers.GetLatestFeeding)
 
 			protected.GET("/babies/:id/records", handlers.GetRecords)
+			protected.GET("/babies/:id/records/count", handlers.GetRecordsCount)
 			protected.POST("/babies/:id/feeding", handlers.CreateFeeding)
 			protected.POST("/babies/:id/diaper", handlers.CreateDiaper)
 			protected.PUT("/records/:id", handlers.UpdateRecord)

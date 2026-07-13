@@ -152,21 +152,25 @@ func GetStats(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
 
-	// 今日开始时间
-	today := "date('now', 'localtime')"
+	var ownerID int64
+	database.DB.QueryRow("SELECT user_id FROM babies WHERE id = ?", babyID).Scan(&ownerID)
+	if ownerID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
+		return
+	}
 
 	// 今日喂奶次数
 	var feedingCount int
 	database.DB.QueryRow(
-		"SELECT COUNT(*) FROM feeding_records WHERE baby_id = ? AND date(occurred_at, 'localtime') = ?",
-		babyID, today,
+		"SELECT COUNT(*) FROM feeding_records WHERE baby_id = ? AND date(occurred_at, 'localtime') = date('now', 'localtime')",
+		babyID,
 	).Scan(&feedingCount)
 
 	// 今日尿布次数
 	var diaperCount int
 	database.DB.QueryRow(
-		"SELECT COUNT(*) FROM diaper_records WHERE baby_id = ? AND date(occurred_at, 'localtime') = ?",
-		babyID, today,
+		"SELECT COUNT(*) FROM diaper_records WHERE baby_id = ? AND date(occurred_at, 'localtime') = date('now', 'localtime')",
+		babyID,
 	).Scan(&diaperCount)
 
 	// 最后一次喂奶
@@ -186,11 +190,9 @@ func GetStats(c *gin.Context) {
 	// 今日总喂奶量
 	var totalMl int
 	database.DB.QueryRow(
-		"SELECT COALESCE(SUM(amount_ml), 0) FROM feeding_records WHERE baby_id = ? AND date(occurred_at, 'localtime') = ? AND amount_ml > 0",
-		babyID, today,
+		"SELECT COALESCE(SUM(amount_ml), 0) FROM feeding_records WHERE baby_id = ? AND date(occurred_at, 'localtime') = date('now', 'localtime') AND amount_ml > 0",
+		babyID,
 	).Scan(&totalMl)
-
-	_ = userID // silence unused warning
 
 	c.JSON(http.StatusOK, gin.H{
 		"feeding_count": feedingCount,

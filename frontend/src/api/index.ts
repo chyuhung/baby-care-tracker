@@ -51,8 +51,14 @@ export const babyAPI = {
 
 // 记录
 export const recordAPI = {
-  list: (babyId: number, type?: string) =>
-    api.get(`/babies/${babyId}/records`, { params: type ? { type } : {} }),
+  list: (babyId: number, type?: string, days?: number) => {
+    const params: any = {}
+    if (type) params.type = type
+    if (days) params.days = days
+    return api.get(`/babies/${babyId}/records`, { params })
+  },
+  count: (babyId: number) =>
+    api.get(`/babies/${babyId}/records/count`),
   createFeeding: (babyId: number, data: any) =>
     api.post(`/babies/${babyId}/feeding`, data),
   createDiaper: (babyId: number, data: any) =>

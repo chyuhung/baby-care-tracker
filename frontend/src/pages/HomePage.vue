@@ -57,8 +57,8 @@
             <div class="text-xs text-text-secondary mb-1">今日喂奶</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-bold text-primary font-num">{{ stats.feeding_count }}</span>
-                <span class="text-sm text-text-secondary">次</span>
+                <span class="text-3xl font-bold text-primary font-num">{{ stats.total_ml_today }}</span>
+                <span class="text-sm text-text-secondary">ml</span>
               </div>
               <div class="text-3xl">🍼</div>
             </div>
@@ -68,6 +68,11 @@
                 {{ lastFeedingAgo.text }}
               </span>
             </div>
+            <!-- 新增喂奶入口 -->
+            <button @click.stop="goToAddFeeding"
+              class="mt-3 w-full py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+              <span class="text-base">＋</span> 喂奶
+            </button>
           </div>
 
           <!-- 尿布卡片 -->
@@ -86,14 +91,20 @@
                 {{ lastDiaperAgo.text }}
               </span>
             </div>
+            <!-- 新增尿布入口 -->
+            <button @click.stop="goToAddDiaper"
+              class="mt-3 w-full py-2 text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1"
+              style="background: #FF6B6B">
+              <span class="text-base">＋</span> 尿布
+            </button>
           </div>
         </div>
 
-        <!-- 今日总奶量 -->
-        <div v-if="stats.total_ml_today > 0" class="bg-white rounded-2xl p-4 shadow-card flex items-center justify-between">
+        <!-- 今日喂奶次数 -->
+        <div v-if="stats.feeding_count > 0" class="bg-white rounded-2xl p-4 shadow-card flex items-center justify-between">
           <div>
-            <div class="text-sm text-text-secondary">今日总奶量</div>
-            <div class="text-xl font-bold text-primary font-num mt-0.5">{{ stats.total_ml_today }} <span class="text-sm font-normal text-text-secondary">ml</span></div>
+            <div class="text-sm text-text-secondary">今日喂奶次数</div>
+            <div class="text-xl font-bold text-primary font-num mt-0.5">{{ stats.feeding_count }} <span class="text-sm font-normal text-text-secondary">次</span></div>
           </div>
           <div class="text-3xl">🍼</div>
         </div>
@@ -101,13 +112,20 @@
         <!-- 最近记录 -->
         <div class="space-y-2">
           <h2 class="text-sm font-semibold text-text-secondary uppercase tracking-wide">最近记录</h2>
-          <div v-if="recentRecords.length === 0" class="bg-white rounded-2xl p-6 text-center shadow-card">
+          <div v-if="displayRecords.length === 0" class="bg-white rounded-2xl p-6 text-center shadow-card">
             <div class="text-4xl mb-2">✨</div>
             <p class="text-text-secondary text-sm">还没有记录</p>
           </div>
-          <RecordCard v-for="(r, i) in recentRecords" :key="r.id" :record="r"
+          <RecordCard v-for="(r, i) in displayRecords" :key="r.record_type + '-' + r.id" :record="r"
             :style="{ animationDelay: `${i * 60}ms` }" class="card-in"
             @edit="editRecord(r)" @delete="deleteRecord(r)" />
+
+          <!-- 加载更多 -->
+          <button v-if="!showAllRecords && allRecords.length > displayRecords.length"
+            @click="showAllRecords = true"
+            class="w-full py-3 bg-white text-primary text-sm font-medium rounded-xl shadow-card btn-press mt-2">
+            加载更多 ({{ allRecords.length - displayRecords.length }})
+          </button>
         </div>
       </template>
     </main>
@@ -191,12 +209,25 @@ import RecordCard from '@/components/RecordCard.vue'
 const router = useRouter()
 const app = useAppStore()
 const stats = ref({ feeding_count: 0, diaper_count: 0, total_ml_today: 0, last_feeding: '', last_diaper: '' })
-const recentRecords = ref<any[]>([])
+const allRecords = ref<any[]>([])
+const showAllRecords = ref(false)
 const showDeleteConfirm = ref(false)
 const recordToDelete = ref<any>(null)
 const showTrendModal = ref(false)
 const trendData = ref<any[]>([])
 const selectedBabyId = ref<number | null>(null)
+
+// 只显示今天和昨天
+const displayRecords = computed(() => {
+  if (showAllRecords.value) return allRecords.value
+  const now = new Date()
+  const today = now.toDateString()
+  const yesterday = new Date(now.getTime() - 86400000).toDateString()
+  return allRecords.value.filter(r => {
+    const d = new Date(r.occurred_at)
+    return d.toDateString() === today || d.toDateString() === yesterday
+  })
+})
 
 const ageText = computed(() => {
   const baby = app.currentBaby()
@@ -242,13 +273,14 @@ async function loadData() {
       recordAPI.list(baby.id),
     ])
     stats.value = statsRes.data
-    recentRecords.value = (recordsRes.data as any[]).slice(0, 5)
+    allRecords.value = recordsRes.data as any[]
   } catch {}
 }
 
 function switchBaby() {
   if (selectedBabyId.value) {
     app.setCurrentBaby(selectedBabyId.value)
+    showAllRecords.value = false
     loadData()
   }
 }
@@ -267,6 +299,14 @@ async function showTrend() {
 
 function goToTimeline(filter: string) {
   router.push(`/timeline?filter=${filter}`)
+}
+
+function goToAddFeeding() {
+  router.push('/record/feeding/new')
+}
+
+function goToAddDiaper() {
+  router.push('/record/diaper/new')
 }
 
 function editRecord(r: any) {
