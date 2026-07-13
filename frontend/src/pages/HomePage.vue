@@ -226,7 +226,9 @@ const displayRecords = computed(() => {
 const ageText = computed(() => {
   const baby = app.currentBaby()
   if (!baby?.birth_date) return ''
-  const birth = new Date(baby.birth_date)
+  const m = baby.birth_date.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/)
+  if (!m) return ''
+  const birth = new Date(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0))
   const now = new Date()
   const diff = Math.floor((now.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24))
   if (diff < 0) return '未出生'

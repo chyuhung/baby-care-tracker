@@ -80,7 +80,7 @@
               </div>
               <div class="flex-1 cursor-pointer">
                 <div class="font-semibold text-text-primary">{{ baby.name }}</div>
-                <div class="text-xs text-text-secondary mt-0.5">{{ baby.birth_date }}</div>
+                 <div class="text-xs text-text-secondary mt-0.5">{{ formatBirthDate(baby.birth_date) }}</div>
               </div>
               <svg class="w-5 h-5 text-text-secondary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
             </div>
@@ -177,6 +177,18 @@ function copyCode() {
   }).catch(() => {
     app.showToast('复制失败', 'error')
   })
+}
+
+function formatBirthDate(bd: string) {
+  if (!bd) return ''
+  // 手动解析，避免 new Date() 在缺少时区/秒数时的跨浏览器歧义
+  const m = bd.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/)
+  if (m) {
+    const [, y, mo, d, h, mi] = m
+    if (h) return `${y}-${mo}-${d} ${h}:${mi}`
+    return `${y}-${mo}-${d}`
+  }
+  return bd
 }
 
 onMounted(() => {

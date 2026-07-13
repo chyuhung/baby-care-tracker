@@ -28,7 +28,7 @@
 
       <div>
         <label class="text-sm text-text-secondary block mb-2">出生日期 <span class="text-red-500">*</span></label>
-        <input v-model="form.birth_date" type="date"
+        <input v-model="form.birth_date" type="datetime-local"
           class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary transition-colors" />
       </div>
 
@@ -107,7 +107,7 @@ async function loadBaby() {
   const baby = app.babies.find(b => b.id === id)
   if (baby) {
     form.name = baby.name
-    form.birth_date = baby.birth_date
+    form.birth_date = baby.birth_date ? baby.birth_date.replace('Z', '').slice(0, 16) : ''
     form.gender = baby.gender || ''
     form.avatar_color = baby.avatar_color || '#6C63FF'
   }
@@ -117,12 +117,15 @@ async function submit() {
   error.value = ''
   if (!form.name.trim()) { error.value = '请输入宝宝姓名'; return }
   if (!form.birth_date) { error.value = '请选择出生日期'; return }
+  // datetime-local 返回格式 YYYY-MM-DDTHH:mm，补上 :00 确保标准 ISO 格式
+  const birthDate = form.birth_date.length === 16 ? form.birth_date + ':00' : form.birth_date
+  const payload = { ...form, birth_date: birthDate }
   loading.value = true
   try {
     if (isEdit.value) {
-      await babyAPI.update(Number(route.params.id), form)
+      await babyAPI.update(Number(route.params.id), payload)
     } else {
-      await babyAPI.create(form)
+      await babyAPI.create(payload)
     }
     await app.loadBabies()
     app.showToast('保存成功', 'success')
