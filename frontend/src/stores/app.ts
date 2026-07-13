@@ -64,9 +64,10 @@ export const useAppStore = defineStore('app', () => {
     ws.onmessage = async (event) => {
       try {
         const msg = JSON.parse(event.data)
-        if (msg.type === 'record_created' || msg.type === 'record_deleted') {
-          // 触发页面刷新
-          window.dispatchEvent(new CustomEvent('app:record-changed'))
+        if (msg.type === 'record_created') {
+          window.dispatchEvent(new CustomEvent('record-created', { detail: msg.payload }))
+        } else if (msg.type === 'record_deleted') {
+          window.dispatchEvent(new CustomEvent('record-deleted', { detail: msg.payload }))
         }
       } catch {}
     }

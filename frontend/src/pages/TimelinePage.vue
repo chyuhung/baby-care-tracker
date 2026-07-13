@@ -148,17 +148,26 @@ function deleteRecord(r: any) {
 async function confirmDelete() {
   if (!recordToDelete.value) return
   try {
-    await recordAPI.delete(recordToDelete.value.id, recordToDelete.value.record_type)
+    const { id, record_type: typ } = recordToDelete.value
+    await recordAPI.delete(id, typ)
+    window.dispatchEvent(new CustomEvent('record-deleted', { detail: { id, type: typ } }))
     app.showToast('已删除', 'success')
     showDeleteConfirm.value = false
-    days.value = 7
-    loadRecords()
   } catch {
     app.showToast('删除失败', 'error')
   }
 }
 
-function onRecordChange() { days.value = 7; loadRecords() }
-onMounted(() => { loadRecords(); window.addEventListener('app:record-changed', onRecordChange) })
-onUnmounted(() => { window.removeEventListener('app:record-changed', onRecordChange) })
+function onRecordCreated(e: Event) {
+  const record = (e as CustomEvent).detail
+  if (record) records.value.unshift(record)
+}
+
+function onRecordDeleted(e: Event) {
+  const { id, type } = (e as CustomEvent).detail || {}
+  records.value = records.value.filter(r => !(r.id === id && r.record_type === (type || r.record_type)))
+}
+
+onMounted(() => { loadRecords(); window.addEventListener('record-created', onRecordCreated); window.addEventListener('record-deleted', onRecordDeleted) })
+onUnmounted(() => { window.removeEventListener('record-created', onRecordCreated); window.removeEventListener('record-deleted', onRecordDeleted) })
 </script>

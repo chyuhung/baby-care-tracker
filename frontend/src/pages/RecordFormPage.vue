@@ -284,7 +284,6 @@ async function submit() {
       await recordAPI.createDiaper(baby.id, payload)
     }
     app.showToast('记录成功 ✅', 'success')
-    window.dispatchEvent(new CustomEvent('app:record-changed'))
     router.back()
   } catch (e: any) {
     error.value = e.response?.data?.error || '保存失败'
@@ -297,9 +296,11 @@ function confirmDelete() { showDelete.value = true }
 
 async function doDelete() {
   try {
-    await recordAPI.delete(Number(route.params.id), recordType.value)
+    const id = Number(route.params.id)
+    const typ = recordType.value
+    await recordAPI.delete(id, typ)
+    window.dispatchEvent(new CustomEvent('record-deleted', { detail: { id, type: typ } }))
     app.showToast('已删除', 'success')
-    window.dispatchEvent(new CustomEvent('app:record-changed'))
     router.back()
   } catch {
     app.showToast('删除失败', 'error')
