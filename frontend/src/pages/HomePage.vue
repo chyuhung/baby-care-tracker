@@ -59,6 +59,7 @@
               <div class="flex items-baseline gap-1">
                 <span class="text-3xl font-bold text-primary font-num">{{ stats.total_ml_today }}</span>
                 <span class="text-sm text-text-secondary">ml</span>
+                <span v-if="stats.feeding_count > 0" class="text-lg font-bold text-primary font-num ml-1">· {{ stats.feeding_count }}<span class="text-sm font-normal text-text-secondary">次</span></span>
               </div>
               <div class="text-3xl">🍼</div>
             </div>
@@ -100,15 +101,6 @@
           </div>
         </div>
 
-        <!-- 今日喂奶次数 -->
-        <div v-if="stats.feeding_count > 0" class="bg-white rounded-2xl p-4 shadow-card flex items-center justify-between">
-          <div>
-            <div class="text-sm text-text-secondary">今日喂奶次数</div>
-            <div class="text-xl font-bold text-primary font-num mt-0.5">{{ stats.feeding_count }} <span class="text-sm font-normal text-text-secondary">次</span></div>
-          </div>
-          <div class="text-3xl">🍼</div>
-        </div>
-
         <!-- 最近记录 -->
         <div class="space-y-2">
           <h2 class="text-sm font-semibold text-text-secondary uppercase tracking-wide">最近记录</h2>
@@ -142,12 +134,14 @@
           </button>
         </div>
         <div class="p-4 space-y-4 overflow-y-auto max-h-[60vh]">
-          <!-- 每日总奶量 -->
+          <!-- 每日总奶量 + 喂奶次数 -->
           <div>
-            <h4 class="text-sm font-semibold text-text-secondary mb-2">🍼 每日总奶量 (ml)</h4>
+            <h4 class="text-sm font-semibold text-text-secondary mb-2">🍼 每日喂奶 (ml·次)</h4>
             <div class="flex items-end gap-1 h-32 bg-gray-50 rounded-lg p-2">
               <div v-for="(d, i) in trendData" :key="i" class="flex-1 flex flex-col items-center gap-1">
-                <div class="w-full bg-primary rounded-t transition-all" :style="{ height: Math.max(d.total_ml / 30, 4) + 'px' }"></div>
+                <div class="w-full bg-primary rounded-t transition-all relative flex items-start justify-center pt-1" :style="{ height: Math.max(d.total_ml / 30, 4) + 'px' }">
+                  <span class="text-[10px] text-white font-bold leading-none" v-if="d.total_ml > 0">{{ d.feeding_count }}次</span>
+                </div>
                 <span class="text-xs text-text-secondary">{{ d.date.slice(5) }}</span>
               </div>
             </div>
@@ -168,14 +162,14 @@
               <thead>
                 <tr class="border-b border-gray-200">
                   <th class="px-3 py-2 text-left text-text-secondary font-medium">日期</th>
-                  <th class="px-3 py-2 text-center text-text-secondary font-medium">奶量</th>
+                  <th class="px-3 py-2 text-center text-text-secondary font-medium">奶量(次)</th>
                   <th class="px-3 py-2 text-center text-text-secondary font-medium">尿布</th>
                 </tr>
               </thead>
               <tbody>
                 <tr v-for="(d, i) in trendData" :key="i" class="border-b border-gray-100">
                   <td class="px-3 py-2 text-text-primary">{{ d.date }}</td>
-                  <td class="px-3 py-2 text-center text-text-primary">{{ d.total_ml }} ml</td>
+                  <td class="px-3 py-2 text-center text-text-primary">{{ d.total_ml }}ml · {{ d.feeding_count }}次</td>
                   <td class="px-3 py-2 text-center text-text-primary">{{ d.diaper_count }}次</td>
                 </tr>
               </tbody>
@@ -302,11 +296,11 @@ function goToTimeline(filter: string) {
 }
 
 function goToAddFeeding() {
-  router.push('/record/feeding/new')
+  router.push('/record/feeding')
 }
 
 function goToAddDiaper() {
-  router.push('/record/diaper/new')
+  router.push('/record/diaper')
 }
 
 function editRecord(r: any) {

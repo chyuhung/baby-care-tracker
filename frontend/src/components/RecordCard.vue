@@ -59,7 +59,11 @@ const timeAgo = computed(() => {
   const diff = Math.floor((now.getTime() - date.getTime()) / 1000)
   if (diff < 60) return '刚刚'
   if (diff < 3600) return `${Math.floor(diff / 60)}分钟前`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}小时前`
+  if (diff < 86400) {
+    const hours = Math.floor(diff / 3600)
+    const mins = Math.floor((diff % 3600) / 60)
+    return mins > 0 ? `${hours}小时${mins}分钟前` : `${hours}小时前`
+  }
   return date.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 })
 </script>
