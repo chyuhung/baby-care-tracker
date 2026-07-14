@@ -137,12 +137,6 @@
           <div>
             <h4 class="text-sm font-semibold text-text-secondary mb-2">🍼 每日奶量 (ml)</h4>
             <svg v-if="trendData.length" viewBox="0 0 340 180" class="w-full block" overflow="visible">
-              <line x1="55" y1="25" x2="300" y2="25" stroke="#f0f0f0" stroke-width="0.5"/>
-              <line x1="55" y1="90" x2="300" y2="90" stroke="#f0f0f0" stroke-width="0.5"/>
-              <line x1="55" y1="150" x2="300" y2="150" stroke="#e5e5e5" stroke-width="0.5"/>
-              <text x="50" y="28" text-anchor="end" font-size="9" fill="#9ca3af">{{ maxFeedingMl }}</text>
-              <text x="50" y="93" text-anchor="end" font-size="9" fill="#9ca3af">{{ Math.round(maxFeedingMl / 2) }}</text>
-              <text x="50" y="153" text-anchor="end" font-size="9" fill="#9ca3af">0</text>
               <polygon :points="feedingAreaPoints" class="chart-fill-primary" opacity="0.08"/>
               <polyline :points="feedingLinePoints" class="chart-line-primary" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               <g v-for="(pt, i) in feedingPoints" :key="'fp'+i">
@@ -156,12 +150,6 @@
           <div>
             <h4 class="text-sm font-semibold text-text-secondary mb-2">🩲 每日尿布次数</h4>
             <svg v-if="trendData.length" viewBox="0 0 340 180" class="w-full block" overflow="visible">
-              <line x1="55" y1="25" x2="300" y2="25" stroke="#f0f0f0" stroke-width="0.5"/>
-              <line x1="55" y1="90" x2="300" y2="90" stroke="#f0f0f0" stroke-width="0.5"/>
-              <line x1="55" y1="150" x2="300" y2="150" stroke="#e5e5e5" stroke-width="0.5"/>
-              <text x="50" y="28" text-anchor="end" font-size="9" fill="#9ca3af">{{ maxDiaperCount }}</text>
-              <text x="50" y="93" text-anchor="end" font-size="9" fill="#9ca3af">{{ Math.round(maxDiaperCount / 2) }}</text>
-              <text x="50" y="153" text-anchor="end" font-size="9" fill="#9ca3af">0</text>
               <polygon :points="diaperAreaPoints" class="chart-fill-diaper" opacity="0.08"/>
               <polyline :points="diaperLinePoints" class="chart-line-diaper" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               <g v-for="(pt, i) in diaperPoints" :key="'dp'+i">
@@ -207,32 +195,38 @@ const showDeleteConfirm = ref(false)
 const recordToDelete = ref<any>(null)
 const showTrendModal = ref(false)
 const trendData = ref<any[]>([])
-const maxFeedingMl = computed(() => Math.max(...trendData.value.map(d => d.total_ml || 0), 1))
-const maxDiaperCount = computed(() => Math.max(...trendData.value.map(d => d.diaper_count || 0), 1))
-
-const CHART = { padL: 50, padR: 40, padT: 25, padB: 30, svgW: 340, svgH: 180 }
-function buildLineChart(getValue: (d: any) => number, max: number) {
+const CHART = { padL: 10, padR: 40, padT: 25, padB: 30, svgW: 340, svgH: 180 }
+function buildLineChart(getValue: (d: any) => number) {
   const data = trendData.value
   if (!data.length) return { points: [], line: '', area: '' }
   const { padL, padR, padT, padB, svgW, svgH } = CHART
   const chartW = svgW - padL - padR
   const chartH = svgH - padT - padB
+
+  const values = data.map(getValue)
+  const rawMin = Math.min(...values)
+  const rawMax = Math.max(...values)
+  const range = rawMax - rawMin
+  const yMin = range === 0 ? rawMin * 0.5 : Math.max(0, rawMin - range * 0.15)
+  const yMax = range === 0 ? rawMax * 1.5 : rawMax + range * 0.15
+  const yRange = yMax - yMin || 1
+
   const step = data.length > 1 ? chartW / (data.length - 1) : 0
   const points = data.map((d, i) => ({
     x: data.length > 1 ? padL + i * step : padL + chartW / 2,
-    y: padT + chartH - (getValue(d) / max) * chartH,
+    y: padT + chartH - ((getValue(d) - yMin) / yRange) * chartH,
     value: getValue(d)
   }))
   const line = points.map(p => `${p.x},${p.y}`).join(' ')
-  const bY = svgH - padB
+  const bY = padT + chartH
   const area = [`${points[0].x},${bY}`, ...points.map(p => `${p.x},${p.y}`), `${points[points.length - 1].x},${bY}`].join(' ')
   return { points, line, area }
 }
-const feedingChart = computed(() => buildLineChart(d => d.total_ml || 0, maxFeedingMl.value))
+const feedingChart = computed(() => buildLineChart(d => d.total_ml || 0))
 const feedingPoints = computed(() => feedingChart.value.points)
 const feedingLinePoints = computed(() => feedingChart.value.line)
 const feedingAreaPoints = computed(() => feedingChart.value.area)
-const diaperChart = computed(() => buildLineChart(d => d.diaper_count || 0, maxDiaperCount.value))
+const diaperChart = computed(() => buildLineChart(d => d.diaper_count || 0))
 const diaperPoints = computed(() => diaperChart.value.points)
 const diaperLinePoints = computed(() => diaperChart.value.line)
 const diaperAreaPoints = computed(() => diaperChart.value.area)
