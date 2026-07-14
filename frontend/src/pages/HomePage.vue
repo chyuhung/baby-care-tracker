@@ -133,57 +133,43 @@
           </button>
         </div>
         <div class="px-4 py-3 overflow-y-auto max-h-[60vh] space-y-5">
-          <!-- 每日奶量 -->
+          <!-- 每日奶量折线图 -->
           <div>
             <h4 class="text-sm font-semibold text-text-secondary mb-2">🍼 每日奶量 (ml)</h4>
-            <div class="flex gap-1">
-              <!-- Y轴 -->
-              <div class="flex flex-col justify-between text-[10px] text-text-secondary text-right pr-1 shrink-0" style="height:130px">
-                <span>{{ maxFeedingMl }}</span>
-                <span>{{ Math.round(maxFeedingMl / 2) }}</span>
-                <span>0</span>
-              </div>
-              <!-- 柱形图 -->
-              <div class="flex-1 min-w-0">
-                <div class="flex items-end gap-1" style="height:110px">
-                  <div v-for="(d, i) in trendData" :key="'f'+i" class="flex-1 flex flex-col items-center justify-end h-full relative">
-                    <span class="text-[10px] text-text-secondary font-medium leading-tight">{{ d.total_ml }}</span>
-                    <div class="w-full bg-primary rounded-t transition-all" :style="{ height: Math.max((d.total_ml / maxFeedingMl) * 110, 3) + 'px' }"></div>
-                  </div>
-                </div>
-                <div class="flex gap-1 mt-0.5">
-                  <div v-for="(d, i) in trendData" :key="'fl'+i" class="flex-1 text-center">
-                    <span class="text-[10px] text-text-secondary">{{ d.date.slice(5) }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <svg v-if="trendData.length" viewBox="0 0 280 140" class="w-full block">
+              <line x1="25" y1="15" x2="270" y2="15" stroke="#f0f0f0" stroke-width="0.5"/>
+              <line x1="25" y1="65" x2="270" y2="65" stroke="#f0f0f0" stroke-width="0.5"/>
+              <line x1="25" y1="115" x2="270" y2="115" stroke="#e5e5e5" stroke-width="0.5"/>
+              <text x="22" y="18" text-anchor="end" font-size="9" fill="#9ca3af">{{ maxFeedingMl }}</text>
+              <text x="22" y="68" text-anchor="end" font-size="9" fill="#9ca3af">{{ Math.round(maxFeedingMl / 2) }}</text>
+              <text x="22" y="118" text-anchor="end" font-size="9" fill="#9ca3af">0</text>
+              <polygon :points="feedingAreaPoints" fill="#7C6CFF" opacity="0.08"/>
+              <polyline :points="feedingLinePoints" fill="none" stroke="#7C6CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <g v-for="(pt, i) in feedingPoints" :key="'fp'+i">
+                <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" stroke="#7C6CFF" stroke-width="2"/>
+                <text :x="pt.x" :y="pt.y - 8" text-anchor="middle" font-size="10" fill="#6b7280">{{ pt.value }}</text>
+              </g>
+              <text v-for="(d, i) in trendData" :key="'fx'+i" :x="feedingPoints[i]?.x" y="132" text-anchor="middle" font-size="9" fill="#9ca3af">{{ d.date.slice(5) }}</text>
+            </svg>
           </div>
-          <!-- 每日尿布次数 -->
+          <!-- 每日尿布次数折线图 -->
           <div>
             <h4 class="text-sm font-semibold text-text-secondary mb-2">🧷 每日尿布次数</h4>
-            <div class="flex gap-1">
-              <!-- Y轴 -->
-              <div class="flex flex-col justify-between text-[10px] text-text-secondary text-right pr-1 shrink-0" style="height:130px">
-                <span>{{ maxDiaperCount }}</span>
-                <span>{{ Math.round(maxDiaperCount / 2) }}</span>
-                <span>0</span>
-              </div>
-              <!-- 柱形图 -->
-              <div class="flex-1 min-w-0">
-                <div class="flex items-end gap-1" style="height:110px">
-                  <div v-for="(d, i) in trendData" :key="'d'+i" class="flex-1 flex flex-col items-center justify-end h-full relative">
-                    <span class="text-[10px] text-text-secondary font-medium leading-tight">{{ d.diaper_count }}</span>
-                    <div class="w-full bg-diaper rounded-t transition-all" :style="{ height: Math.max((d.diaper_count / maxDiaperCount) * 110, 3) + 'px' }"></div>
-                  </div>
-                </div>
-                <div class="flex gap-1 mt-0.5">
-                  <div v-for="(d, i) in trendData" :key="'dl'+i" class="flex-1 text-center">
-                    <span class="text-[10px] text-text-secondary">{{ d.date.slice(5) }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <svg v-if="trendData.length" viewBox="0 0 280 140" class="w-full block">
+              <line x1="25" y1="15" x2="270" y2="15" stroke="#f0f0f0" stroke-width="0.5"/>
+              <line x1="25" y1="65" x2="270" y2="65" stroke="#f0f0f0" stroke-width="0.5"/>
+              <line x1="25" y1="115" x2="270" y2="115" stroke="#e5e5e5" stroke-width="0.5"/>
+              <text x="22" y="18" text-anchor="end" font-size="9" fill="#9ca3af">{{ maxDiaperCount }}</text>
+              <text x="22" y="68" text-anchor="end" font-size="9" fill="#9ca3af">{{ Math.round(maxDiaperCount / 2) }}</text>
+              <text x="22" y="118" text-anchor="end" font-size="9" fill="#9ca3af">0</text>
+              <polygon :points="diaperAreaPoints" fill="#FF7EB3" opacity="0.08"/>
+              <polyline :points="diaperLinePoints" fill="none" stroke="#FF7EB3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <g v-for="(pt, i) in diaperPoints" :key="'dp'+i">
+                <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" stroke="#FF7EB3" stroke-width="2"/>
+                <text :x="pt.x" :y="pt.y - 8" text-anchor="middle" font-size="10" fill="#6b7280">{{ pt.value }}</text>
+              </g>
+              <text v-for="(d, i) in trendData" :key="'dx'+i" :x="diaperPoints[i]?.x" y="132" text-anchor="middle" font-size="9" fill="#9ca3af">{{ d.date.slice(5) }}</text>
+            </svg>
           </div>
         </div>
       </div>
@@ -224,6 +210,33 @@ const showTrendModal = ref(false)
 const trendData = ref<any[]>([])
 const maxFeedingMl = computed(() => Math.max(...trendData.value.map(d => d.total_ml || 0), 1))
 const maxDiaperCount = computed(() => Math.max(...trendData.value.map(d => d.diaper_count || 0), 1))
+
+const CHART = { padL: 25, padR: 10, padT: 15, padB: 25, svgW: 280, svgH: 140 }
+function buildLineChart(getValue: (d: any) => number, max: number) {
+  const data = trendData.value
+  if (!data.length) return { points: [], line: '', area: '' }
+  const { padL, padR, padT, padB, svgW, svgH } = CHART
+  const chartW = svgW - padL - padR
+  const chartH = svgH - padT - padB
+  const step = data.length > 1 ? chartW / (data.length - 1) : 0
+  const points = data.map((d, i) => ({
+    x: data.length > 1 ? padL + i * step : padL + chartW / 2,
+    y: padT + chartH - (getValue(d) / max) * chartH,
+    value: getValue(d)
+  }))
+  const line = points.map(p => `${p.x},${p.y}`).join(' ')
+  const bY = svgH - padB
+  const area = [`${points[0].x},${bY}`, ...points.map(p => `${p.x},${p.y}`), `${points[points.length - 1].x},${bY}`].join(' ')
+  return { points, line, area }
+}
+const feedingChart = computed(() => buildLineChart(d => d.total_ml || 0, maxFeedingMl.value))
+const feedingPoints = computed(() => feedingChart.value.points)
+const feedingLinePoints = computed(() => feedingChart.value.line)
+const feedingAreaPoints = computed(() => feedingChart.value.area)
+const diaperChart = computed(() => buildLineChart(d => d.diaper_count || 0, maxDiaperCount.value))
+const diaperPoints = computed(() => diaperChart.value.points)
+const diaperLinePoints = computed(() => diaperChart.value.line)
+const diaperAreaPoints = computed(() => diaperChart.value.area)
 const selectedBabyId = ref<number | null>(null)
 let loadGeneration = 0
 
