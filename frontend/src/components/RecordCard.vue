@@ -39,7 +39,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const props = defineProps<{ record: any }>()
+const props = withDefaults(defineProps<{ record: any; showDate?: boolean }>(), { showDate: true })
 defineEmits(['edit', 'delete'])
 
 const f = computed(() => props.record.data || {})
@@ -56,6 +56,13 @@ const sideLabel = computed(() => sideMap[f.value.side] || f.value.side)
 const timeAgo = computed(() => {
   const d = new Date(props.record.occurred_at)
   const pad = (n: number) => String(n).padStart(2, '0')
-  return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  const hhmm = `${pad(d.getHours())}:${pad(d.getMinutes())}`
+  if (!props.showDate) return hhmm
+  const now = new Date()
+  const isToday = d.toDateString() === now.toDateString()
+  const isYesterday = d.toDateString() === new Date(now.getTime() - 86400000).toDateString()
+  if (isToday) return `今天 ${hhmm}`
+  if (isYesterday) return `昨天 ${hhmm}`
+  return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${hhmm}`
 })
 </script>

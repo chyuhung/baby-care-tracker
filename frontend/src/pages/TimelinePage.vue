@@ -26,7 +26,7 @@
           </h3>
           <div class="space-y-2">
             <RecordCard v-for="(r, i) in group.records" :key="r.record_type + '-' + r.id"
-              :record="r" :style="{ animationDelay: `${i * 40}ms` }" class="card-in"
+              :record="r" :show-date="false" :style="{ animationDelay: `${i * 40}ms` }" class="card-in"
               @edit="editRecord(r)" @delete="deleteRecord(r)" />
           </div>
         </div>
@@ -86,6 +86,8 @@ watch(() => route.query.filter, (newFilter) => {
   }
 }, { immediate: true })
 
+const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+
 const groupedRecords = computed(() => {
   const filtered = activeFilter.value ? records.value.filter(r => r.record_type === activeFilter.value) : records.value
   const groups: { label: string; records: any[] }[] = []
@@ -104,6 +106,10 @@ const groupedRecords = computed(() => {
     let label = date
     if (date === today) label = '今天'
     else if (date === yesterday) label = '昨天'
+    else {
+      const d = new Date(date)
+      label = `${d.getMonth() + 1}月${d.getDate()}日 ${weekDays[d.getDay()]}`
+    }
     groups.push({ label, records: recs })
   }
 
