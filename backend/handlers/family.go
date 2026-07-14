@@ -70,7 +70,7 @@ func JoinFamily(c *gin.Context) {
 		req.InviteCode,
 	).Scan(&familyID)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "邀请码无效"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "邀请码无效"})
 		return
 	}
 

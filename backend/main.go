@@ -4,7 +4,6 @@ import (
 	"baby-care-tracker/database"
 	"baby-care-tracker/handlers"
 	"embed"
-	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -55,15 +54,13 @@ func SPAHandler(staticDir string) gin.HandlerFunc {
 		if staticDir != "" {
 			http.ServeFile(c.Writer, c.Request, filepath.Join(staticDir, "index.html"))
 		} else {
-			// Embedded mode: serve from embed.FS
-			subFS, _ := fs.Sub(embeddedDist, "dist")
-			f, err := subFS.Open("index.html")
+			// Embedded mode: serve index.html for SPA
+			data, err := embeddedDist.ReadFile("dist/index.html")
 			if err != nil {
 				c.Status(404)
 				return
 			}
-			f.Close()
-			http.FileServer(http.FS(subFS)).ServeHTTP(c.Writer, c.Request)
+			c.Data(200, "text/html; charset=utf-8", data)
 		}
 	}
 }
@@ -133,6 +130,11 @@ func main() {
 			protected.POST("/family/regenerate-code", handlers.RegenerateInviteCode)
 		}
 	}
+
+	// Favicon
+	r.GET("/favicon.ico", func(c *gin.Context) {
+		c.Data(200, "image/svg+xml", []byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">👶</text></svg>`))
+	})
 
 	// WebSocket
 	r.GET("/ws", handlers.HandleWebSocket)
