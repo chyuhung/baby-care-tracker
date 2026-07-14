@@ -4,11 +4,11 @@
 FROM node:20-alpine AS frontend-builder
 
 WORKDIR /build/frontend
-COPY frontend/package.json frontend/pnpm-lock.yaml* .npmrc ./
-RUN npm install -g pnpm && pnpm install
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
 
 COPY frontend/ ./
-RUN pnpm build
+RUN npm run build
 
 # ======================================
 # 阶段2: 构建后端 (Go)
