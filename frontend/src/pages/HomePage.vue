@@ -189,15 +189,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, reactive } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
-const tick = ref(0)
-let tickTimer: number | null = null
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { babyAPI, recordAPI } from '@/api'
 import RecordCard from '@/components/RecordCard.vue'
 
+const tick = ref(0)
+let tickTimer: number | null = null
 const router = useRouter()
 const app = useAppStore()
 const stats = ref({ feeding_count: 0, diaper_count: 0, total_ml_today: 0, last_feeding: '', last_diaper: '' })
@@ -267,11 +267,10 @@ const ageText = computed(() => {
   return `${diff}天`
 })
 
-const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
+const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 const todayDateText = computed(() => {
   const d = new Date()
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${weekDays[d.getDay()]}`
+  return `${d.getMonth() + 1}月${d.getDate()}日 ${weekDays[d.getDay()]}`
 })
 
 function getTimeAgo(isoString: string | null) {
