@@ -5,10 +5,10 @@ FROM node:20-alpine AS frontend-builder
 
 WORKDIR /build/frontend
 COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci
+RUN npm ci && npm cache clean --force
 
 COPY frontend/ ./
-RUN npm run build
+RUN npx vite build
 
 # ======================================
 # 阶段2: 构建后端 (Go)
