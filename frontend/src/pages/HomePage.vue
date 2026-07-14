@@ -132,31 +132,31 @@
             </svg>
           </button>
         </div>
-        <div class="px-1 py-3 overflow-y-auto max-h-[60vh] space-y-5">
+        <div class="px-4 py-4 overflow-y-auto max-h-[60vh] space-y-5">
           <!-- 每日奶量折线图 -->
           <div>
             <h4 class="text-sm font-semibold text-text-secondary mb-2">🍼 每日奶量 (ml)</h4>
-            <svg v-if="trendData.length" viewBox="0 0 340 180" class="w-full block" overflow="visible">
+            <svg v-if="trendData.length" viewBox="0 0 340 170" class="w-full block">
               <polygon :points="feedingAreaPoints" class="chart-fill-primary" opacity="0.08"/>
               <polyline :points="feedingLinePoints" class="chart-line-primary" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               <g v-for="(pt, i) in feedingPoints" :key="'fp'+i">
                 <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-primary" stroke-width="2"/>
                 <text :x="pt.x" :y="pt.y - 8" text-anchor="middle" font-size="10" fill="#6b7280">{{ pt.value }}</text>
               </g>
-              <text v-for="(d, i) in trendData" :key="'fx'+i" :x="feedingPoints[i]?.x" y="168" text-anchor="middle" font-size="9" fill="#9ca3af">{{ d.date.slice(5) }}</text>
+              <text v-for="(d, i) in trendData" :key="'fx'+i" :x="feedingPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ d.date.slice(5) }}</text>
             </svg>
           </div>
           <!-- 每日尿布次数折线图 -->
           <div>
             <h4 class="text-sm font-semibold text-text-secondary mb-2">🩲 每日尿布次数</h4>
-            <svg v-if="trendData.length" viewBox="0 0 340 180" class="w-full block" overflow="visible">
+            <svg v-if="trendData.length" viewBox="0 0 340 170" class="w-full block">
               <polygon :points="diaperAreaPoints" class="chart-fill-diaper" opacity="0.08"/>
               <polyline :points="diaperLinePoints" class="chart-line-diaper" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               <g v-for="(pt, i) in diaperPoints" :key="'dp'+i">
                 <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-diaper" stroke-width="2"/>
                 <text :x="pt.x" :y="pt.y - 8" text-anchor="middle" font-size="10" fill="#6b7280">{{ pt.value }}</text>
               </g>
-              <text v-for="(d, i) in trendData" :key="'dx'+i" :x="diaperPoints[i]?.x" y="168" text-anchor="middle" font-size="9" fill="#9ca3af">{{ d.date.slice(5) }}</text>
+              <text v-for="(d, i) in trendData" :key="'dx'+i" :x="diaperPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ d.date.slice(5) }}</text>
             </svg>
           </div>
         </div>
@@ -195,7 +195,7 @@ const showDeleteConfirm = ref(false)
 const recordToDelete = ref<any>(null)
 const showTrendModal = ref(false)
 const trendData = ref<any[]>([])
-const CHART = { padL: 10, padR: 40, padT: 25, padB: 30, svgW: 340, svgH: 180 }
+const CHART = { padL: 20, padR: 20, padT: 25, padB: 35, svgW: 340, svgH: 170 }
 function buildLineChart(getValue: (d: any) => number) {
   const data = trendData.value
   if (!data.length) return { points: [], line: '', area: '' }
@@ -207,16 +207,24 @@ function buildLineChart(getValue: (d: any) => number) {
   const rawMin = Math.min(...values)
   const rawMax = Math.max(...values)
   const range = rawMax - rawMin
-  const yMin = range === 0 ? rawMin * 0.5 : Math.max(0, rawMin - range * 0.15)
-  const yMax = range === 0 ? rawMax * 1.5 : rawMax + range * 0.15
+  const positiveValues = values.filter(v => v > 0)
+  const effectiveMin = (rawMin === 0 && positiveValues.length > 0)
+    ? Math.min(...positiveValues)
+    : rawMin
+  const yMin = range === 0 ? effectiveMin * 0.5 : effectiveMin - range * 0.15
+  const yMax = range === 0 ? effectiveMin * 1.5 : rawMax + range * 0.15
   const yRange = yMax - yMin || 1
 
   const step = data.length > 1 ? chartW / (data.length - 1) : 0
-  const points = data.map((d, i) => ({
-    x: data.length > 1 ? padL + i * step : padL + chartW / 2,
-    y: padT + chartH - ((getValue(d) - yMin) / yRange) * chartH,
-    value: getValue(d)
-  }))
+  const points = data.map((d, i) => {
+    const val = getValue(d)
+    const y = padT + chartH - (Math.max(val, yMin) - yMin) / yRange * chartH
+    return {
+      x: data.length > 1 ? padL + i * step : padL + chartW / 2,
+      y,
+      value: val
+    }
+  })
   const line = points.map(p => `${p.x},${p.y}`).join(' ')
   const bY = padT + chartH
   const area = [`${points[0].x},${bY}`, ...points.map(p => `${p.x},${p.y}`), `${points[points.length - 1].x},${bY}`].join(' ')
