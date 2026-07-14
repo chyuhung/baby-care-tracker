@@ -155,7 +155,7 @@ const showDelete = ref(false)
 const pageTitle = computed(() => {
   if (isEdit.value) return '编辑记录'
   if (recordType.value === 'feeding') return '🍼 记录喂奶'
-  if (recordType.value === 'diaper') return '🧷 记录尿布'
+  if (recordType.value === 'diaper') return '🩲 记录尿布'
   return '记录'
 })
 
@@ -193,7 +193,7 @@ const sides = [
 const diaperTypes = [
   { value: 'pee', label: '小便', emoji: '💧' },
   { value: 'poop', label: '大便', emoji: '💩' },
-  { value: 'mixed', label: '混合', emoji: '💥' },
+  { value: 'mixed', label: '混合', emoji: '🌪️' },
 ]
 
 const form = reactive({

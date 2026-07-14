@@ -46,7 +46,7 @@ const f = computed(() => props.record.data || {})
 const d = computed(() => props.record.data || {})
 
 const feedingTypeMap: Record<string, string> = { breast: '🤱 母乳亲喂', bottle: '🍼 母乳瓶喂', formula: '🍼 配方奶' }
-const diaperTypeMap: Record<string, string> = { pee: '💧 小便', poop: '💩 大便', mixed: '💥 混合' }
+const diaperTypeMap: Record<string, string> = { pee: '💧 小便', poop: '💩 大便', mixed: '🌪️ 混合' }
 const sideMap: Record<string, string> = { left: '左侧', right: '右侧', both: '双边' }
 
 const feedingTypeLabel = computed(() => feedingTypeMap[f.value.type] || f.value.type)

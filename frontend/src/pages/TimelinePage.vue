@@ -75,7 +75,7 @@ const loadedCount = ref(0)
 const filters = [
   { label: '全部', value: '' },
   { label: '🍼 喂奶', value: 'feeding' },
-  { label: '🧷 尿布', value: 'diaper' },
+  { label: '🩲 尿布', value: 'diaper' },
 ]
 
 // 监听路由参数变化，自动切换筛选

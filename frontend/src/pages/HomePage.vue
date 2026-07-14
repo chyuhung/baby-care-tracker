@@ -84,7 +84,7 @@
                 <span class="text-3xl font-bold font-num text-diaper">{{ stats.diaper_count }}</span>
                 <span class="text-sm text-text-secondary">次</span>
               </div>
-              <div class="text-3xl">🧷</div>
+              <div class="text-3xl">🩲</div>
             </div>
             <div v-if="lastDiaperAgo" class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
@@ -154,7 +154,7 @@
           </div>
           <!-- 每日尿布次数折线图 -->
           <div>
-            <h4 class="text-sm font-semibold text-text-secondary mb-2">🧷 每日尿布次数</h4>
+            <h4 class="text-sm font-semibold text-text-secondary mb-2">🩲 每日尿布次数</h4>
             <svg v-if="trendData.length" viewBox="0 0 340 180" class="w-full block" overflow="visible">
               <line x1="55" y1="25" x2="300" y2="25" stroke="#f0f0f0" stroke-width="0.5"/>
               <line x1="55" y1="90" x2="300" y2="90" stroke="#f0f0f0" stroke-width="0.5"/>
