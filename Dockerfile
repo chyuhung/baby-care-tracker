@@ -17,6 +17,11 @@ FROM golang:1.21-alpine AS backend-builder
 
 WORKDIR /build/backend
 
+# 设置 Go 代理（国内加速）
+ENV GOPROXY=https://goproxy.cn,https://goproxy.io,direct
+ENV GO111MODULE=on
+ENV CGO_ENABLED=0
+
 # 先复制前端构建产物到 dist 目录（供 go:embed 使用）
 COPY --from=frontend-builder /build/frontend/dist ./dist
 
