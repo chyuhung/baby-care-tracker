@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"math/big"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -18,7 +19,13 @@ const inviteChars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 func generateInviteCode() string {
 	code := make([]byte, 6)
 	for i := range code {
-		n, _ := rand.Int(rand.Reader, big.NewInt(int64(len(inviteChars))))
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(inviteChars))))
+		if err != nil {
+			buf := make([]byte, 1)
+			rand.Read(buf)
+			code[i] = inviteChars[int(buf[0])%len(inviteChars)]
+			continue
+		}
 		code[i] = inviteChars[n.Int64()]
 	}
 	return string(code)
@@ -29,19 +36,31 @@ func EnsureUserHasFamily(userID int64) (int64, error) {
 	var familyID int64
 	err := database.DB.QueryRow("SELECT family_id FROM users WHERE id = ?", userID).Scan(&familyID)
 	if err != nil || familyID == 0 {
-		// 创建新家庭
 		code := generateInviteCode()
 		res, err := database.DB.Exec("INSERT INTO families (invite_code) VALUES (?)", code)
 		if err != nil {
 			return 0, err
 		}
-		familyID, _ = res.LastInsertId()
-		database.DB.Exec("UPDATE users SET family_id = ? WHERE id = ?", familyID, userID)
+		familyID, err = res.LastInsertId()
+		if err != nil {
+			return 0, err
+		}
+		_, err = database.DB.Exec("UPDATE users SET family_id = ? WHERE id = ?", familyID, userID)
+		if err != nil {
+			return 0, err
+		}
 	}
 	return familyID, nil
 }
 
-var JWTSecret = []byte("baby-care-secret-key-2024")
+func getJWTSecret() []byte {
+	if secret := os.Getenv("JWT_SECRET"); secret != "" {
+		return []byte(secret)
+	}
+	return []byte("baby-care-secret-key-2024")
+}
+
+var JWTSecret = getJWTSecret()
 
 func getJWTWithUserID(userID int64, expirationHours int) string {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -49,7 +68,10 @@ func getJWTWithUserID(userID int64, expirationHours int) string {
 		"iat": time.Now().Unix(),
 		"uid": userID,
 	})
-	tokenString, _ := token.SignedString(JWTSecret)
+	tokenString, err := token.SignedString(JWTSecret)
+	if err != nil {
+		return ""
+	}
 	return tokenString
 }
 
@@ -94,9 +116,12 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	userID, _ := result.LastInsertId()
+	userID, err := result.LastInsertId()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "注册失败"})
+		return
+	}
 
-	// 自动创建家庭
 	var familyID int64
 	code := generateInviteCode()
 	familyRes, err := database.DB.Exec("INSERT INTO families (invite_code) VALUES (?)", code)
@@ -110,9 +135,9 @@ func Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, models.AuthResponse{
 		Token: token,
 		User: models.User{
-			ID:       userID,
-			Username: req.Username,
-			FamilyID: &familyID,
+			ID:        userID,
+			Username:  req.Username,
+			FamilyID:  &familyID,
 			CreatedAt: time.Now(),
 		},
 	})
@@ -143,10 +168,8 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// 确保用户有家庭（兼容旧数据）
 	EnsureUserHasFamily(user.ID)
 
-	// 重新查询完整用户信息
 	database.DB.QueryRow(
 		"SELECT id, username, family_id, created_at FROM users WHERE id = ?",
 		user.ID,

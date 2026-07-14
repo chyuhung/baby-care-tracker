@@ -1,13 +1,98 @@
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
 
+export interface Baby {
+  id: number
+  user_id: number
+  name: string
+  birth_date: string
+  gender: string
+  avatar_color: string
+  created_at: string
+}
+
+export interface FeedingRecord {
+  id: number
+  baby_id: number
+  user_id: number
+  type: string
+  duration_minutes: number
+  amount_ml: number
+  side: string
+  brand: string
+  note: string
+  occurred_at: string
+  created_at: string
+}
+
+export interface DiaperRecord {
+  id: number
+  baby_id: number
+  user_id: number
+  type: string
+  note: string
+  occurred_at: string
+  created_at: string
+}
+
+export interface Record {
+  id: number
+  baby_id: number
+  user_id: number
+  record_type: string
+  data: FeedingRecord | DiaperRecord
+  occurred_at: string
+  created_at: string
+}
+
+export interface BabyStats {
+  feeding_count: number
+  diaper_count: number
+  last_feeding: string
+  last_diaper: string
+  total_ml_today: number
+}
+
+export interface DailyStats {
+  date: string
+  feeding_count: number
+  diaper_count: number
+  total_ml: number
+}
+
+export interface CreateBabyData {
+  name: string
+  birth_date: string
+  gender: string
+  avatar_color: string
+}
+
+export interface CreateFeedingData {
+  type: string
+  duration_minutes: number
+  amount_ml: number
+  side: string
+  brand: string
+  note: string
+  occurred_at: string
+}
+
+export interface CreateDiaperData {
+  type: string
+  note: string
+  occurred_at: string
+}
+
+export interface UpdateRecordData {
+  note: string
+}
+
 const api = axios.create({
   baseURL: '/api',
   timeout: 10000,
   headers: { 'Content-Type': 'application/json' },
 })
 
-// 请求拦截器：附加 JWT 和时区偏移
 api.interceptors.request.use((config) => {
   const auth = useAuthStore()
   if (auth.token) {
@@ -17,7 +102,6 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// 响应拦截器
 api.interceptors.response.use(
   (res) => res,
   (err) => {
@@ -30,7 +114,6 @@ api.interceptors.response.use(
   }
 )
 
-// 认证
 export const authAPI = {
   register: (username: string, password: string) =>
     api.post('/auth/register', { username, password }),
@@ -39,38 +122,35 @@ export const authAPI = {
   getMe: () => api.get('/me'),
 }
 
-// 宝宝
 export const babyAPI = {
-  list: () => api.get('/babies'),
-  create: (data: any) => api.post('/babies', data),
-  update: (id: number, data: any) => api.put(`/babies/${id}`, data),
+  list: () => api.get<Baby[]>('/babies'),
+  create: (data: CreateBabyData) => api.post<Baby>('/babies', data),
+  update: (id: number, data: Partial<CreateBabyData>) => api.put<Baby>(`/babies/${id}`, data),
   delete: (id: number) => api.delete(`/babies/${id}`),
-  stats: (id: number) => api.get(`/babies/${id}/stats`),
-  trend: (id: number) => api.get(`/babies/${id}/trend`),
+  stats: (id: number) => api.get<BabyStats>(`/babies/${id}/stats`),
+  trend: (id: number) => api.get<DailyStats[]>(`/babies/${id}/trend`),
   latestFeeding: (id: number) => api.get(`/babies/${id}/latest-feeding`),
 }
 
-// 记录
 export const recordAPI = {
   list: (babyId: number, type?: string, days?: number) => {
-    const params: any = {}
+    const params: Record<string, string | number> = {}
     if (type) params.type = type
     if (days) params.days = days
-    return api.get(`/babies/${babyId}/records`, { params })
+    return api.get<Record[]>(`/babies/${babyId}/records`, { params })
   },
   count: (babyId: number) =>
-    api.get(`/babies/${babyId}/records/count`),
-  createFeeding: (babyId: number, data: any) =>
-    api.post(`/babies/${babyId}/feeding`, data),
-  createDiaper: (babyId: number, data: any) =>
-    api.post(`/babies/${babyId}/diaper`, data),
-  update: (id: number, type: string, data: any) =>
+    api.get<{ feeding_count: number; diaper_count: number; total: number }>(`/babies/${babyId}/records/count`),
+  createFeeding: (babyId: number, data: CreateFeedingData) =>
+    api.post<Record>(`/babies/${babyId}/feeding`, data),
+  createDiaper: (babyId: number, data: CreateDiaperData) =>
+    api.post<Record>(`/babies/${babyId}/diaper`, data),
+  update: (id: number, type: string, data: UpdateRecordData) =>
     api.put(`/records/${id}?type=${type}`, data),
   delete: (id: number, type: string) =>
     api.delete(`/records/${id}?type=${type}`),
 }
 
-// 家庭
 export const familyAPI = {
   getMyFamily: () => api.get('/family'),
   join: (inviteCode: string) => api.post('/family/join', { invite_code: inviteCode }),

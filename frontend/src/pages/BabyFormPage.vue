@@ -115,7 +115,7 @@ async function loadBaby() {
     form.name = baby.name
     form.birth_date = baby.birth_date ? baby.birth_date.replace('Z', '').slice(0, 16) : ''
     form.gender = baby.gender || ''
-    form.avatar_color = baby.avatar_color || '#6C63FF'
+    form.avatar_color = baby.avatar_color || '#7C6CFF'
   }
 }
 

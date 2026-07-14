@@ -13,14 +13,14 @@ func GetMyFamily(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 
 	var familyID int64
-	database.DB.QueryRow("SELECT family_id FROM users WHERE id = ?", userID).Scan(&familyID)
-	if familyID == 0 {
+	err := database.DB.QueryRow("SELECT family_id FROM users WHERE id = ?", userID).Scan(&familyID)
+	if err != nil || familyID == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "未加入家庭"})
 		return
 	}
 
 	var family models.Family
-	err := database.DB.QueryRow(
+	err = database.DB.QueryRow(
 		"SELECT id, invite_code, created_at FROM families WHERE id = ?",
 		familyID,
 	).Scan(&family.ID, &family.InviteCode, &family.CreatedAt)
@@ -29,7 +29,6 @@ func GetMyFamily(c *gin.Context) {
 		return
 	}
 
-	// 查询家庭成员
 	rows, err := database.DB.Query(
 		"SELECT id, username FROM users WHERE family_id = ? ORDER BY id",
 		familyID,
@@ -75,7 +74,11 @@ func JoinFamily(c *gin.Context) {
 		return
 	}
 
-	database.DB.Exec("UPDATE users SET family_id = ? WHERE id = ?", familyID, userID)
+	_, err = database.DB.Exec("UPDATE users SET family_id = ? WHERE id = ?", familyID, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "加入失败"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "加入成功", "family_id": familyID})
 }
@@ -84,15 +87,22 @@ func JoinFamily(c *gin.Context) {
 func LeaveFamily(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 
-	// 创建一个新家庭
 	code := generateInviteCode()
 	res, err := database.DB.Exec("INSERT INTO families (invite_code) VALUES (?)", code)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "操作失败"})
 		return
 	}
-	newFamilyID, _ := res.LastInsertId()
-	database.DB.Exec("UPDATE users SET family_id = ? WHERE id = ?", newFamilyID, userID)
+	newFamilyID, err := res.LastInsertId()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "操作失败"})
+		return
+	}
+	_, err = database.DB.Exec("UPDATE users SET family_id = ? WHERE id = ?", newFamilyID, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "操作失败"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "已退出"})
 }
@@ -102,14 +112,18 @@ func RegenerateInviteCode(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 
 	var familyID int64
-	database.DB.QueryRow("SELECT family_id FROM users WHERE id = ?", userID).Scan(&familyID)
-	if familyID == 0 {
+	err := database.DB.QueryRow("SELECT family_id FROM users WHERE id = ?", userID).Scan(&familyID)
+	if err != nil || familyID == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "未加入家庭"})
 		return
 	}
 
 	code := generateInviteCode()
-	database.DB.Exec("UPDATE families SET invite_code = ? WHERE id = ?", code, familyID)
+	_, err = database.DB.Exec("UPDATE families SET invite_code = ? WHERE id = ?", code, familyID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "更新失败"})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"invite_code": code})
 }

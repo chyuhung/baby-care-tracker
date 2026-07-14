@@ -26,18 +26,18 @@ export const useAppStore = defineStore('app', () => {
   const wsConnected = ref(false)
   let toastCounter = 0
   let ws: WebSocket | null = null
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+  let reconnectAttempts = 0
 
-  const currentBaby = () => babies.value.find(b => b.id === currentBabyId.value) || babies.value[0]
+  const currentBaby = computed(() => babies.value.find(b => b.id === currentBabyId.value) || babies.value[0])
 
-  // 主题：根据当前宝宝性别切换
   const theme = computed(() => {
-    const g = currentBaby()?.gender
+    const g = currentBaby.value?.gender
     if (g === 'female') return 'female'
     if (g === 'male') return 'male'
     return 'neutral'
   })
 
-  // 各性别的默认头像色（与主题呼应）
   function defaultAvatarColor(gender: string): string {
     if (gender === 'female') return '#FF7EB3'
     if (gender === 'male') return '#4D9DFD'
@@ -45,10 +45,14 @@ export const useAppStore = defineStore('app', () => {
   }
 
   async function loadBabies() {
-    const res = await babyAPI.list()
-    babies.value = res.data
-    if (babies.value.length > 0 && !currentBabyId.value) {
-      setCurrentBaby(babies.value[0].id)
+    try {
+      const res = await babyAPI.list()
+      babies.value = res.data
+      if (babies.value.length > 0 && !currentBabyId.value) {
+        setCurrentBaby(babies.value[0].id)
+      }
+    } catch {
+      console.error('加载宝宝列表失败')
     }
   }
 
@@ -70,11 +74,16 @@ export const useAppStore = defineStore('app', () => {
     if (!auth.token || ws) return
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
     ws = new WebSocket(`${protocol}//${location.host}/ws?token=${auth.token}`)
-    ws.onopen = () => { wsConnected.value = true }
+    ws.onopen = () => {
+      wsConnected.value = true
+      reconnectAttempts = 0
+    }
     ws.onclose = () => {
       wsConnected.value = false
       ws = null
-      setTimeout(connectWebSocket, 3000)
+      const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000)
+      reconnectAttempts++
+      reconnectTimer = setTimeout(connectWebSocket, delay)
     }
     ws.onmessage = async (event) => {
       try {
@@ -84,11 +93,18 @@ export const useAppStore = defineStore('app', () => {
         } else if (msg.type === 'record_deleted') {
           window.dispatchEvent(new CustomEvent('record-deleted', { detail: msg.payload }))
         }
-      } catch {}
+      } catch (e) {
+        console.error('WebSocket 消息解析失败:', e)
+      }
     }
   }
 
   function disconnectWebSocket() {
+    if (reconnectTimer !== null) {
+      clearTimeout(reconnectTimer)
+      reconnectTimer = null
+    }
+    reconnectAttempts = 0
     ws?.close()
     ws = null
   }

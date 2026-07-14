@@ -39,9 +39,14 @@ func (h *WSHub) Run() {
 		select {
 		case client := <-h.register:
 			h.mu.Lock()
+			if old, ok := h.clients[client.UserID]; ok {
+				close(old.Send)
+				delete(h.clients, client.UserID)
+			}
 			h.clients[client.UserID] = client
+			count := len(h.clients)
 			h.mu.Unlock()
-			log.Printf("WS: 用户 %d 连接 (共 %d 个连接)", client.UserID, len(h.clients))
+			log.Printf("WS: 用户 %d 连接 (共 %d 个连接)", client.UserID, count)
 
 		case client := <-h.unregister:
 			h.mu.Lock()
@@ -53,16 +58,20 @@ func (h *WSHub) Run() {
 			log.Printf("WS: 用户 %d 断开", client.UserID)
 
 		case message := <-h.broadcast:
-			h.mu.RLock()
+			h.mu.Lock()
+			var dead []int64
 			for userID, client := range h.clients {
 				select {
 				case client.Send <- message:
 				default:
 					close(client.Send)
-					delete(h.clients, userID)
+					dead = append(dead, userID)
 				}
 			}
-			h.mu.RUnlock()
+			for _, uid := range dead {
+				delete(h.clients, uid)
+			}
+			h.mu.Unlock()
 		}
 	}
 }
@@ -106,21 +115,7 @@ func HandleWebSocket(c *gin.Context) {
 
 	Hub.register <- client
 
-	// 读取协程
-	go func() {
-		defer func() {
-			Hub.unregister <- client
-			conn.Close()
-		}()
-		for {
-			_, _, err := conn.ReadMessage()
-			if err != nil {
-				break
-			}
-		}
-	}()
-
-	// 写入协程
+	// 写入协程（唯一调用 conn.WriteMessage 的地方）
 	go func() {
 		defer conn.Close()
 		for {
@@ -131,6 +126,19 @@ func HandleWebSocket(c *gin.Context) {
 			}
 			if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
 				return
+			}
+		}
+	}()
+
+	// 读取协程
+	go func() {
+		defer func() {
+			Hub.unregister <- client
+		}()
+		for {
+			_, _, err := conn.ReadMessage()
+			if err != nil {
+				break
 			}
 		}
 	}()

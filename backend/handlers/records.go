@@ -3,7 +3,6 @@ package handlers
 import (
 	"baby-care-tracker/database"
 	"baby-care-tracker/models"
-	"fmt"
 	"net/http"
 	"sort"
 	"strconv"
@@ -12,42 +11,74 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func parseID(c *gin.Context) (int64, bool) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || id <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return 0, false
+	}
+	return id, true
+}
+
+func lookupBabyID(recordID int64, recordType string) int64 {
+	var babyID int64
+	if recordType == "diaper" {
+		database.DB.QueryRow("SELECT baby_id FROM diaper_records WHERE id = ?", recordID).Scan(&babyID)
+	} else {
+		database.DB.QueryRow("SELECT baby_id FROM feeding_records WHERE id = ?", recordID).Scan(&babyID)
+	}
+	return babyID
+}
+
 // GetRecords 获取某宝宝所有记录（统一时间线）
 func GetRecords(c *gin.Context) {
 	userID := c.GetInt64("user_id")
-	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
-	recordType := c.Query("type") // optional filter
-	daysStr := c.Query("days")     // optional: 最近N天
+	babyID, ok := parseID(c)
+	if !ok {
+		return
+	}
+	recordType := c.Query("type")
+	if recordType != "" && recordType != "feeding" && recordType != "diaper" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "type 必须为 feeding 或 diaper"})
+		return
+	}
+	daysStr := c.Query("days")
 
 	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
 		return
 	}
 
-	var totalCount int
-	database.DB.QueryRow("SELECT COUNT(*) FROM feeding_records WHERE baby_id = ?", babyID).Scan(&totalCount)
-	var diaperCount int
-	database.DB.QueryRow("SELECT COUNT(*) FROM diaper_records WHERE baby_id = ?", babyID).Scan(&diaperCount)
-	totalCount += diaperCount
-	c.Header("X-Total-Count", strconv.Itoa(totalCount))
-
 	tzOffset := getTzOffset(c)
+	args := []interface{}{babyID}
 	daysFilter := ""
 	if daysStr != "" {
-		if days, err := strconv.Atoi(daysStr); err == nil && days > 0 {
+		if days, err := strconv.Atoi(daysStr); err == nil && days > 0 && days <= 365 {
 			start := daysAgoUTC(tzOffset, days)
-			daysFilter = fmt.Sprintf(" AND occurred_at >= '%s'", start)
+			daysFilter = " AND occurred_at >= ?"
+			args = append(args, start)
 		}
 	}
 
+	var feedingCount, diaperCount int
+	if recordType == "" || recordType == "feeding" {
+		fArgs := append([]interface{}{}, args...)
+		database.DB.QueryRow("SELECT COUNT(*) FROM feeding_records WHERE baby_id = ?"+daysFilter, fArgs...).Scan(&feedingCount)
+	}
+	if recordType == "" || recordType == "diaper" {
+		dArgs := append([]interface{}{}, args...)
+		database.DB.QueryRow("SELECT COUNT(*) FROM diaper_records WHERE baby_id = ?"+daysFilter, dArgs...).Scan(&diaperCount)
+	}
+	c.Header("X-Total-Count", strconv.Itoa(feedingCount+diaperCount))
+
 	var records []models.Record
 
-	// 喂奶记录
 	if recordType == "" || recordType == "feeding" {
+		fArgs := append([]interface{}{}, args...)
 		rows, err := database.DB.Query(
 			`SELECT id, baby_id, user_id, type, duration_minutes, amount_ml, side, brand, note, occurred_at, created_at
 			FROM feeding_records WHERE baby_id = ?`+daysFilter+` ORDER BY occurred_at DESC LIMIT 500`,
-			babyID,
+			fArgs...,
 		)
 		if err == nil {
 			defer rows.Close()
@@ -77,12 +108,12 @@ func GetRecords(c *gin.Context) {
 		}
 	}
 
-	// 尿布记录
 	if recordType == "" || recordType == "diaper" {
+		dArgs := append([]interface{}{}, args...)
 		rows, err := database.DB.Query(
 			`SELECT id, baby_id, user_id, type, note, occurred_at, created_at
 			FROM diaper_records WHERE baby_id = ?`+daysFilter+` ORDER BY occurred_at DESC LIMIT 500`,
-			babyID,
+			dArgs...,
 		)
 		if err == nil {
 			defer rows.Close()
@@ -123,7 +154,10 @@ func GetRecords(c *gin.Context) {
 // GetRecordsCount 获取宝宝记录总数
 func GetRecordsCount(c *gin.Context) {
 	userID := c.GetInt64("user_id")
-	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	babyID, ok := parseID(c)
+	if !ok {
+		return
+	}
 
 	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
@@ -138,14 +172,17 @@ func GetRecordsCount(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"feeding_count": feedingCount,
 		"diaper_count":  diaperCount,
-		"total":          feedingCount + diaperCount,
+		"total":         feedingCount + diaperCount,
 	})
 }
 
 // CreateFeeding 创建喂奶记录
 func CreateFeeding(c *gin.Context) {
 	userID := c.GetInt64("user_id")
-	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	babyID, ok := parseID(c)
+	if !ok {
+		return
+	}
 
 	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
@@ -172,12 +209,21 @@ func CreateFeeding(c *gin.Context) {
 		return
 	}
 
-	recordID, _ := result.LastInsertId()
+	recordID, err := result.LastInsertId()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建记录失败"})
+		return
+	}
+
 	var record models.FeedingRecord
-	database.DB.QueryRow(
+	err = database.DB.QueryRow(
 		"SELECT id, baby_id, user_id, type, duration_minutes, amount_ml, side, brand, note, occurred_at, created_at FROM feeding_records WHERE id = ?",
 		recordID,
 	).Scan(&record.ID, &record.BabyID, &record.UserID, &record.Type, &record.DurationMinutes, &record.AmountMl, &record.Side, &record.Brand, &record.Note, &record.OccurredAt, &record.CreatedAt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建记录失败"})
+		return
+	}
 	record.RecordType = "feeding"
 
 	rec := models.Record{
@@ -201,7 +247,10 @@ func CreateFeeding(c *gin.Context) {
 // CreateDiaper 创建尿布记录
 func CreateDiaper(c *gin.Context) {
 	userID := c.GetInt64("user_id")
-	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	babyID, ok := parseID(c)
+	if !ok {
+		return
+	}
 
 	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
@@ -227,12 +276,21 @@ func CreateDiaper(c *gin.Context) {
 		return
 	}
 
-	recordID, _ := result.LastInsertId()
+	recordID, err := result.LastInsertId()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建记录失败"})
+		return
+	}
+
 	var record models.DiaperRecord
-	database.DB.QueryRow(
+	err = database.DB.QueryRow(
 		"SELECT id, baby_id, user_id, type, note, occurred_at, created_at FROM diaper_records WHERE id = ?",
 		recordID,
 	).Scan(&record.ID, &record.BabyID, &record.UserID, &record.Type, &record.Note, &record.OccurredAt, &record.CreatedAt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建记录失败"})
+		return
+	}
 	record.RecordType = "diaper"
 
 	rec := models.Record{
@@ -256,28 +314,36 @@ func CreateDiaper(c *gin.Context) {
 // UpdateRecord 更新记录
 func UpdateRecord(c *gin.Context) {
 	userID := c.GetInt64("user_id")
-	recordID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	recordID, ok := parseID(c)
+	if !ok {
+		return
+	}
 	recordType := c.Query("type")
 
 	var req models.UpdateRecordRequest
-	c.ShouldBindJSON(&req)
-
-	// 验证归属
-	var babyID int64
-	if recordType == "diaper" {
-		database.DB.QueryRow("SELECT baby_id FROM diaper_records WHERE id = ?", recordID).Scan(&babyID)
-	} else {
-		database.DB.QueryRow("SELECT baby_id FROM feeding_records WHERE id = ?", recordID).Scan(&babyID)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "请求格式错误"})
+		return
 	}
+
+	babyID := lookupBabyID(recordID, recordType)
 	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
 		return
 	}
 
 	if recordType == "diaper" {
-		database.DB.Exec("UPDATE diaper_records SET note = ? WHERE id = ?", req.Note, recordID)
+		_, err := database.DB.Exec("UPDATE diaper_records SET note = ? WHERE id = ?", req.Note, recordID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "更新失败"})
+			return
+		}
 	} else {
-		database.DB.Exec("UPDATE feeding_records SET note = ? WHERE id = ?", req.Note, recordID)
+		_, err := database.DB.Exec("UPDATE feeding_records SET note = ? WHERE id = ?", req.Note, recordID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "更新失败"})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "更新成功"})
@@ -286,25 +352,30 @@ func UpdateRecord(c *gin.Context) {
 // DeleteRecord 删除记录
 func DeleteRecord(c *gin.Context) {
 	userID := c.GetInt64("user_id")
-	recordID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	recordID, ok := parseID(c)
+	if !ok {
+		return
+	}
 	recordType := c.Query("type")
 
-	// 验证归属
-	var babyID int64
-	if recordType == "diaper" {
-		database.DB.QueryRow("SELECT baby_id FROM diaper_records WHERE id = ?", recordID).Scan(&babyID)
-	} else {
-		database.DB.QueryRow("SELECT baby_id FROM feeding_records WHERE id = ?", recordID).Scan(&babyID)
-	}
+	babyID := lookupBabyID(recordID, recordType)
 	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
 		return
 	}
 
 	if recordType == "diaper" {
-		database.DB.Exec("DELETE FROM diaper_records WHERE id = ?", recordID)
+		_, err := database.DB.Exec("DELETE FROM diaper_records WHERE id = ?", recordID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "删除失败"})
+			return
+		}
 	} else {
-		database.DB.Exec("DELETE FROM feeding_records WHERE id = ?", recordID)
+		_, err := database.DB.Exec("DELETE FROM feeding_records WHERE id = ?", recordID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "删除失败"})
+			return
+		}
 	}
 
 	BroadcastMessage(models.WebSocketMessage{
@@ -318,7 +389,10 @@ func DeleteRecord(c *gin.Context) {
 // GetLatestFeeding 获取最近一次喂奶记录（用于快捷填表）
 func GetLatestFeeding(c *gin.Context) {
 	userID := c.GetInt64("user_id")
-	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	babyID, ok := parseID(c)
+	if !ok {
+		return
+	}
 
 	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
@@ -334,7 +408,7 @@ func GetLatestFeeding(c *gin.Context) {
 	).Scan(&record.Type, &duration, &amount, &side, &brand, &note)
 
 	if err != nil {
-		c.JSON(http.StatusOK, nil)
+		c.JSON(http.StatusOK, gin.H{})
 		return
 	}
 

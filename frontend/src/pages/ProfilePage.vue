@@ -125,7 +125,9 @@ async function loadFamily() {
   try {
     const res = await familyAPI.getMyFamily()
     family.value = { ...res.data.family, members: res.data.members }
-  } catch {}
+  } catch {
+    // family not available
+  }
 }
 
 async function joinFamily() {

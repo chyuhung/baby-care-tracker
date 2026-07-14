@@ -71,7 +71,7 @@ func CreateBaby(c *gin.Context) {
 	}
 
 	if req.AvatarColor == "" {
-		req.AvatarColor = "#6C63FF"
+		req.AvatarColor = "#7C6CFF"
 	}
 
 	result, err := database.DB.Exec(
@@ -83,15 +83,22 @@ func CreateBaby(c *gin.Context) {
 		return
 	}
 
-	babyID, _ := result.LastInsertId()
+	babyID, err := result.LastInsertId()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建宝宝失败"})
+		return
+	}
 
 	var baby models.Baby
-	database.DB.QueryRow(
+	err = database.DB.QueryRow(
 		"SELECT id, user_id, name, birth_date, gender, avatar_color, created_at FROM babies WHERE id = ?",
 		babyID,
 	).Scan(&baby.ID, &baby.UserID, &baby.Name, &baby.BirthDate, &baby.Gender, &baby.AvatarColor, &baby.CreatedAt)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建宝宝失败"})
+		return
+	}
 
-	// 广播给所有连接的客户端
 	BroadcastMessage(models.WebSocketMessage{
 		Type:    "baby_created",
 		Payload: baby,
@@ -103,7 +110,11 @@ func CreateBaby(c *gin.Context) {
 // UpdateBaby 更新宝宝
 func UpdateBaby(c *gin.Context) {
 	userID := c.GetInt64("user_id")
-	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	babyID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || babyID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return
+	}
 
 	var req models.UpdateBabyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -116,7 +127,7 @@ func UpdateBaby(c *gin.Context) {
 		return
 	}
 
-	_, err := database.DB.Exec(
+	_, err = database.DB.Exec(
 		"UPDATE babies SET name = COALESCE(NULLIF(?, ''), name), birth_date = COALESCE(NULLIF(?, ''), birth_date), gender = COALESCE(NULLIF(?, ''), gender), avatar_color = COALESCE(NULLIF(?, ''), avatar_color) WHERE id = ?",
 		req.Name, req.BirthDate, req.Gender, req.AvatarColor, babyID,
 	)
@@ -142,14 +153,18 @@ func UpdateBaby(c *gin.Context) {
 // DeleteBaby 删除宝宝
 func DeleteBaby(c *gin.Context) {
 	userID := c.GetInt64("user_id")
-	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	babyID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || babyID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return
+	}
 
 	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限操作"})
 		return
 	}
 
-	_, err := database.DB.Exec("DELETE FROM babies WHERE id = ?", babyID)
+	_, err = database.DB.Exec("DELETE FROM babies WHERE id = ?", babyID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "删除失败"})
 		return
@@ -166,7 +181,11 @@ func DeleteBaby(c *gin.Context) {
 // GetStats 获取宝宝统计
 func GetStats(c *gin.Context) {
 	userID := c.GetInt64("user_id")
-	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	babyID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || babyID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return
+	}
 
 	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
@@ -176,35 +195,30 @@ func GetStats(c *gin.Context) {
 	tzOffset := getTzOffset(c)
 	todayStart, todayEnd := todayDateRange(tzOffset)
 
-	// 今日喂奶次数
 	var feedingCount int
 	database.DB.QueryRow(
 		"SELECT COUNT(*) FROM feeding_records WHERE baby_id = ? AND occurred_at >= ? AND occurred_at < ?",
 		babyID, todayStart, todayEnd,
 	).Scan(&feedingCount)
 
-	// 今日尿布次数
 	var diaperCount int
 	database.DB.QueryRow(
 		"SELECT COUNT(*) FROM diaper_records WHERE baby_id = ? AND occurred_at >= ? AND occurred_at < ?",
 		babyID, todayStart, todayEnd,
 	).Scan(&diaperCount)
 
-	// 最后一次喂奶
 	var lastFeeding string
 	database.DB.QueryRow(
 		"SELECT occurred_at FROM feeding_records WHERE baby_id = ? ORDER BY occurred_at DESC LIMIT 1",
 		babyID,
 	).Scan(&lastFeeding)
 
-	// 最后一次尿布
 	var lastDiaper string
 	database.DB.QueryRow(
 		"SELECT occurred_at FROM diaper_records WHERE baby_id = ? ORDER BY occurred_at DESC LIMIT 1",
 		babyID,
 	).Scan(&lastDiaper)
 
-	// 今日总喂奶量
 	var totalMl int
 	database.DB.QueryRow(
 		"SELECT COALESCE(SUM(amount_ml), 0) FROM feeding_records WHERE baby_id = ? AND occurred_at >= ? AND occurred_at < ? AND amount_ml > 0",
@@ -212,17 +226,17 @@ func GetStats(c *gin.Context) {
 	).Scan(&totalMl)
 
 	c.JSON(http.StatusOK, gin.H{
-		"feeding_count": feedingCount,
-		"diaper_count":  diaperCount,
-		"last_feeding":  lastFeeding,
-		"last_diaper":   lastDiaper,
+		"feeding_count":  feedingCount,
+		"diaper_count":   diaperCount,
+		"last_feeding":   lastFeeding,
+		"last_diaper":    lastDiaper,
 		"total_ml_today": totalMl,
 	})
 }
 
 // DailyStats 每日统计数据结构
 type DailyStats struct {
-	Date        string `json:"date"`
+	Date         string `json:"date"`
 	FeedingCount int    `json:"feeding_count"`
 	DiaperCount  int    `json:"diaper_count"`
 	TotalMl      int    `json:"total_ml"`
@@ -231,7 +245,11 @@ type DailyStats struct {
 // GetTrendStats 获取宝宝趋势统计（最近7天）
 func GetTrendStats(c *gin.Context) {
 	userID := c.GetInt64("user_id")
-	babyID, _ := strconv.ParseInt(c.Param("id"), 10, 64)
+	babyID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || babyID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return
+	}
 
 	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限操作"})
@@ -247,10 +265,8 @@ func GetTrendStats(c *gin.Context) {
 
 	startDate := daysAgoUTC(tzOffset, 7)
 
-	// 在 Go 中按客户端时区分组，避免 SQLite date() 函数对时区修饰符支持不一致
 	loc := time.FixedZone("user", tzOffset*60)
 
-	// 查询7天内的喂奶原始数据
 	feedingRows, err := database.DB.Query(`
 		SELECT occurred_at, amount_ml FROM feeding_records
 		WHERE baby_id = ? AND occurred_at >= ?
@@ -279,7 +295,6 @@ func GetTrendStats(c *gin.Context) {
 		ds.TotalMl += ml
 	}
 
-	// 查询7天内的尿布原始数据
 	diaperRows, err := database.DB.Query(`
 		SELECT occurred_at FROM diaper_records
 		WHERE baby_id = ? AND occurred_at >= ?
@@ -304,11 +319,16 @@ func GetTrendStats(c *gin.Context) {
 	var trends []DailyStats
 	for _, date := range dates {
 		f := feedingMap[date]
+		var feedingCount, totalMl int
+		if f != nil {
+			feedingCount = f.FeedingCount
+			totalMl = f.TotalMl
+		}
 		trends = append(trends, DailyStats{
 			Date:         date,
-			FeedingCount: func() int { if f != nil { return f.FeedingCount }; return 0 }(),
+			FeedingCount: feedingCount,
 			DiaperCount:  diaperMap[date],
-			TotalMl:      func() int { if f != nil { return f.TotalMl }; return 0 }(),
+			TotalMl:      totalMl,
 		})
 	}
 

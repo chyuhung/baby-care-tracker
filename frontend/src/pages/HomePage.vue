@@ -5,9 +5,9 @@
       <div class="flex items-center justify-between">
         <div>
           <h1 class="text-lg font-bold text-text-primary">
-            {{ app.currentBaby()?.name ? `${app.currentBaby()?.name} 的记录` : '宝宝护理' }}
+            {{ app.currentBaby?.name ? `${app.currentBaby?.name} 的记录` : '宝宝护理' }}
           </h1>
-          <p v-if="app.currentBaby()?.birth_date" class="text-xs text-text-secondary mt-0.5">
+          <p v-if="app.currentBaby?.birth_date" class="text-xs text-text-secondary mt-0.5">
             {{ ageText }} · {{ todayDateText }}
           </p>
         </div>
@@ -20,7 +20,7 @@
       </div>
 
       <!-- 宝宝切换 + 趋势图 -->
-      <div v-if="app.currentBaby()" class="mt-3 flex items-center gap-2">
+      <div v-if="app.currentBaby" class="mt-3 flex items-center gap-2">
         <select v-model="selectedBabyId" @change="switchBaby"
           class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-text-primary appearance-none cursor-pointer">
           <option v-for="b in app.babies" :key="b.id" :value="b.id">{{ b.name }}</option>
@@ -125,7 +125,7 @@
     <div v-if="showTrendModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" @click.self="showTrendModal = false">
       <div class="bg-white rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden">
         <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-          <h3 class="text-lg font-bold text-text-primary">{{ app.currentBaby()?.name }} 的趋势</h3>
+          <h3 class="text-lg font-bold text-text-primary">{{ app.currentBaby?.name }} 的趋势</h3>
           <button @click="showTrendModal = false" class="p-1">
             <svg class="w-6 h-6 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -225,6 +225,7 @@ const trendData = ref<any[]>([])
 const maxFeedingMl = computed(() => Math.max(...trendData.value.map(d => d.total_ml || 0), 1))
 const maxDiaperCount = computed(() => Math.max(...trendData.value.map(d => d.diaper_count || 0), 1))
 const selectedBabyId = ref<number | null>(null)
+let loadGeneration = 0
 
 
 // 只显示今天和昨天
@@ -240,7 +241,7 @@ const displayRecords = computed(() => {
 })
 
 const ageText = computed(() => {
-  const baby = app.currentBaby()
+  const baby = app.currentBaby
   if (!baby?.birth_date) return ''
   const m = baby.birth_date.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/)
   if (!m) return ''
@@ -282,21 +283,24 @@ const lastFeedingAgo = computed(() => { tick.value; return getTimeAgo(stats.valu
 const lastDiaperAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_diaper) })
 
 async function loadData() {
-  // 等待宝宝列表加载完成
   if (app.babies.length === 0) {
     await app.loadBabies()
   }
-  const baby = app.currentBaby()
+  const baby = app.currentBaby
   if (!baby) return
   selectedBabyId.value = baby.id
+  const gen = ++loadGeneration
   try {
     const [statsRes, recordsRes] = await Promise.all([
       babyAPI.stats(baby.id),
       recordAPI.list(baby.id),
     ])
+    if (gen !== loadGeneration) return
     stats.value = statsRes.data
     allRecords.value = recordsRes.data as any[]
-  } catch {}
+  } catch {
+    app.showToast('数据加载失败', 'error')
+  }
 }
 
 function switchBaby() {
@@ -308,7 +312,7 @@ function switchBaby() {
 }
 
 async function showTrend() {
-  const baby = app.currentBaby()
+  const baby = app.currentBaby
   if (!baby) return
   showTrendModal.value = true
   try {
@@ -316,6 +320,7 @@ async function showTrend() {
     trendData.value = res.data
   } catch {
     trendData.value = []
+    app.showToast('趋势数据加载失败', 'error')
   }
 }
 

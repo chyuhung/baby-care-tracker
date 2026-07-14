@@ -113,7 +113,7 @@ const groupedRecords = computed(() => {
 const hasMore = computed(() => loadedCount.value < totalCount.value)
 
 async function loadRecords(reset: boolean = true) {
-  const baby = app.currentBaby()
+  const baby = app.currentBaby
   if (!baby) return
   if (reset) loading.value = true
   else loadingMore.value = true
@@ -125,7 +125,9 @@ async function loadRecords(reset: boolean = true) {
     records.value = res.data
     totalCount.value = countRes.data.total
     loadedCount.value = res.data.length
-  } catch {} finally {
+  } catch {
+    app.showToast('数据加载失败', 'error')
+  } finally {
     loading.value = false
     loadingMore.value = false
   }

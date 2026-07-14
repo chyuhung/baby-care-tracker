@@ -223,7 +223,7 @@ function resetFormDefaults() {
 }
 
 async function loadLatest() {
-  const baby = app.currentBaby()
+  const baby = app.currentBaby
   if (!baby) return
   try {
     const res = await babyAPI.latestFeeding(baby.id)
@@ -235,16 +235,18 @@ async function loadLatest() {
       form.brand = res.data.brand || ''
       form.note = ''
     }
-  } catch {}
+  } catch {
+    // latest data not available, use defaults
+  }
 }
 
 async function loadRecord() {
   if (!isEdit.value) return
   const id = Number(route.params.id)
-  const baby = app.currentBaby()
+  const baby = app.currentBaby
   if (!baby) return
   try {
-    const res = await recordAPI.list(baby.id)
+    const res = await recordAPI.list(baby.id, recordType.value)
     const records = res.data as any[]
     const r = records.find((r: any) => r.id === id)
     if (r) {
@@ -263,12 +265,14 @@ async function loadRecord() {
         form.occurred_at = r.occurred_at ? utcToLocalDatetime(r.occurred_at) : nowDatetime()
       }
     }
-  } catch {}
+  } catch {
+    app.showToast('记录加载失败', 'error')
+  }
 }
 
 async function submit() {
   error.value = ''
-  const baby = app.currentBaby()
+  const baby = app.currentBaby
   if (!baby) { error.value = '请先添加宝宝'; return }
   loading.value = true
   try {
