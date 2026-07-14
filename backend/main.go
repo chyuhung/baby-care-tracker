@@ -4,6 +4,7 @@ import (
 	"baby-care-tracker/database"
 	"baby-care-tracker/handlers"
 	"embed"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
@@ -32,6 +33,7 @@ func fileExists(path string) bool {
 
 // SPAHandler serves the SPA index.html for all non-API, non-asset routes
 func SPAHandler(staticDir string) gin.HandlerFunc {
+	subFS, _ := fs.Sub(embeddedDist, "dist")
 	return func(c *gin.Context) {
 		path := c.Request.URL.Path
 
@@ -47,6 +49,15 @@ func SPAHandler(staticDir string) gin.HandlerFunc {
 			if info, err := os.Stat(filePath); err == nil && !info.IsDir() {
 				http.ServeFile(c.Writer, c.Request, filePath)
 				return
+			}
+		} else {
+			// Embedded mode: try to serve the exact file first
+			cleanPath := strings.TrimPrefix(path, "/")
+			if cleanPath != "" {
+				if _, err := embeddedDist.ReadFile("dist/" + cleanPath); err == nil {
+					http.FileServer(http.FS(subFS)).ServeHTTP(c.Writer, c.Request)
+					return
+				}
 			}
 		}
 
