@@ -1,0 +1,12 @@
+node_modules/
+frontend/dist/
+backend/dist/
+data/
+*.exe
+*.db
+*.db-wal
+*.db-shm
+*.log
+.env
+.DS_Store
+Thumbs.db
