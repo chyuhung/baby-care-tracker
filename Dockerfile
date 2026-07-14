@@ -8,7 +8,7 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci && npm cache clean --force
 
 COPY frontend/ ./
-RUN npx vite build
+RUN node node_modules/vite/bin/vite.js build
 
 # ======================================
 # 阶段2: 构建后端 (Go)
