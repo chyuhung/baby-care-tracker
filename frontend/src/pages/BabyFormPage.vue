@@ -60,8 +60,7 @@
 
     <!-- 删除确认 -->
     <div v-if="showDelete" class="fixed inset-0 bg-black/30 flex items-end z-50" @click.self="showDelete = false">
-      <div class="bg-white w-full rounded-t-2xl p-6 space-y-4 pb-safe">
-        <h3 class="text-lg font-bold text-text-primary text-center">确认删除</h3>
+      <div class="bg-white w-full rounded-t-2xl p-6 space-y-4 pb-safe animate-slide-up">
         <p class="text-text-secondary text-sm text-center">删除后所有记录将无法恢复</p>
         <div class="flex gap-3">
           <button @click="showDelete = false" class="flex-1 py-3 bg-gray-100 text-text-primary rounded-xl font-medium btn-press">取消</button>
@@ -134,7 +133,7 @@ async function submit() {
       await babyAPI.create(payload)
     }
     await app.loadBabies()
-    app.showToast('保存成功', 'success')
+    app.showToast('✅ 保存成功', 'success')
     router.back()
   } catch (e: any) {
     error.value = e.response?.data?.error || '保存失败'
@@ -152,7 +151,7 @@ async function doDelete() {
     if (app.currentBabyId === Number(route.params.id)) {
       app.setCurrentBaby(app.babies[0]?.id || 0)
     }
-    app.showToast('已删除', 'success')
+    app.showToast('✅ 已删除', 'success')
     router.replace('/')
   } catch {
     app.showToast('删除失败', 'error')

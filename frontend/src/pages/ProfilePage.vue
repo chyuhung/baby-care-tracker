@@ -51,7 +51,7 @@
         <div class="border-t border-border-color pt-3">
           <p class="text-xs text-text-secondary mb-2">加入其他家庭后，你和你的宝宝数据将切换到新家庭</p>
           <div class="flex gap-2">
-            <input v-model="joinCode" placeholder="输入对方的邀请码" maxlength="6" class="flex-1 px-3 py-2 border border-border-color rounded-xl text-sm focus:outline-none focus:border-primary uppercase" />
+            <input v-model="joinCode" placeholder="输入对方的邀请码" maxlength="6" class="flex-1 px-3 py-2 border border-border-color rounded-xl text-sm focus:border-primary transition-colors uppercase" />
             <button @click="joinFamily" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-xl btn-press">加入</button>
           </div>
         </div>
@@ -144,7 +144,7 @@ async function joinFamily() {
     joinCode.value = ''
     await loadFamily()
     await app.loadBabies()
-    app.showToast('已加入家庭', 'success')
+    app.showToast('✅ 已加入家庭', 'success')
   } catch (e: any) {
     app.showToast(e.response?.data?.error || '加入失败', 'error')
   }
@@ -156,7 +156,7 @@ async function leaveFamily() {
     await familyAPI.leave()
     family.value = null
     await app.loadBabies()
-    app.showToast('已退出家庭', 'success')
+    app.showToast('✅ 已退出家庭', 'success')
   } catch (e: any) {
     app.showToast(e.response?.data?.error || '退出失败', 'error')
   }
@@ -166,7 +166,7 @@ async function regenerateCode() {
   try {
     const res = await familyAPI.regenerateCode()
     family.value!.invite_code = res.data.invite_code
-    app.showToast('邀请码已更新', 'success')
+    app.showToast('✅ 邀请码已更新', 'success')
   } catch (e: any) {
     app.showToast(e.response?.data?.error || '操作失败', 'error')
   }
@@ -175,7 +175,7 @@ async function regenerateCode() {
 function copyCode() {
   if (!family.value) return
   navigator.clipboard.writeText(family.value.invite_code).then(() => {
-    app.showToast('已复制邀请码', 'success')
+    app.showToast('✅ 已复制邀请码', 'success')
   }).catch(() => {
     app.showToast('复制失败', 'error')
   })

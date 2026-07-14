@@ -125,11 +125,11 @@
 
     <!-- 删除确认 -->
     <div v-if="showDelete" class="fixed inset-0 bg-black/30 flex items-end z-50" @click.self="showDelete = false">
-      <div class="bg-white w-full rounded-t-2xl p-6 space-y-4 pb-safe">
-        <h3 class="text-lg font-bold text-text-primary text-center">确认删除</h3>
+      <div class="bg-white w-full rounded-t-2xl p-6 space-y-4 pb-safe animate-slide-up">
+        <p class="text-text-secondary text-sm text-center">确定要删除这条记录吗？</p>
         <div class="flex gap-3">
           <button @click="showDelete = false" class="flex-1 py-3 bg-gray-100 text-text-primary rounded-xl font-medium btn-press">取消</button>
-          <button @click="doDelete" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-medium btn-press">删除</button>
+          <button @click="doDelete" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-medium btn-press">确认删除</button>
         </div>
       </div>
     </div>
@@ -304,7 +304,7 @@ async function doDelete() {
     const typ = recordType.value
     await recordAPI.delete(id, typ)
     window.dispatchEvent(new CustomEvent('record-deleted', { detail: { id, type: typ } }))
-    app.showToast('已删除', 'success')
+    app.showToast('✅ 已删除', 'success')
     router.back()
   } catch {
     app.showToast('删除失败', 'error')

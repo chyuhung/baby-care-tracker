@@ -16,7 +16,7 @@
     <main class="flex-1 min-h-0 px-4 py-4 overflow-y-auto pb-20">
       <div v-if="loading" class="text-center py-16 text-text-secondary">加载中...</div>
       <div v-else-if="groupedRecords.length === 0" class="text-center py-16">
-        <div class="text-5xl mb-4">📋</div>
+        <div class="text-5xl mb-4">🍼</div>
         <p class="text-text-secondary">暂无记录</p>
       </div>
       <div v-else class="space-y-6">
@@ -41,12 +41,11 @@
 
     <!-- 删除确认弹窗 -->
     <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black/30 flex items-end z-50" @click.self="showDeleteConfirm = false">
-      <div class="bg-white w-full rounded-t-2xl p-6 space-y-4 pb-safe animate-[slideUp_0.3s_ease]">
-        <h3 class="text-lg font-bold text-text-primary text-center">确认删除</h3>
+      <div class="bg-white w-full rounded-t-2xl p-6 space-y-4 pb-safe animate-slide-up">
         <p class="text-text-secondary text-sm text-center">确定要删除这条记录吗？</p>
         <div class="flex gap-3">
           <button @click="showDeleteConfirm = false" class="flex-1 py-3 bg-gray-100 text-text-primary rounded-xl font-medium btn-press">取消</button>
-          <button @click="confirmDelete" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-medium btn-press">删除</button>
+          <button @click="confirmDelete" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-medium btn-press">确认删除</button>
         </div>
       </div>
     </div>
@@ -159,7 +158,7 @@ async function confirmDelete() {
     const { id, record_type: typ } = recordToDelete.value
     await recordAPI.delete(id, typ)
     window.dispatchEvent(new CustomEvent('record-deleted', { detail: { id, type: typ } }))
-    app.showToast('已删除', 'success')
+    app.showToast('✅ 已删除', 'success')
     showDeleteConfirm.value = false
   } catch {
     app.showToast('删除失败', 'error')

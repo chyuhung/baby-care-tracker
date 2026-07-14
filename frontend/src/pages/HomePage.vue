@@ -22,7 +22,7 @@
       <!-- 宝宝切换 + 趋势图 -->
       <div v-if="app.currentBaby" class="mt-3 flex items-center gap-2">
         <select v-model="selectedBabyId" @change="switchBaby"
-          class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-text-primary appearance-none cursor-pointer">
+          class="flex-1 px-3 py-2 bg-white border border-border-color rounded-xl text-sm text-text-primary appearance-none cursor-pointer">
           <option v-for="b in app.babies" :key="b.id" :value="b.id">{{ b.name }}</option>
         </select>
         <button @click="showTrend"
@@ -53,7 +53,7 @@
         <!-- 统计卡片（可点击跳转） -->
         <div class="grid grid-cols-2 gap-3">
           <!-- 喂奶卡片 -->
-          <div @click="goToTimeline('feeding')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer active:scale-98 transition-transform">
+          <div @click="goToTimeline('feeding')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
             <div class="text-xs text-text-secondary mb-1">今日喂奶</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-1">
@@ -77,7 +77,7 @@
           </div>
 
           <!-- 尿布卡片 -->
-          <div @click="goToTimeline('diaper')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer active:scale-98 transition-transform">
+          <div @click="goToTimeline('diaper')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
             <div class="text-xs text-text-secondary mb-1">今日尿布</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-1">
@@ -104,7 +104,7 @@
         <div class="space-y-2">
           <h2 class="text-sm font-semibold text-text-secondary uppercase tracking-wide">最近记录</h2>
           <div v-if="displayRecords.length === 0" class="bg-white rounded-2xl p-6 text-center shadow-card">
-            <div class="text-4xl mb-2">✨</div>
+            <div class="text-4xl mb-2">🍼</div>
             <p class="text-text-secondary text-sm">还没有记录</p>
           </div>
           <RecordCard v-for="(r, i) in displayRecords" :key="r.record_type + '-' + r.id" :record="r"
@@ -143,10 +143,10 @@
               <text x="50" y="28" text-anchor="end" font-size="9" fill="#9ca3af">{{ maxFeedingMl }}</text>
               <text x="50" y="93" text-anchor="end" font-size="9" fill="#9ca3af">{{ Math.round(maxFeedingMl / 2) }}</text>
               <text x="50" y="153" text-anchor="end" font-size="9" fill="#9ca3af">0</text>
-              <polygon :points="feedingAreaPoints" fill="#7C6CFF" opacity="0.08"/>
-              <polyline :points="feedingLinePoints" fill="none" stroke="#7C6CFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <polygon :points="feedingAreaPoints" class="chart-fill-primary" opacity="0.08"/>
+              <polyline :points="feedingLinePoints" class="chart-line-primary" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               <g v-for="(pt, i) in feedingPoints" :key="'fp'+i">
-                <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" stroke="#7C6CFF" stroke-width="2"/>
+                <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-primary" stroke-width="2"/>
                 <text :x="pt.x" :y="pt.y - 8" text-anchor="middle" font-size="10" fill="#6b7280">{{ pt.value }}</text>
               </g>
               <text v-for="(d, i) in trendData" :key="'fx'+i" :x="feedingPoints[i]?.x" y="168" text-anchor="middle" font-size="9" fill="#9ca3af">{{ d.date.slice(5) }}</text>
@@ -162,10 +162,10 @@
               <text x="50" y="28" text-anchor="end" font-size="9" fill="#9ca3af">{{ maxDiaperCount }}</text>
               <text x="50" y="93" text-anchor="end" font-size="9" fill="#9ca3af">{{ Math.round(maxDiaperCount / 2) }}</text>
               <text x="50" y="153" text-anchor="end" font-size="9" fill="#9ca3af">0</text>
-              <polygon :points="diaperAreaPoints" fill="#FF7EB3" opacity="0.08"/>
-              <polyline :points="diaperLinePoints" fill="none" stroke="#FF7EB3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <polygon :points="diaperAreaPoints" class="chart-fill-diaper" opacity="0.08"/>
+              <polyline :points="diaperLinePoints" class="chart-line-diaper" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               <g v-for="(pt, i) in diaperPoints" :key="'dp'+i">
-                <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" stroke="#FF7EB3" stroke-width="2"/>
+                <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-diaper" stroke-width="2"/>
                 <text :x="pt.x" :y="pt.y - 8" text-anchor="middle" font-size="10" fill="#6b7280">{{ pt.value }}</text>
               </g>
               <text v-for="(d, i) in trendData" :key="'dx'+i" :x="diaperPoints[i]?.x" y="168" text-anchor="middle" font-size="9" fill="#9ca3af">{{ d.date.slice(5) }}</text>
@@ -177,12 +177,11 @@
 
     <!-- 删除确认弹窗 -->
     <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black/30 flex items-end z-50" @click.self="showDeleteConfirm = false">
-      <div class="bg-white w-full rounded-t-2xl p-6 space-y-4 pb-safe animate-[slideUp_0.3s_ease]">
-        <h3 class="text-lg font-bold text-text-primary text-center">确认删除</h3>
+      <div class="bg-white w-full rounded-t-2xl p-6 space-y-4 pb-safe animate-slide-up">
         <p class="text-text-secondary text-sm text-center">确定要删除这条记录吗？</p>
         <div class="flex gap-3">
           <button @click="showDeleteConfirm = false" class="flex-1 py-3 bg-gray-100 text-text-primary rounded-xl font-medium btn-press">取消</button>
-          <button @click="confirmDelete" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-medium btn-press">删除</button>
+          <button @click="confirmDelete" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-medium btn-press">确认删除</button>
         </div>
       </div>
     </div>
@@ -364,7 +363,7 @@ async function confirmDelete() {
     const { id, record_type: typ } = recordToDelete.value
     await recordAPI.delete(id, typ)
     window.dispatchEvent(new CustomEvent('record-deleted', { detail: { id, type: typ } }))
-    app.showToast('已删除', 'success')
+    app.showToast('✅ 已删除', 'success')
     showDeleteConfirm.value = false
   } catch (e: any) {
     app.showToast(e.response?.data?.error || '删除失败', 'error')
