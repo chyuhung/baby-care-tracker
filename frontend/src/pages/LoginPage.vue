@@ -11,14 +11,14 @@
     <div class="w-full max-w-xs space-y-4">
       <div class="space-y-1">
         <label class="text-sm text-text-secondary">用户名</label>
-        <input v-model="form.username" type="text" :placeholder="isRegister ? '2-20位字符' : '输入用户名'"
-          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary placeholder-text-secondary/50 focus:border-primary transition-colors" />
+        <input v-model="form.username" type="text" :placeholder="isRegister ? '2-20位字符' : '输入用户名'" autocomplete="off"
+          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary placeholder-text-secondary/50 focus:border-primary focus:outline-none transition-colors" />
       </div>
 
       <div class="space-y-1">
         <label class="text-sm text-text-secondary">{{ isRegister ? '设置密码' : '密码' }}</label>
-        <input v-model="form.password" type="password" :placeholder="isRegister ? '至少6位' : '输入密码'"
-          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary placeholder-text-secondary/50 focus:border-primary transition-colors" />
+        <input v-model="form.password" type="password" :placeholder="isRegister ? '至少6位' : '输入密码'" :autocomplete="isRegister ? 'new-password' : 'current-password'"
+          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary placeholder-text-secondary/50 focus:border-primary focus:outline-none transition-colors" />
       </div>
 
       <div v-if="error" class="bg-red-50 text-red-500 text-sm px-4 py-2 rounded-xl text-center">
