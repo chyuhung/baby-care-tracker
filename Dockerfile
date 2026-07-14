@@ -41,18 +41,13 @@ FROM alpine:3.19
 
 RUN apk add --no-cache ca-certificates tzdata
 
-# 非 root 用户
-RUN addgroup -g 1000 appgroup && adduser -u 1000 -G appgroup -s /bin/sh -D appuser
-
 WORKDIR /app
 
 # 复制后端可执行文件
 COPY --from=backend-builder /build/backend/baby-care-tracker .
 
 # 数据目录
-RUN mkdir -p /app/data && chown -R appuser:appgroup /app
-
-USER appuser
+RUN mkdir -p /app/data
 
 EXPOSE 8080
 
