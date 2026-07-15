@@ -29,6 +29,7 @@ export const useAppStore = defineStore('app', () => {
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null
   let reconnectAttempts = 0
 
+
   const currentBaby = computed(() => babies.value.find(b => b.id === currentBabyId.value) || babies.value[0])
 
   const theme = computed(() => {
@@ -81,9 +82,11 @@ export const useAppStore = defineStore('app', () => {
     ws.onclose = () => {
       wsConnected.value = false
       ws = null
+      if (document.hidden) return
       const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000)
       reconnectAttempts++
-      reconnectTimer = setTimeout(connectWebSocket, delay)
+      const jitter = Math.random() * 1000
+      reconnectTimer = setTimeout(connectWebSocket, delay + jitter)
     }
     ws.onmessage = async (event) => {
       try {
@@ -107,6 +110,15 @@ export const useAppStore = defineStore('app', () => {
     reconnectAttempts = 0
     ws?.close()
     ws = null
+  }
+
+  function onVisibilityChange() {
+    if (!document.hidden && !ws && useAuthStore().token) {
+      connectWebSocket()
+    }
+  }
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', onVisibilityChange)
   }
 
   return {

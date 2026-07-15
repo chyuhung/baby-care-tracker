@@ -20,7 +20,7 @@ var upgrader = websocket.Upgrader{
 }
 
 type WSHub struct {
-	clients    map[int64]*models.WSClient
+	clients    map[int64]map[*models.WSClient]bool
 	broadcast  chan []byte
 	register   chan *models.WSClient
 	unregister chan *models.WSClient
@@ -28,7 +28,7 @@ type WSHub struct {
 }
 
 var Hub = &WSHub{
-	clients:    make(map[int64]*models.WSClient),
+	clients:    make(map[int64]map[*models.WSClient]bool),
 	broadcast:  make(chan []byte, 256),
 	register:   make(chan *models.WSClient),
 	unregister: make(chan *models.WSClient),
@@ -39,41 +39,56 @@ func (h *WSHub) Run() {
 		select {
 		case client := <-h.register:
 			h.mu.Lock()
-			if old, ok := h.clients[client.UserID]; ok {
-				old.CloseSend()
-				delete(h.clients, client.UserID)
+			if h.clients[client.UserID] == nil {
+				h.clients[client.UserID] = make(map[*models.WSClient]bool)
 			}
-			h.clients[client.UserID] = client
-			count := len(h.clients)
+			h.clients[client.UserID][client] = true
+			count := h.totalConnections()
 			h.mu.Unlock()
 			log.Printf("WS: 用户 %d 连接 (共 %d 个连接)", client.UserID, count)
 
 		case client := <-h.unregister:
 			h.mu.Lock()
-			if existing, ok := h.clients[client.UserID]; ok && existing == client {
-				delete(h.clients, client.UserID)
+			if set, ok := h.clients[client.UserID]; ok && set[client] {
+				delete(set, client)
 				client.CloseSend()
+				if len(set) == 0 {
+					delete(h.clients, client.UserID)
+				}
 			}
 			h.mu.Unlock()
 			log.Printf("WS: 用户 %d 断开", client.UserID)
 
 		case message := <-h.broadcast:
 			h.mu.Lock()
-			var dead []int64
-			for userID, client := range h.clients {
-				select {
-				case client.Send <- message:
-				default:
-					client.CloseSend()
-					dead = append(dead, userID)
+			for userID, set := range h.clients {
+				var dead []*models.WSClient
+				for client := range set {
+					select {
+					case client.Send <- message:
+					default:
+						client.CloseSend()
+						dead = append(dead, client)
+					}
 				}
-			}
-			for _, uid := range dead {
-				delete(h.clients, uid)
+				for _, c := range dead {
+					delete(set, c)
+				}
+				if len(set) == 0 {
+					delete(h.clients, userID)
+				}
 			}
 			h.mu.Unlock()
 		}
 	}
+}
+
+func (h *WSHub) totalConnections() int {
+	n := 0
+	for _, set := range h.clients {
+		n += len(set)
+	}
+	return n
 }
 
 // BroadcastMessage 向所有连接的客户端广播消息
