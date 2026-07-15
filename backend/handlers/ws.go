@@ -40,7 +40,7 @@ func (h *WSHub) Run() {
 		case client := <-h.register:
 			h.mu.Lock()
 			if old, ok := h.clients[client.UserID]; ok {
-				close(old.Send)
+				old.CloseSend()
 				delete(h.clients, client.UserID)
 			}
 			h.clients[client.UserID] = client
@@ -50,9 +50,9 @@ func (h *WSHub) Run() {
 
 		case client := <-h.unregister:
 			h.mu.Lock()
-			if _, ok := h.clients[client.UserID]; ok {
+			if existing, ok := h.clients[client.UserID]; ok && existing == client {
 				delete(h.clients, client.UserID)
-				close(client.Send)
+				client.CloseSend()
 			}
 			h.mu.Unlock()
 			log.Printf("WS: 用户 %d 断开", client.UserID)
@@ -64,7 +64,7 @@ func (h *WSHub) Run() {
 				select {
 				case client.Send <- message:
 				default:
-					close(client.Send)
+					client.CloseSend()
 					dead = append(dead, userID)
 				}
 			}

@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 // Family 家庭组
 type Family struct {
@@ -138,6 +141,11 @@ type WebSocketMessage struct {
 
 // WSClient WebSocket 客户端
 type WSClient struct {
-	UserID int64
-	Send   chan []byte
+	UserID    int64
+	Send      chan []byte
+	closeOnce sync.Once
+}
+
+func (c *WSClient) CloseSend() {
+	c.closeOnce.Do(func() { close(c.Send) })
 }
