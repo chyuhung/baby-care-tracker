@@ -56,10 +56,9 @@
           <div @click="goToTimeline('feeding')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
             <div class="text-xs text-text-secondary mb-1">今日喂奶</div>
             <div class="flex items-end justify-between">
-              <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-bold text-primary font-num">{{ stats.total_ml_today }}</span>
+              <div class="flex items-baseline gap-0.5">
+                <span class="text-3xl font-bold text-primary font-num">{{ stats.total_ml_today }}<sup v-if="stats.feeding_count > 0" class="text-[0.55em] font-bold text-primary font-num leading-none">{{ stats.feeding_count }}</sup></span>
                 <span class="text-sm text-text-secondary">ml</span>
-                <span v-if="stats.feeding_count > 0" class="text-lg font-bold text-primary font-num ml-1">· {{ stats.feeding_count }}<span class="text-sm font-normal text-text-secondary">次</span></span>
               </div>
               <div class="text-3xl">🍼</div>
             </div>
