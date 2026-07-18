@@ -23,13 +23,13 @@
       <div>
         <label class="text-sm text-text-secondary block mb-2">宝宝姓名 <span class="text-red-500">*</span></label>
         <input v-model="form.name" type="text" placeholder="输入宝宝姓名"
-          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary transition-colors" />
+          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
       </div>
 
       <div>
         <label class="text-sm text-text-secondary block mb-2">出生日期 <span class="text-red-500">*</span></label>
         <input v-model="form.birth_date" type="datetime-local"
-          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary transition-colors" />
+          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
       </div>
 
       <div>

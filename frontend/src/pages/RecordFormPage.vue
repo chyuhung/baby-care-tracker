@@ -28,7 +28,7 @@
         <div>
           <label class="text-sm text-text-secondary block mb-2">发生时间</label>
           <input v-model="form.occurred_at" type="datetime-local"
-            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary transition-colors" />
+            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
         </div>
 
         <!-- 亲喂：时长 + 方向 -->
@@ -37,7 +37,7 @@
             <div>
               <label class="text-sm text-text-secondary block mb-2">时长（分钟）</label>
               <input v-model.number="form.duration_minutes" type="number" min="1" placeholder="15"
-                class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary transition-colors" />
+                class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
             </div>
             <div>
               <label class="text-sm text-text-secondary block mb-2">喂养侧</label>
@@ -59,18 +59,18 @@
             <div>
               <label class="text-sm text-text-secondary block mb-2">奶量（ml）</label>
               <input v-model.number="form.amount_ml" type="number" min="1" placeholder="120"
-                class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary transition-colors" />
+                class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
             </div>
             <div>
               <label class="text-sm text-text-secondary block mb-2">品牌（可选）</label>
               <input v-model="form.brand" type="text" placeholder="如：爱他美"
-                class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary transition-colors" />
+                class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
             </div>
           </div>
           <div>
             <label class="text-sm text-text-secondary block mb-2">时长（分钟）</label>
             <input v-model.number="form.duration_minutes" type="number" min="1" placeholder="15"
-              class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary transition-colors" />
+              class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
           </div>
         </template>
 
@@ -78,7 +78,7 @@
         <div>
           <label class="text-sm text-text-secondary block mb-2">备注</label>
           <textarea v-model="form.note" rows="2" placeholder="可选"
-            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary transition-colors resize-none"></textarea>
+            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors resize-none"></textarea>
         </div>
       </template>
 
@@ -87,7 +87,7 @@
         <div>
           <label class="text-sm text-text-secondary block mb-2">发生时间</label>
           <input v-model="form.occurred_at" type="datetime-local"
-            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary transition-colors" />
+            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
         </div>
 
         <div>
@@ -106,7 +106,7 @@
         <div>
           <label class="text-sm text-text-secondary block mb-2">备注</label>
           <textarea v-model="form.note" rows="2" placeholder="可选，如颜色、形状等"
-            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary transition-colors resize-none"></textarea>
+            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors resize-none"></textarea>
         </div>
       </template>
 

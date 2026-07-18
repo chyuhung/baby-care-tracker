@@ -22,7 +22,7 @@
       <!-- 宝宝切换 + 趋势图 -->
       <div v-if="app.currentBaby" class="mt-3 flex items-center gap-2">
         <select v-model="selectedBabyId" @change="switchBaby"
-          class="flex-1 px-3 py-2 bg-white border border-border-color rounded-xl text-sm text-text-primary appearance-none cursor-pointer">
+          class="flex-1 px-3 py-2 bg-white border border-border-color rounded-xl text-sm text-text-primary appearance-none cursor-pointer focus:border-primary focus:outline-none transition-colors">
           <option v-for="b in app.babies" :key="b.id" :value="b.id">{{ b.name }}</option>
         </select>
         <button @click="showTrend"
