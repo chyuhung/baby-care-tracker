@@ -131,7 +131,13 @@ type CreateDiaperRequest struct {
 }
 
 type UpdateRecordRequest struct {
-	Note string `json:"note"`
+	OccurredAt      string `json:"occurred_at"`
+	Type            string `json:"type"`
+	DurationMinutes int    `json:"duration_minutes"`
+	AmountMl        int    `json:"amount_ml"`
+	Side            string `json:"side"`
+	Brand           string `json:"brand"`
+	Note            string `json:"note"`
 }
 
 type WebSocketMessage struct {

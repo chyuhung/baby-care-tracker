@@ -333,13 +333,19 @@ func UpdateRecord(c *gin.Context) {
 	}
 
 	if recordType == "diaper" {
-		_, err := database.DB.Exec("UPDATE diaper_records SET note = ? WHERE id = ?", req.Note, recordID)
+		_, err := database.DB.Exec(
+			"UPDATE diaper_records SET type = ?, note = ?, occurred_at = ? WHERE id = ?",
+			req.Type, req.Note, req.OccurredAt, recordID,
+		)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "更新失败"})
 			return
 		}
 	} else {
-		_, err := database.DB.Exec("UPDATE feeding_records SET note = ? WHERE id = ?", req.Note, recordID)
+		_, err := database.DB.Exec(
+			"UPDATE feeding_records SET type = ?, duration_minutes = ?, amount_ml = ?, side = ?, brand = ?, note = ?, occurred_at = ? WHERE id = ?",
+			req.Type, req.DurationMinutes, req.AmountMl, req.Side, req.Brand, req.Note, req.OccurredAt, recordID,
+		)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "更新失败"})
 			return

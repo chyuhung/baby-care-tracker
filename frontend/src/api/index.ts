@@ -84,6 +84,12 @@ export interface CreateDiaperData {
 }
 
 export interface UpdateRecordData {
+  occurred_at: string
+  type: string
+  duration_minutes: number
+  amount_ml: number
+  side: string
+  brand: string
   note: string
 }
 
