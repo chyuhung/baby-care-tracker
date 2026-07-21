@@ -5,7 +5,8 @@ FROM node:20-alpine AS frontend-builder
 
 WORKDIR /build/frontend
 COPY frontend/package.json frontend/package-lock.json ./
-RUN npm ci && npm cache clean --force
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm ci
 
 COPY frontend/ ./
 RUN node node_modules/vite/bin/vite.js build
@@ -39,7 +40,8 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -o baby-care
 # ======================================
 FROM alpine:3.19
 
-RUN apk add --no-cache ca-certificates tzdata
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories && \
+    apk add --no-cache ca-certificates tzdata
 
 WORKDIR /app
 
