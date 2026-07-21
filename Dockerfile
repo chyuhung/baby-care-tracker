@@ -23,13 +23,14 @@ ENV GOPROXY=https://goproxy.cn,https://goproxy.io,direct
 ENV GO111MODULE=on
 ENV CGO_ENABLED=0
 
-# 先复制前端构建产物到 dist 目录（供 go:embed 使用）
-COPY --from=frontend-builder /build/frontend/dist ./dist
-
-# 复制 Go 模块和源码
+# 先下载 Go 模块（只依赖 go.mod/go.sum，缓存命中率高）
 COPY backend/go.mod backend/go.sum ./
 RUN go mod download
 
+# 复制前端构建产物（供 go:embed 使用）
+COPY --from=frontend-builder /build/frontend/dist ./dist
+
+# 复制 Go 源码
 COPY backend/ ./
 
 # 纯 Go SQLite，无需 CGO
