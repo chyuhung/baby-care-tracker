@@ -174,11 +174,29 @@ async function regenerateCode() {
 
 function copyCode() {
   if (!family.value) return
-  navigator.clipboard.writeText(family.value.invite_code).then(() => {
-    app.showToast('✅ 已复制邀请码', 'success')
-  }).catch(() => {
-    app.showToast('复制失败', 'error')
-  })
+  const text = family.value.invite_code
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(() => {
+      app.showToast('✅ 已复制邀请码', 'success')
+    }).catch(fallbackCopy)
+  } else {
+    fallbackCopy()
+  }
+  function fallbackCopy() {
+    const el = document.createElement('textarea')
+    el.value = text
+    el.style.position = 'fixed'
+    el.style.opacity = '0'
+    document.body.appendChild(el)
+    el.select()
+    try {
+      document.execCommand('copy')
+      app.showToast('✅ 已复制邀请码', 'success')
+    } catch {
+      app.showToast('复制失败，请手动复制', 'error')
+    }
+    document.body.removeChild(el)
+  }
 }
 
 function formatBirthDate(bd: string) {
