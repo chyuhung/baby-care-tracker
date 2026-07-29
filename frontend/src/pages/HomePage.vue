@@ -108,12 +108,12 @@
               <span class="text-xs font-medium" :class="lastSleepAgo.isLong ? 'text-orange-500' : 'text-text-secondary'">{{ lastSleepAgo.text }}</span>
             </div>
             <button v-if="currentSleep" @click.stop="stopSleep"
-              class="mt-3 w-full py-2 bg-red-500 text-white text-sm font-medium rounded-lg btn-press">
-              结束
+              class="mt-3 w-full py-2 bg-red-500 text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+              <span>■</span> 结束
             </button>
             <button v-else @click.stop="startSleep"
-              class="mt-3 w-full py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg btn-press">
-              开始
+              class="mt-3 w-full py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+              <span>●</span> 开始
             </button>
           </div>
 
@@ -314,8 +314,9 @@ async function startSleep() {
     currentSleep.value = res.data
     window.dispatchEvent(new CustomEvent('record-created', { detail: res.data }))
     app.showToast('😴 开始睡觉', 'success')
-  } catch {
-    app.showToast('开始睡眠失败', 'error')
+  } catch (e: any) {
+    console.error('开始睡眠失败:', e?.response?.data || e)
+    app.showToast(e?.response?.data?.error || '开始睡眠失败', 'error')
   }
 }
 

@@ -12,20 +12,18 @@
       <template v-if="isEdit">
         <div>
           <label class="text-sm text-text-secondary block mb-2">开始时间</label>
-          <input v-model="editForm.started_at" type="datetime-local" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary focus:border-primary focus:outline-none" />
+          <input v-model="editForm.started_at" type="datetime-local" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary focus:border-primary focus:outline-none transition-colors" />
         </div>
         <div>
           <label class="text-sm text-text-secondary block mb-2">结束时间</label>
-          <input v-model="editForm.ended_at" type="datetime-local" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary focus:border-primary focus:outline-none" />
+          <input v-model="editForm.ended_at" type="datetime-local" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary focus:border-primary focus:outline-none transition-colors" />
         </div>
         <div>
           <label class="text-sm text-text-secondary block mb-2">备注</label>
-          <textarea v-model="editForm.note" rows="3" placeholder="添加备注..." class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary resize-none focus:border-primary focus:outline-none" />
+          <textarea v-model="editForm.note" rows="3" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary resize-none focus:border-primary focus:outline-none transition-colors" />
         </div>
-        <div class="flex gap-3">
-          <button @click="saveEdit" class="flex-1 py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press">更新记录</button>
-          <button @click="deleteRecord" class="py-3 px-6 bg-red-500 text-white rounded-xl font-medium btn-press">删除此记录</button>
-        </div>
+        <button @click="saveEdit" class="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press">更新记录</button>
+        <button @click="deleteRecord" class="w-full py-3 bg-white text-red-500 font-medium rounded-xl border border-red-200 btn-press">删除此记录</button>
       </template>
 
       <!-- 非编辑模式 -->
@@ -44,13 +42,13 @@
           <template v-if="currentSleep">
             <div class="text-lg text-text-primary mb-2">😴 正在睡觉</div>
             <div class="text-4xl font-bold text-primary font-num mb-4">{{ elapsedText }}</div>
-            <button @click="stopSleep" class="w-full py-3 bg-red-500 text-white rounded-xl font-medium shadow-card btn-press">
-              结束
+            <button @click="stopSleep" class="w-full py-3 bg-red-500 text-white rounded-xl font-medium shadow-card btn-press flex items-center justify-center gap-2">
+              <span>■</span> 结束
             </button>
           </template>
           <template v-else>
-            <button @click="startSleep" class="w-full py-3 bg-primary/10 text-primary rounded-xl font-medium btn-press">
-              开始
+            <button @click="startSleep" class="w-full py-3 bg-primary/10 text-primary rounded-xl font-medium btn-press flex items-center justify-center gap-2">
+              <span>●</span> 开始
             </button>
           </template>
         </div>
@@ -191,8 +189,9 @@ async function startSleep() {
     currentSleep.value = res.data
     window.dispatchEvent(new CustomEvent('record-created', { detail: res.data }))
     app.showToast('😴 开始睡觉', 'success')
-  } catch {
-    app.showToast('开始睡眠失败', 'error')
+  } catch (e: any) {
+    console.error('开始睡眠失败:', e?.response?.data?.error || e)
+    app.showToast(e?.response?.data?.error || '开始睡眠失败', 'error')
   }
 }
 

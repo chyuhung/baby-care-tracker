@@ -27,12 +27,10 @@
         </div>
         <div>
           <label class="text-sm text-text-secondary block mb-2">备注</label>
-          <textarea v-model="editForm.note" rows="3" placeholder="添加备注..." class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary resize-none focus:border-primary focus:outline-none transition-colors" />
+          <textarea v-model="editForm.note" rows="3" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary resize-none focus:border-primary focus:outline-none transition-colors" />
         </div>
-        <div class="flex gap-3">
-          <button @click="saveEdit" class="flex-1 py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press">更新记录</button>
-          <button @click="deleteRecord" class="py-3 px-6 bg-red-500 text-white rounded-xl font-medium btn-press">删除此记录</button>
-        </div>
+        <button @click="saveEdit" class="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press">更新记录</button>
+        <button @click="deleteRecord" class="w-full py-3 bg-white text-red-500 font-medium rounded-xl border border-red-200 btn-press">删除此记录</button>
       </template>
 
       <!-- 非编辑模式 -->
@@ -69,7 +67,7 @@
           </div>
           <div>
             <label class="text-xs text-text-secondary block mb-1">备注</label>
-            <input v-model="form.note" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary focus:border-primary focus:outline-none" />
+            <input v-model="form.note" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary focus:border-primary focus:outline-none transition-colors" />
           </div>
           <button @click="submitTemperature" :disabled="!form.temperature"
             class="w-full py-3 bg-temperature text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">
@@ -77,30 +75,6 @@
           </button>
         </div>
 
-        <!-- 最近体温记录 -->
-        <div class="space-y-2">
-          <h3 class="text-sm font-semibold text-text-secondary">最近记录</h3>
-          <div v-if="allTemps.length === 0" class="bg-white rounded-2xl p-6 text-center shadow-card">
-            <p class="text-text-secondary text-sm">还没有体温记录</p>
-          </div>
-          <div v-for="t in allTemps" :key="t.id" @click="editTemp(t)" :data="t.data"
-            class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press">
-            <div class="w-1.5 h-12 rounded-full bg-temperature flex-shrink-0"></div>
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center justify-between">
-                <span class="text-sm font-semibold text-text-primary">
-                  🌡️ {{ t.data?.temperature }}°C
-                  <span v-if="t.data?.temperature >= 37.5" class="text-red-500">🔥</span>
-                </span>
-                <span class="text-xs text-text-secondary font-num">{{ formatTime(t.data?.occurred_at || t.occurred_at) }}</span>
-              </div>
-              <div class="text-xs text-text-secondary mt-1 flex gap-2">
-                <span v-if="t.data?.location" class="bg-gray-100 text-text-secondary px-2 py-0.5 rounded-full">{{ t.data?.location }}</span>
-                <span v-if="t.data?.note" class="truncate">{{ t.data?.note }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
       </template>
     </main>
   </div>
@@ -117,7 +91,6 @@ const route = useRoute()
 const app = useAppStore()
 
 const isEdit = computed(() => !!route.params.id)
-const allTemps = ref<any[]>([])
 const latestTemp = ref<any>(null)
 
 const locations = ['腋下', '口腔', '耳温', '额温', '肛门']
@@ -148,7 +121,6 @@ async function loadData() {
   try {
     const res = await recordAPI.list(baby.id)
     const temps = (res.data as any[]).filter(r => r.record_type === 'temperature')
-    allTemps.value = temps
     if (temps.length > 0) {
       latestTemp.value = { ...temps[0].data, id: temps[0].id }
     }
@@ -183,8 +155,7 @@ async function submitTemperature() {
     })
     window.dispatchEvent(new CustomEvent('record-created', { detail: res.data }))
     app.showToast('✅ 体温已记录', 'success')
-    form.value = { temperature: 0, location: '', note: '' }
-    loadData()
+    router.back()
   } catch {
     app.showToast('记录体温失败', 'error')
   }
@@ -218,10 +189,6 @@ async function deleteRecord() {
   } catch {
     app.showToast('删除失败', 'error')
   }
-}
-
-function editTemp(t: any) {
-  router.push(`/temperature/${t.id}/edit`)
 }
 
 onMounted(() => { loadData() })
