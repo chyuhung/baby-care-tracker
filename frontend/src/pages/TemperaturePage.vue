@@ -35,50 +35,33 @@
 
       <!-- 非编辑模式 -->
       <template v-else>
-        <!-- 最新体温 -->
-        <div class="bg-white rounded-2xl shadow-card p-5 text-center">
-          <div class="text-xs text-text-secondary mb-2">最新体温</div>
-          <div v-if="latestTemp" class="flex items-center justify-center gap-2">
-            <span class="text-5xl font-bold font-num" :class="latestTemp.temperature >= 37.5 ? 'text-red-500' : 'text-temperature'">{{ latestTemp.temperature }}</span>
-            <span class="text-xl text-text-secondary">°C</span>
-            <span v-if="latestTemp.temperature >= 37.5" class="text-red-500 text-lg">🔥</span>
-          </div>
-          <div v-else class="text-text-secondary text-sm py-4">暂无体温记录</div>
-          <div v-if="latestTemp" class="text-xs text-text-secondary mt-2">
-            {{ formatTime(latestTemp.occurred_at) }}
-            <span v-if="latestTemp.location"> · {{ latestTemp.location }}</span>
+        <div>
+          <label class="text-sm text-text-secondary block mb-2">发生时间</label>
+          <input v-model="form.occurred_at" type="datetime-local"
+            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+        </div>
+        <div>
+          <label class="text-sm text-text-secondary block mb-2">体温</label>
+          <input v-model="form.temperature" type="number" step="0.1" min="35" max="42" placeholder="37.0"
+            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary font-num focus:border-primary focus:outline-none transition-colors" />
+        </div>
+        <div>
+          <label class="text-sm text-text-secondary block mb-3">测量位置</label>
+          <div class="grid grid-cols-3 gap-3">
+            <button v-for="loc in locations" :key="loc" @click="form.location = loc"
+              :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press', form.location === loc ? 'bg-primary text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
           </div>
         </div>
-
-        <div class="bg-white rounded-2xl shadow-card p-5 space-y-4">
-          <div>
-            <label class="text-sm text-text-secondary block mb-2">发生时间</label>
-            <input v-model="form.occurred_at" type="datetime-local"
-              class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
-          </div>
-          <div>
-            <label class="text-sm text-text-secondary block mb-2">体温</label>
-            <input v-model="form.temperature" type="number" step="0.1" min="35" max="42" placeholder="37.0"
-              class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary font-num focus:border-primary focus:outline-none transition-colors" />
-          </div>
-          <div>
-            <label class="text-sm text-text-secondary block mb-2">测量位置</label>
-            <div class="grid grid-cols-3 gap-3">
-              <button v-for="loc in locations" :key="loc" @click="form.location = loc"
-                :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press', form.location === loc ? 'bg-primary text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
-            </div>
-          </div>
-          <div>
-            <label class="text-sm text-text-secondary block mb-2">备注</label>
-            <textarea v-model="form.note" rows="2" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors resize-none"></textarea>
-          </div>
-          <button @click="submitTemperature" :disabled="!form.temperature"
-            class="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">
-            记录
-          </button>
+        <div>
+          <label class="text-sm text-text-secondary block mb-2">备注</label>
+          <textarea v-model="form.note" rows="2" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors resize-none"></textarea>
         </div>
-
       </template>
+
+      <button @click="submitTemperature" :disabled="!form.temperature"
+        class="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">
+        记录
+      </button>
     </main>
   </div>
 </template>
@@ -94,7 +77,6 @@ const route = useRoute()
 const app = useAppStore()
 
 const isEdit = computed(() => !!route.params.id)
-const latestTemp = ref<any>(null)
 
 const locations = ['腋下', '口腔', '耳温', '额温', '肛门']
 
@@ -111,17 +93,6 @@ function nowDatetime() {
 const form = ref({ temperature: 0, location: '', note: '', occurred_at: nowDatetime() })
 const editForm = ref({ temperature: 0, location: '腋下', occurred_at: '', note: '' })
 
-function formatTime(iso: string) {
-  if (!iso) return ''
-  const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  const now = new Date()
-  const isToday = d.toDateString() === now.toDateString()
-  const hhmm = `${pad(d.getHours())}:${pad(d.getMinutes())}`
-  if (isToday) return `今天 ${hhmm}`
-  return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${hhmm}`
-}
-
 function toLocalDatetime(iso: string) {
   const d = new Date(iso)
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -132,13 +103,9 @@ async function loadData() {
   const baby = app.currentBaby
   if (!baby) return
   try {
-    const res = await recordAPI.list(baby.id)
-    const temps = (res.data as any[]).filter(r => r.record_type === 'temperature')
-    if (temps.length > 0) {
-      latestTemp.value = { ...temps[0].data, id: temps[0].id }
-    }
-
     if (isEdit.value) {
+      const res = await recordAPI.list(baby.id)
+      const temps = (res.data as any[]).filter(r => r.record_type === 'temperature')
       const record = temps.find((r: any) => r.id === Number(route.params.id))
       if (record) {
         const d = record.data

@@ -202,7 +202,7 @@ async function stopSleep() {
     const now = new Date().toISOString()
     await recordAPI.stopSleep(baby.id, currentSleep.value.id, { ended_at: now })
     currentSleep.value = null
-    loadData()
+    await loadData()
     app.showToast('✅ 睡眠已结束', 'success')
   } catch {
     app.showToast('结束睡眠失败', 'error')

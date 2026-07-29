@@ -112,7 +112,7 @@ func StopSleep(c *gin.Context) {
 		req.EndedAt, req.Note, sleepID,
 	)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "结束睡眠失败"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

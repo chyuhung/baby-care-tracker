@@ -95,8 +95,8 @@
           <div @click="goToTimeline('sleep')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
             <div class="text-xs text-text-secondary mb-1">今日睡眠</div>
             <div class="flex items-end justify-between">
-              <div v-if="currentSleep" class="flex items-baseline gap-1">
-                <span class="text-base font-bold text-primary">😴 正在睡觉</span>
+              <div v-if="currentSleep" class="flex items-baseline gap-1 min-w-0">
+                <span class="text-base font-bold text-primary truncate">已睡 {{ elapsedSleepText }}</span>
               </div>
               <div v-else class="flex items-baseline gap-0.5">
                 <span class="text-3xl font-bold font-num text-primary">{{ formattedSleepDuration }}<sup v-if="stats.sleep_count > 0" class="text-[0.55em] font-bold text-primary font-num leading-none">{{ stats.sleep_count }}</sup></span>
@@ -249,6 +249,18 @@ const lastDiaperAgo = computed(() => { tick.value; return getTimeAgo(stats.value
 const lastSleepAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_sleep_end) })
 const lastTempAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_temperature) })
 
+const elapsedSleepText = computed(() => {
+  tick.value
+  if (!currentSleep.value?.started_at) return ''
+  const start = new Date(currentSleep.value.started_at)
+  const mins = Math.round((Date.now() - start.getTime()) / 60000)
+  if (mins <= 0) return '0M'
+  if (mins < 60) return `${mins}M`
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return m > 0 ? `${h}H${m}M` : `${h}H`
+})
+
 const formattedSleepDuration = computed(() => {
   const mins = stats.value.sleep_duration
   if (mins <= 0) return '0'
@@ -327,10 +339,11 @@ async function stopSleep() {
     const now = new Date().toISOString()
     await recordAPI.stopSleep(baby.id, currentSleep.value.id, { ended_at: now })
     currentSleep.value = null
-    loadData()
+    await loadData()
     app.showToast('✅ 睡眠已结束', 'success')
-  } catch {
-    app.showToast('结束睡眠失败', 'error')
+  } catch (e: any) {
+    console.error('结束睡眠失败:', e?.response?.data || e)
+    app.showToast(e?.response?.data?.error || '结束睡眠失败', 'error')
   }
 }
 
