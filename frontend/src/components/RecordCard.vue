@@ -105,10 +105,10 @@ const sleepDurationLabel = computed(() => {
   const start = new Date(s.value.started_at)
   const end = new Date(s.value.ended_at)
   const mins = Math.round((end.getTime() - start.getTime()) / 60000)
-  if (mins < 60) return `${mins}分钟`
+  if (mins < 60) return `${mins}M`
   const h = Math.floor(mins / 60)
   const m = mins % 60
-  return m > 0 ? `${h}h${m}m` : `${h}小时`
+  return m > 0 ? `${h}H${m}M` : `${h}H`
 })
 
 const timeAgo = computed(() => {

@@ -4,7 +4,7 @@
       <button @click="router.back()" class="p-1 -ml-1 btn-press">
         <svg class="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
       </button>
-      <h1 class="text-lg font-bold text-text-primary">{{ isEdit ? '编辑体温' : '体温记录' }}</h1>
+      <h1 class="text-lg font-bold text-text-primary">{{ isEdit ? '编辑记录' : '🌡️ 记录体温' }}</h1>
     </header>
 
     <main class="px-4 py-6 space-y-5">
@@ -12,7 +12,7 @@
       <template v-if="isEdit">
         <div>
           <label class="text-sm text-text-secondary block mb-2">体温 (°C)</label>
-          <input v-model="editForm.temperature" type="number" step="0.1" min="35" max="42" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary focus:border-primary focus:outline-none" />
+          <input v-model="editForm.temperature" type="number" step="0.1" min="35" max="42" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary focus:border-primary focus:outline-none transition-colors" />
         </div>
         <div>
           <label class="text-sm text-text-secondary block mb-2">测量位置</label>
@@ -23,15 +23,15 @@
         </div>
         <div>
           <label class="text-sm text-text-secondary block mb-2">时间</label>
-          <input v-model="editForm.occurred_at" type="datetime-local" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary focus:border-primary focus:outline-none" />
+          <input v-model="editForm.occurred_at" type="datetime-local" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary focus:border-primary focus:outline-none transition-colors" />
         </div>
         <div>
           <label class="text-sm text-text-secondary block mb-2">备注</label>
-          <textarea v-model="editForm.note" rows="3" placeholder="添加备注..." class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary resize-none focus:border-primary focus:outline-none" />
+          <textarea v-model="editForm.note" rows="3" placeholder="添加备注..." class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary resize-none focus:border-primary focus:outline-none transition-colors" />
         </div>
         <div class="flex gap-3">
-          <button @click="saveEdit" class="flex-1 py-3 bg-primary text-white rounded-xl font-medium btn-press">保存</button>
-          <button @click="deleteRecord" class="py-3 px-6 bg-red-500 text-white rounded-xl font-medium btn-press">删除</button>
+          <button @click="saveEdit" class="flex-1 py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press">更新记录</button>
+          <button @click="deleteRecord" class="py-3 px-6 bg-red-500 text-white rounded-xl font-medium btn-press">删除此记录</button>
         </div>
       </template>
 
@@ -58,7 +58,7 @@
           <div>
             <label class="text-xs text-text-secondary block mb-1">体温</label>
             <input v-model="form.temperature" type="number" step="0.1" min="35" max="42" placeholder="37.0"
-              class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary font-num focus:border-primary focus:outline-none" />
+              class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary font-num focus:border-primary focus:outline-none transition-colors" />
           </div>
           <div>
             <label class="text-xs text-text-secondary block mb-1">测量位置</label>
@@ -69,11 +69,11 @@
           </div>
           <div>
             <label class="text-xs text-text-secondary block mb-1">备注</label>
-            <input v-model="form.note" placeholder="可选备注" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary focus:border-primary focus:outline-none" />
+            <input v-model="form.note" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary focus:border-primary focus:outline-none" />
           </div>
           <button @click="submitTemperature" :disabled="!form.temperature"
-            class="w-full py-3 bg-temperature text-white rounded-xl font-medium btn-press flex items-center justify-center gap-1 disabled:opacity-50">
-            <span>🌡️</span> 记录体温
+            class="w-full py-3 bg-temperature text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">
+            记录
           </button>
         </div>
 

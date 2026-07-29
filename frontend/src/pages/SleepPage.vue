@@ -4,7 +4,7 @@
       <button @click="router.back()" class="p-1 -ml-1 btn-press">
         <svg class="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
       </button>
-      <h1 class="text-lg font-bold text-text-primary">{{ isEdit ? '编辑睡眠' : '睡眠记录' }}</h1>
+      <h1 class="text-lg font-bold text-text-primary">{{ isEdit ? '编辑记录' : '😴 记录睡眠' }}</h1>
     </header>
 
     <main class="px-4 py-6 space-y-5">
@@ -23,8 +23,8 @@
           <textarea v-model="editForm.note" rows="3" placeholder="添加备注..." class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary resize-none focus:border-primary focus:outline-none" />
         </div>
         <div class="flex gap-3">
-          <button @click="saveEdit" class="flex-1 py-3 bg-primary text-white rounded-xl font-medium btn-press">保存</button>
-          <button @click="deleteRecord" class="py-3 px-6 bg-red-500 text-white rounded-xl font-medium btn-press">删除</button>
+          <button @click="saveEdit" class="flex-1 py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press">更新记录</button>
+          <button @click="deleteRecord" class="py-3 px-6 bg-red-500 text-white rounded-xl font-medium btn-press">删除此记录</button>
         </div>
       </template>
 
@@ -44,13 +44,13 @@
           <template v-if="currentSleep">
             <div class="text-lg text-text-primary mb-2">😴 正在睡觉</div>
             <div class="text-4xl font-bold text-primary font-num mb-4">{{ elapsedText }}</div>
-            <button @click="stopSleep" class="w-full py-3 bg-red-500 text-white rounded-xl font-medium btn-press flex items-center justify-center gap-2">
-              <span>■</span> 停止睡觉
+            <button @click="stopSleep" class="w-full py-3 bg-red-500 text-white rounded-xl font-medium shadow-card btn-press">
+              结束
             </button>
           </template>
           <template v-else>
-            <button @click="startSleep" class="w-full py-4 bg-primary/10 text-primary rounded-xl font-medium btn-press flex items-center justify-center gap-2 text-lg">
-              <span>😴</span> 开始睡觉
+            <button @click="startSleep" class="w-full py-3 bg-primary/10 text-primary rounded-xl font-medium btn-press">
+              开始
             </button>
           </template>
         </div>
@@ -112,10 +112,11 @@ const formattedDuration = computed(() => {
     const end = new Date(s.ended_at)
     return sum + Math.round((end.getTime() - start.getTime()) / 60000)
   }, 0)
-  if (mins < 60) return `${mins}分钟`
+  if (mins <= 0) return '0'
+  if (mins < 60) return `${mins}M`
   const h = Math.floor(mins / 60)
   const m = mins % 60
-  return m > 0 ? `${h}h${m}m` : `${h}小时`
+  return m > 0 ? `${h}H${m}M` : `${h}H`
 })
 
 const elapsedText = computed(() => {
@@ -143,10 +144,10 @@ function formatDuration(s: any) {
   const start = new Date(s.started_at)
   const end = new Date(s.ended_at)
   const mins = Math.round((end.getTime() - start.getTime()) / 60000)
-  if (mins < 60) return `${mins}分钟`
+  if (mins < 60) return `${mins}M`
   const h = Math.floor(mins / 60)
   const m = mins % 60
-  return m > 0 ? `${h}h${m}m` : `${h}小时`
+  return m > 0 ? `${h}H${m}M` : `${h}H`
 }
 
 async function loadData() {

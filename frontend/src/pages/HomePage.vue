@@ -95,12 +95,11 @@
           <div @click="goToTimeline('sleep')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
             <div class="text-xs text-text-secondary mb-1">今日睡眠</div>
             <div class="flex items-end justify-between">
-              <div class="flex items-baseline gap-1">
-                <span v-if="currentSleep" class="text-base font-bold text-primary">😴 正在睡觉</span>
-                <template v-else>
-                  <span class="text-3xl font-bold font-num text-primary">{{ formattedSleepDuration }}</span>
-                  <span class="text-sm text-text-secondary ml-1">· {{ stats.sleep_count }}次</span>
-                </template>
+              <div v-if="currentSleep" class="flex items-baseline gap-1">
+                <span class="text-base font-bold text-primary">😴 正在睡觉</span>
+              </div>
+              <div v-else class="flex items-baseline gap-0.5">
+                <span class="text-3xl font-bold font-num text-primary">{{ formattedSleepDuration }}<sup v-if="stats.sleep_count > 0" class="text-[0.55em] font-bold text-primary font-num leading-none">{{ stats.sleep_count }}</sup></span>
               </div>
               <div class="text-3xl">😴</div>
             </div>
@@ -109,12 +108,12 @@
               <span class="text-xs font-medium text-text-secondary">{{ lastSleepAgo.text }}</span>
             </div>
             <button v-if="currentSleep" @click.stop="stopSleep"
-              class="mt-3 w-full py-2 bg-red-500 text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
-              <span>■</span> 停止睡觉
+              class="mt-3 w-full py-2 bg-red-500 text-white text-sm font-medium rounded-lg btn-press">
+              结束
             </button>
             <button v-else @click.stop="startSleep"
-              class="mt-3 w-full py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
-              <span>😴</span> 开始睡觉
+              class="mt-3 w-full py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg btn-press">
+              开始
             </button>
           </div>
 
@@ -253,10 +252,10 @@ const lastTempAgo = computed(() => { tick.value; return getTimeAgo(stats.value.l
 const formattedSleepDuration = computed(() => {
   const mins = stats.value.sleep_duration
   if (mins <= 0) return '0'
-  if (mins < 60) return `${mins}分钟`
+  if (mins < 60) return `${mins}M`
   const h = Math.floor(mins / 60)
   const m = mins % 60
-  return m > 0 ? `${h}h${m}m` : `${h}小时`
+  return m > 0 ? `${h}H${m}M` : `${h}H`
 })
 
 async function loadData() {
