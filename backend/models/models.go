@@ -74,14 +74,14 @@ type DiaperRecord struct {
 
 // SleepRecord 睡眠记录
 type SleepRecord struct {
-	ID         int64  `json:"id"`
-	BabyID     int64  `json:"baby_id"`
-	UserID     int64  `json:"user_id"`
-	StartedAt  string `json:"started_at"`
-	EndedAt    string `json:"ended_at"`
-	Note       string `json:"note"`
-	CreatedAt  string `json:"created_at"`
-	RecordType string `json:"record_type"` // sleep
+	ID         int64   `json:"id"`
+	BabyID     int64   `json:"baby_id"`
+	UserID     int64   `json:"user_id"`
+	StartedAt  string  `json:"started_at"`
+	EndedAt    *string `json:"ended_at"`
+	Note       string  `json:"note"`
+	CreatedAt  string  `json:"created_at"`
+	RecordType string  `json:"record_type"` // sleep
 }
 
 // TemperatureRecord 体温记录

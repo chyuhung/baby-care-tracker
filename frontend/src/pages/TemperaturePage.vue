@@ -16,9 +16,9 @@
         </div>
         <div>
           <label class="text-sm text-text-secondary block mb-2">测量位置</label>
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-3 gap-3">
             <button v-for="loc in locations" :key="loc" @click="editForm.location = loc"
-              :class="['py-2 rounded-xl text-sm font-medium btn-press', editForm.location === loc ? 'bg-temperature text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
+              :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press', editForm.location === loc ? 'bg-primary text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
           </div>
         </div>
         <div>
@@ -27,7 +27,7 @@
         </div>
         <div>
           <label class="text-sm text-text-secondary block mb-2">备注</label>
-          <textarea v-model="editForm.note" rows="3" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary resize-none focus:border-primary focus:outline-none transition-colors" />
+          <textarea v-model="editForm.note" rows="2" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary resize-none focus:border-primary focus:outline-none transition-colors" />
         </div>
         <button @click="saveEdit" class="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press">更新记录</button>
         <button @click="deleteRecord" class="w-full py-3 bg-white text-red-500 font-medium rounded-xl border border-red-200 btn-press">删除此记录</button>
@@ -50,27 +50,30 @@
           </div>
         </div>
 
-        <!-- 快速记录 -->
         <div class="bg-white rounded-2xl shadow-card p-5 space-y-4">
-          <h3 class="text-sm font-semibold text-text-secondary">快速记录</h3>
           <div>
-            <label class="text-xs text-text-secondary block mb-1">体温</label>
+            <label class="text-sm text-text-secondary block mb-2">发生时间</label>
+            <input v-model="form.occurred_at" type="datetime-local"
+              class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+          </div>
+          <div>
+            <label class="text-sm text-text-secondary block mb-2">体温</label>
             <input v-model="form.temperature" type="number" step="0.1" min="35" max="42" placeholder="37.0"
               class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary font-num focus:border-primary focus:outline-none transition-colors" />
           </div>
           <div>
-            <label class="text-xs text-text-secondary block mb-1">测量位置</label>
-            <div class="grid grid-cols-3 gap-2">
+            <label class="text-sm text-text-secondary block mb-2">测量位置</label>
+            <div class="grid grid-cols-3 gap-3">
               <button v-for="loc in locations" :key="loc" @click="form.location = loc"
-                :class="['py-2 rounded-xl text-sm font-medium btn-press', form.location === loc ? 'bg-temperature text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
+                :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press', form.location === loc ? 'bg-primary text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
             </div>
           </div>
           <div>
-            <label class="text-xs text-text-secondary block mb-1">备注</label>
-            <input v-model="form.note" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary focus:border-primary focus:outline-none transition-colors" />
+            <label class="text-sm text-text-secondary block mb-2">备注</label>
+            <textarea v-model="form.note" rows="2" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors resize-none"></textarea>
           </div>
           <button @click="submitTemperature" :disabled="!form.temperature"
-            class="w-full py-3 bg-temperature text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">
+            class="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">
             记录
           </button>
         </div>
@@ -95,7 +98,17 @@ const latestTemp = ref<any>(null)
 
 const locations = ['腋下', '口腔', '耳温', '额温', '肛门']
 
-const form = ref({ temperature: 0, location: '', note: '' })
+function nowDatetime() {
+  const d = new Date()
+  const y = d.getFullYear()
+  const M = String(d.getMonth() + 1).padStart(2, '0')
+  const D = String(d.getDate()).padStart(2, '0')
+  const h = String(d.getHours()).padStart(2, '0')
+  const m = String(d.getMinutes()).padStart(2, '0')
+  return `${y}-${M}-${D}T${h}:${m}`
+}
+
+const form = ref({ temperature: 0, location: '', note: '', occurred_at: nowDatetime() })
 const editForm = ref({ temperature: 0, location: '腋下', occurred_at: '', note: '' })
 
 function formatTime(iso: string) {
@@ -146,12 +159,12 @@ async function submitTemperature() {
   const baby = app.currentBaby
   if (!baby || !form.value.temperature) return
   try {
-    const now = new Date().toISOString()
+    const occurredAt = new Date(form.value.occurred_at).toISOString()
     const res = await recordAPI.createTemperature(baby.id, {
       temperature: form.value.temperature,
       location: form.value.location,
       note: form.value.note,
-      occurred_at: now,
+      occurred_at: occurredAt,
     })
     window.dispatchEvent(new CustomEvent('record-created', { detail: res.data }))
     app.showToast('✅ 体温已记录', 'success')

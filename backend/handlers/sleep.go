@@ -3,6 +3,7 @@ package handlers
 import (
 	"baby-care-tracker/database"
 	"baby-care-tracker/models"
+	"database/sql"
 	"net/http"
 	"time"
 
@@ -47,13 +48,17 @@ func StartSleep(c *gin.Context) {
 	}
 
 	var record models.SleepRecord
+	var endedAt sql.NullString
 	err = database.DB.QueryRow(
 		"SELECT id, baby_id, user_id, started_at, ended_at, note, created_at FROM sleep_records WHERE id = ?",
 		recordID,
-	).Scan(&record.ID, &record.BabyID, &record.UserID, &record.StartedAt, &record.EndedAt, &record.Note, &record.CreatedAt)
+	).Scan(&record.ID, &record.BabyID, &record.UserID, &record.StartedAt, &endedAt, &record.Note, &record.CreatedAt)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+	if endedAt.Valid {
+		record.EndedAt = &endedAt.String
 	}
 	record.RecordType = "sleep"
 
@@ -112,10 +117,14 @@ func StopSleep(c *gin.Context) {
 	}
 
 	var record models.SleepRecord
+	var endedAt2 sql.NullString
 	database.DB.QueryRow(
 		"SELECT id, baby_id, user_id, started_at, ended_at, note, created_at FROM sleep_records WHERE id = ?",
 		sleepID,
-	).Scan(&record.ID, &record.BabyID, &record.UserID, &record.StartedAt, &record.EndedAt, &record.Note, &record.CreatedAt)
+	).Scan(&record.ID, &record.BabyID, &record.UserID, &record.StartedAt, &endedAt2, &record.Note, &record.CreatedAt)
+	if endedAt2.Valid {
+		record.EndedAt = &endedAt2.String
+	}
 	record.RecordType = "sleep"
 
 	rec := models.Record{
@@ -149,13 +158,17 @@ func GetCurrentSleep(c *gin.Context) {
 	}
 
 	var record models.SleepRecord
+	var endedAt3 sql.NullString
 	err := database.DB.QueryRow(
 		"SELECT id, baby_id, user_id, started_at, ended_at, note, created_at FROM sleep_records WHERE baby_id = ? AND ended_at IS NULL ORDER BY started_at DESC LIMIT 1",
 		babyID,
-	).Scan(&record.ID, &record.BabyID, &record.UserID, &record.StartedAt, &record.EndedAt, &record.Note, &record.CreatedAt)
+	).Scan(&record.ID, &record.BabyID, &record.UserID, &record.StartedAt, &endedAt3, &record.Note, &record.CreatedAt)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{})
 		return
+	}
+	if endedAt3.Valid {
+		record.EndedAt = &endedAt3.String
 	}
 	record.RecordType = "sleep"
 

@@ -3,6 +3,7 @@ package handlers
 import (
 	"baby-care-tracker/database"
 	"baby-care-tracker/models"
+	"database/sql"
 	"net/http"
 	"sort"
 	"strconv"
@@ -169,8 +170,12 @@ func GetRecords(c *gin.Context) {
 			for rows.Next() {
 				var r models.SleepRecord
 				var note string
-				if err := rows.Scan(&r.ID, &r.BabyID, &r.UserID, &r.StartedAt, &r.EndedAt, &note, &r.CreatedAt); err != nil {
+				var endedAt sql.NullString
+				if err := rows.Scan(&r.ID, &r.BabyID, &r.UserID, &r.StartedAt, &endedAt, &note, &r.CreatedAt); err != nil {
 					continue
+				}
+				if endedAt.Valid {
+					r.EndedAt = &endedAt.String
 				}
 				r.Note = note
 				r.RecordType = "sleep"
