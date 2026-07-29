@@ -36,13 +36,13 @@ func StartSleep(c *gin.Context) {
 		babyID, userID, req.StartedAt, req.Note,
 	)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建睡眠记录失败"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	recordID, err := result.LastInsertId()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建睡眠记录失败"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -52,7 +52,7 @@ func StartSleep(c *gin.Context) {
 		recordID,
 	).Scan(&record.ID, &record.BabyID, &record.UserID, &record.StartedAt, &record.EndedAt, &record.Note, &record.CreatedAt)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "创建睡眠记录失败"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 	record.RecordType = "sleep"
