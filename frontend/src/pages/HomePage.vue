@@ -105,7 +105,7 @@
             </div>
             <div v-if="lastSleepAgo" class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
-              <span class="text-xs font-medium text-text-secondary">{{ lastSleepAgo.text }}</span>
+              <span class="text-xs font-medium" :class="lastSleepAgo.isLong ? 'text-orange-500' : 'text-text-secondary'">{{ lastSleepAgo.text }}</span>
             </div>
             <button v-if="currentSleep" @click.stop="stopSleep"
               class="mt-3 w-full py-2 bg-red-500 text-white text-sm font-medium rounded-lg btn-press">
@@ -129,7 +129,7 @@
             </div>
             <div v-if="lastTempAgo" class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
-              <span class="text-xs font-medium text-text-secondary">{{ lastTempAgo.text }}</span>
+              <span class="text-xs font-medium" :class="lastTempAgo.isLong ? 'text-orange-500' : 'text-text-secondary'">{{ lastTempAgo.text }}</span>
             </div>
             <button @click.stop="goToAddTemperature"
               class="mt-3 w-full py-2 bg-temperature/10 text-temperature text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">

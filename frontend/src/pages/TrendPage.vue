@@ -44,13 +44,13 @@
           </svg>
         </div>
         <div>
-          <h4 class="text-sm font-semibold text-text-secondary mb-2">😴 每日睡眠 (分钟)</h4>
+          <h4 class="text-sm font-semibold text-text-secondary mb-2">😴 每日睡眠</h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <polygon :points="sleepAreaPoints" class="chart-fill-primary" opacity="0.08"/>
             <polyline :points="sleepLinePoints" class="chart-line-primary" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <g v-for="(pt, i) in sleepPoints" :key="'sp'+i">
               <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-primary" stroke-width="2"/>
-              <text :x="pt.x" :y="pt.y - 8" text-anchor="middle" font-size="10" fill="#6b7280">{{ pt.value }}</text>
+              <text :x="pt.x" :y="pt.y - 8" text-anchor="middle" font-size="10" fill="#6b7280">{{ sleepLabels[i] }}</text>
             </g>
             <text v-for="(d, i) in trendData" :key="'sx'+i" :x="sleepPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ d.date.slice(5) }}</text>
           </svg>
@@ -133,6 +133,16 @@ const sleepChart = computed(() => buildLineChart(d => d.sleep_duration_minutes |
 const sleepPoints = computed(() => sleepChart.value.points)
 const sleepLinePoints = computed(() => sleepChart.value.line)
 const sleepAreaPoints = computed(() => sleepChart.value.area)
+
+function formatMinutes(mins: number) {
+  if (mins <= 0) return '0'
+  if (mins < 60) return `${mins}M`
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return m > 0 ? `${h}H${m}M` : `${h}H`
+}
+
+const sleepLabels = computed(() => trendData.value.map(d => formatMinutes(d.sleep_duration_minutes || 0)))
 
 const tempChart = computed(() => buildLineChart(d => d.temperature_avg || 0))
 const tempPoints = computed(() => tempChart.value.points)
