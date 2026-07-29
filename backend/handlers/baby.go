@@ -225,21 +225,61 @@ func GetStats(c *gin.Context) {
 		babyID, todayStart, todayEnd,
 	).Scan(&totalMl)
 
+	var sleepCount int
+	var sleepDuration int
+	database.DB.QueryRow(
+		"SELECT COUNT(*), COALESCE(SUM(CAST((julianday(ended_at) - julianday(started_at)) * 24 * 60 AS INTEGER)), 0) FROM sleep_records WHERE baby_id = ? AND ended_at IS NOT NULL AND started_at >= ? AND started_at < ?",
+		babyID, todayStart, todayEnd,
+	).Scan(&sleepCount, &sleepDuration)
+
+	var lastSleepEnd string
+	database.DB.QueryRow(
+		"SELECT ended_at FROM sleep_records WHERE baby_id = ? AND ended_at IS NOT NULL ORDER BY ended_at DESC LIMIT 1",
+		babyID,
+	).Scan(&lastSleepEnd)
+
+	var temperatureCount int
+	database.DB.QueryRow(
+		"SELECT COUNT(*) FROM temperature_records WHERE baby_id = ? AND occurred_at >= ? AND occurred_at < ?",
+		babyID, todayStart, todayEnd,
+	).Scan(&temperatureCount)
+
+	var latestTemp float64
+	database.DB.QueryRow(
+		"SELECT COALESCE(temperature, 0) FROM temperature_records WHERE baby_id = ? ORDER BY occurred_at DESC LIMIT 1",
+		babyID,
+	).Scan(&latestTemp)
+
+	var lastTemperature string
+	database.DB.QueryRow(
+		"SELECT occurred_at FROM temperature_records WHERE baby_id = ? ORDER BY occurred_at DESC LIMIT 1",
+		babyID,
+	).Scan(&lastTemperature)
+
 	c.JSON(http.StatusOK, gin.H{
-		"feeding_count":  feedingCount,
-		"diaper_count":   diaperCount,
-		"last_feeding":   lastFeeding,
-		"last_diaper":    lastDiaper,
-		"total_ml_today": totalMl,
+		"feeding_count":      feedingCount,
+		"diaper_count":       diaperCount,
+		"last_feeding":       lastFeeding,
+		"last_diaper":        lastDiaper,
+		"total_ml_today":     totalMl,
+		"sleep_count":        sleepCount,
+		"sleep_duration":     sleepDuration,
+		"last_sleep_end":     lastSleepEnd,
+		"temperature_count":  temperatureCount,
+		"latest_temperature": latestTemp,
+		"last_temperature":   lastTemperature,
 	})
 }
 
 // DailyStats 每日统计数据结构
 type DailyStats struct {
-	Date         string `json:"date"`
-	FeedingCount int    `json:"feeding_count"`
-	DiaperCount  int    `json:"diaper_count"`
-	TotalMl      int    `json:"total_ml"`
+	Date                string  `json:"date"`
+	FeedingCount        int     `json:"feeding_count"`
+	DiaperCount         int     `json:"diaper_count"`
+	TotalMl             int     `json:"total_ml"`
+	SleepDuration       int     `json:"sleep_duration_minutes"`
+	TemperatureAvg      float64 `json:"temperature_avg"`
+	TemperatureHigh     float64 `json:"temperature_high"`
 }
 
 // GetTrendStats 获取宝宝趋势统计（最近7天）
@@ -257,13 +297,19 @@ func GetTrendStats(c *gin.Context) {
 	}
 
 	tzOffset := getTzOffset(c)
-	dates := lastNDates(tzOffset, 7)
+	days := 7
+	if daysStr := c.Query("days"); daysStr != "" {
+		if d, err := strconv.Atoi(daysStr); err == nil && d > 0 && d <= 365 {
+			days = d
+		}
+	}
+	dates := lastNDates(tzOffset, days)
 	if len(dates) == 0 {
 		c.JSON(http.StatusOK, []DailyStats{})
 		return
 	}
 
-	startDate := daysAgoUTC(tzOffset, 7)
+	startDate := daysAgoUTC(tzOffset, days)
 
 	loc := time.FixedZone("user", tzOffset*60)
 
@@ -316,6 +362,68 @@ func GetTrendStats(c *gin.Context) {
 		diaperMap[date]++
 	}
 
+	sleepRows, err := database.DB.Query(`
+		SELECT started_at, ended_at FROM sleep_records
+		WHERE baby_id = ? AND ended_at IS NOT NULL AND started_at >= ?
+	`, babyID, startDate)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
+		return
+	}
+	defer sleepRows.Close()
+
+	sleepMap := make(map[string]int)
+	for sleepRows.Next() {
+		var startedAt, endedAt string
+		if sleepRows.Scan(&startedAt, &endedAt) != nil {
+			continue
+		}
+		t := parseTime(startedAt).In(loc)
+		date := fmt.Sprintf("%d-%02d-%02d", t.Year(), t.Month(), t.Day())
+		end := parseTime(endedAt)
+		start := parseTime(startedAt)
+		duration := int(end.Sub(start).Minutes())
+		if duration > 0 {
+			sleepMap[date] += duration
+		}
+	}
+
+	tempRows, err := database.DB.Query(`
+		SELECT occurred_at, temperature FROM temperature_records
+		WHERE baby_id = ? AND occurred_at >= ?
+	`, babyID, startDate)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
+		return
+	}
+	defer tempRows.Close()
+
+	type tempEntry struct {
+		avg   float64
+		high  float64
+		count int
+	}
+	tempMap := make(map[string]*tempEntry)
+	for tempRows.Next() {
+		var occurredAt string
+		var temp float64
+		if tempRows.Scan(&occurredAt, &temp) != nil {
+			continue
+		}
+		t := parseTime(occurredAt).In(loc)
+		date := fmt.Sprintf("%d-%02d-%02d", t.Year(), t.Month(), t.Day())
+		te, ok := tempMap[date]
+		if !ok {
+			te = &tempEntry{}
+			tempMap[date] = te
+		}
+		te.count++
+		te.avg += temp
+		if temp > te.high {
+			te.high = temp
+		}
+	}
+
 	var trends []DailyStats
 	for _, date := range dates {
 		f := feedingMap[date]
@@ -324,11 +432,20 @@ func GetTrendStats(c *gin.Context) {
 			feedingCount = f.FeedingCount
 			totalMl = f.TotalMl
 		}
+		te := tempMap[date]
+		var tempAvg, tempHigh float64
+		if te != nil && te.count > 0 {
+			tempAvg = te.avg / float64(te.count)
+			tempHigh = te.high
+		}
 		trends = append(trends, DailyStats{
-			Date:         date,
-			FeedingCount: feedingCount,
-			DiaperCount:  diaperMap[date],
-			TotalMl:      totalMl,
+			Date:            date,
+			FeedingCount:    feedingCount,
+			DiaperCount:     diaperMap[date],
+			TotalMl:         totalMl,
+			SleepDuration:   sleepMap[date],
+			TemperatureAvg:  tempAvg,
+			TemperatureHigh: tempHigh,
 		})
 	}
 

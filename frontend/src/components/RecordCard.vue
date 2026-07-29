@@ -3,9 +3,7 @@
     <div class="w-1.5 h-12 rounded-full bg-primary flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
-        <span class="text-sm font-semibold text-text-primary">
-          {{ feedingTypeLabel }}
-        </span>
+        <span class="text-sm font-semibold text-text-primary">{{ feedingTypeLabel }}</span>
         <span class="text-xs text-text-secondary font-num">{{ timeAgo }}</span>
       </div>
       <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
@@ -21,7 +19,7 @@
     </button>
   </div>
 
-  <div v-else class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+  <div v-else-if="record.record_type === 'diaper'" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
     <div class="w-1.5 h-12 rounded-full bg-diaper flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -29,6 +27,42 @@
         <span class="text-xs text-text-secondary font-num">{{ timeAgo }}</span>
       </div>
       <div v-if="d.note" class="text-xs text-text-secondary mt-1 truncate">{{ d.note }}</div>
+    </div>
+    <button @click.stop="$emit('delete')" class="p-1 text-text-secondary/50 hover:text-red-400 btn-press">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div v-else-if="record.record_type === 'sleep'" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+    <div class="w-1.5 h-12 rounded-full bg-primary flex-shrink-0"></div>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-sm font-semibold text-text-primary">😴 睡眠</span>
+        <span class="text-xs text-text-secondary font-num">{{ sleepTimeLabel }}</span>
+      </div>
+      <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
+        <span class="bg-primary/10 text-primary px-2 py-0.5 rounded-full">{{ sleepDurationLabel }}</span>
+      </div>
+      <div v-if="s.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ s.note }}</div>
+    </div>
+    <button @click.stop="$emit('delete')" class="p-1 text-text-secondary/50 hover:text-red-400 btn-press">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div v-else class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+    <div class="w-1.5 h-12 rounded-full bg-temperature flex-shrink-0"></div>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-sm font-semibold text-text-primary">🌡️ 体温</span>
+        <span class="text-xs text-text-secondary font-num">{{ timeAgo }}</span>
+      </div>
+      <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
+        <span class="bg-temperature/10 text-temperature px-2 py-0.5 rounded-full font-num">{{ t.temperature }}°C</span>
+        <span v-if="t.location" class="bg-gray-100 text-text-secondary px-2 py-0.5 rounded-full">{{ t.location }}</span>
+        <span v-if="t.temperature >= 37.5" class="text-red-500 px-1">🔥</span>
+      </div>
+      <div v-if="t.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ t.note }}</div>
     </div>
     <button @click.stop="$emit('delete')" class="p-1 text-text-secondary/50 hover:text-red-400 btn-press">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -44,6 +78,8 @@ defineEmits(['edit', 'delete'])
 
 const f = computed(() => props.record.data || {})
 const d = computed(() => props.record.data || {})
+const s = computed(() => props.record.data || {})
+const t = computed(() => props.record.data || {})
 
 const feedingTypeMap: Record<string, string> = { breast: '🤱 母乳亲喂', bottle: '🍼 母乳瓶喂', formula: '🍼 配方奶' }
 const diaperTypeMap: Record<string, string> = { pee: '💧 小便', poop: '💩 大便', mixed: '🌪️ 混合' }
@@ -53,16 +89,37 @@ const feedingTypeLabel = computed(() => feedingTypeMap[f.value.type] || f.value.
 const diaperTypeLabel = computed(() => diaperTypeMap[d.value.type] || d.value.type)
 const sideLabel = computed(() => sideMap[f.value.side] || f.value.side)
 
+const pad2 = (n: number) => String(n).padStart(2, '0')
+
+const sleepTimeLabel = computed(() => {
+  const start = new Date(s.value.started_at)
+  const end = s.value.ended_at ? new Date(s.value.ended_at) : null
+  const hhmm1 = `${pad2(start.getHours())}:${pad2(start.getMinutes())}`
+  if (!end) return hhmm1
+  const hhmm2 = `${pad2(end.getHours())}:${pad2(end.getMinutes())}`
+  return `${hhmm1}~${hhmm2}`
+})
+
+const sleepDurationLabel = computed(() => {
+  if (!s.value.ended_at) return '进行中'
+  const start = new Date(s.value.started_at)
+  const end = new Date(s.value.ended_at)
+  const mins = Math.round((end.getTime() - start.getTime()) / 60000)
+  if (mins < 60) return `${mins}分钟`
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return m > 0 ? `${h}h${m}m` : `${h}小时`
+})
+
 const timeAgo = computed(() => {
   const d = new Date(props.record.occurred_at)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  const hhmm = `${pad(d.getHours())}:${pad(d.getMinutes())}`
+  const hhmm = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`
   if (!props.showDate) return hhmm
   const now = new Date()
   const isToday = d.toDateString() === now.toDateString()
   const isYesterday = d.toDateString() === new Date(now.getTime() - 86400000).toDateString()
   if (isToday) return `今天 ${hhmm}`
   if (isYesterday) return `昨天 ${hhmm}`
-  return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${hhmm}`
+  return `${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${hhmm}`
 })
 </script>

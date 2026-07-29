@@ -14,27 +14,33 @@
   --primary: 124 108 255;        /* #7C6CFF */
   --primary-light: 240 238 255;    /* #F0EEFF */
   --diaper: 255 122 89;          /* #FF7A59 暖珊瑚，三主题通用强调 */
+  --temperature: 255 140 66;     /* #FF8C42 暖橙，气温警示感 */
   --header-grad: linear-gradient(135deg, rgb(124 108 255 / 0.16), rgb(124 108 255 / 0.04));
   --chart-primary: #7C6CFF;
   --chart-diaper: #FF7A59;
+  --chart-temperature: #FF8C42;
 }
 
 [data-theme='female'] {
   --primary: 255 126 179;        /* #FF7EB3 */
   --primary-light: 255 230 240;    /* #FFE6F0 */
   --diaper: 255 122 89;          /* #FF7A59 */
+  --temperature: 255 140 66;     /* #FF8C42 */
   --header-grad: linear-gradient(135deg, rgb(255 126 179 / 0.18), rgb(255 126 179 / 0.04));
   --chart-primary: #FF7EB3;
   --chart-diaper: #FF7A59;
+  --chart-temperature: #FF8C42;
 }
 
 [data-theme='male'] {
   --primary: 77 157 253;         /* #4D9DFD */
   --primary-light: 230 241 254;    /* #E6F1FE */
   --diaper: 255 122 89;          /* #FF7A59 */
+  --temperature: 255 140 66;     /* #FF8C42 */
   --header-grad: linear-gradient(135deg, rgb(77 157 253 / 0.18), rgb(77 157 253 / 0.04));
   --chart-primary: #4D9DFD;
   --chart-diaper: #FF7A59;
+  --chart-temperature: #FF8C42;
 }
 
 * {
@@ -144,5 +150,8 @@ body {
 .chart-fill-primary { fill: var(--chart-primary); }
 .chart-line-diaper { stroke: var(--chart-diaper); }
 .chart-fill-diaper { fill: var(--chart-diaper); }
+.chart-line-temperature { stroke: var(--chart-temperature); }
+.chart-fill-temperature { fill: var(--chart-temperature); }
 .chart-text-primary { fill: var(--chart-primary); }
 .chart-text-diaper { fill: var(--chart-diaper); }
+.chart-text-temperature { fill: var(--chart-temperature); }

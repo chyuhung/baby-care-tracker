@@ -90,6 +90,36 @@ func createTables() error {
 	CREATE INDEX IF NOT EXISTS idx_feeding_occurred ON feeding_records(occurred_at);
 	CREATE INDEX IF NOT EXISTS idx_diaper_baby ON diaper_records(baby_id);
 	CREATE INDEX IF NOT EXISTS idx_diaper_occurred ON diaper_records(occurred_at);
+
+	CREATE TABLE IF NOT EXISTS sleep_records (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		baby_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL,
+		started_at DATETIME NOT NULL,
+		ended_at DATETIME,
+		note TEXT DEFAULT '',
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (baby_id) REFERENCES babies(id) ON DELETE CASCADE,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);
+
+	CREATE TABLE IF NOT EXISTS temperature_records (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		baby_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL,
+		temperature REAL NOT NULL,
+		location TEXT DEFAULT '',
+		note TEXT DEFAULT '',
+		occurred_at DATETIME NOT NULL,
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (baby_id) REFERENCES babies(id) ON DELETE CASCADE,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_sleep_baby ON sleep_records(baby_id);
+	CREATE INDEX IF NOT EXISTS idx_sleep_started ON sleep_records(started_at);
+	CREATE INDEX IF NOT EXISTS idx_temperature_baby ON temperature_records(baby_id);
+	CREATE INDEX IF NOT EXISTS idx_temperature_occurred ON temperature_records(occurred_at);
 	`
 
 	_, err := DB.Exec(schema)

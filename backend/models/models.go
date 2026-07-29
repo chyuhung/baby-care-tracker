@@ -72,12 +72,37 @@ type DiaperRecord struct {
 	RecordType string `json:"record_type"` // diaper
 }
 
+// SleepRecord 睡眠记录
+type SleepRecord struct {
+	ID         int64  `json:"id"`
+	BabyID     int64  `json:"baby_id"`
+	UserID     int64  `json:"user_id"`
+	StartedAt  string `json:"started_at"`
+	EndedAt    string `json:"ended_at"`
+	Note       string `json:"note"`
+	CreatedAt  string `json:"created_at"`
+	RecordType string `json:"record_type"` // sleep
+}
+
+// TemperatureRecord 体温记录
+type TemperatureRecord struct {
+	ID          int64   `json:"id"`
+	BabyID      int64   `json:"baby_id"`
+	UserID      int64   `json:"user_id"`
+	Temperature float64 `json:"temperature"`
+	Location    string  `json:"location"`
+	Note        string  `json:"note"`
+	OccurredAt  string  `json:"occurred_at"`
+	CreatedAt   string  `json:"created_at"`
+	RecordType  string  `json:"record_type"` // temperature
+}
+
 // Record 统一记录类型
 type Record struct {
 	ID         int64  `json:"id"`
 	BabyID     int64  `json:"baby_id"`
 	UserID     int64  `json:"user_id"`
-	RecordType string `json:"record_type"` // feeding, diaper
+	RecordType string `json:"record_type"` // feeding, diaper, sleep, temperature
 	Data       any    `json:"data"`
 	OccurredAt string `json:"occurred_at"`
 	CreatedAt  string `json:"created_at"`
@@ -131,13 +156,34 @@ type CreateDiaperRequest struct {
 }
 
 type UpdateRecordRequest struct {
-	OccurredAt      string `json:"occurred_at"`
-	Type            string `json:"type"`
-	DurationMinutes int    `json:"duration_minutes"`
-	AmountMl        int    `json:"amount_ml"`
-	Side            string `json:"side"`
-	Brand           string `json:"brand"`
-	Note            string `json:"note"`
+	OccurredAt      string  `json:"occurred_at"`
+	Type            string  `json:"type"`
+	DurationMinutes int     `json:"duration_minutes"`
+	AmountMl        int     `json:"amount_ml"`
+	Side            string  `json:"side"`
+	Brand           string  `json:"brand"`
+	Note            string  `json:"note"`
+	StartedAt       string  `json:"started_at"`
+	EndedAt         string  `json:"ended_at"`
+	Temperature     float64 `json:"temperature"`
+	Location        string  `json:"location"`
+}
+
+type CreateSleepRequest struct {
+	StartedAt string `json:"started_at" binding:"required"`
+	Note      string `json:"note"`
+}
+
+type StopSleepRequest struct {
+	EndedAt string `json:"ended_at" binding:"required"`
+	Note    string `json:"note"`
+}
+
+type CreateTemperatureRequest struct {
+	Temperature float64 `json:"temperature" binding:"required"`
+	Location    string  `json:"location"`
+	Note        string  `json:"note"`
+	OccurredAt  string  `json:"occurred_at" binding:"required"`
 }
 
 type WebSocketMessage struct {

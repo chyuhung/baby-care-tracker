@@ -19,19 +19,12 @@
         </div>
       </div>
 
-      <!-- 宝宝切换 + 趋势图 -->
+      <!-- 宝宝切换 -->
       <div v-if="app.currentBaby" class="mt-3 flex items-center gap-2">
         <select v-model="selectedBabyId" @change="switchBaby"
           class="flex-1 px-3 py-2 bg-white border border-border-color rounded-xl text-sm text-text-primary appearance-none cursor-pointer focus:border-primary focus:outline-none transition-colors">
           <option v-for="b in app.babies" :key="b.id" :value="b.id">{{ b.name }}</option>
         </select>
-        <button @click="showTrend"
-          class="px-3 py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg flex items-center gap-1 btn-press">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-          </svg>
-          趋势
-        </button>
       </div>
     </header>
 
@@ -97,6 +90,53 @@
               <span class="text-base">＋</span> 尿布
             </button>
           </div>
+
+          <!-- 睡眠卡片 -->
+          <div @click="goToTimeline('sleep')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+            <div class="text-xs text-text-secondary mb-1">今日睡眠</div>
+            <div class="flex items-end justify-between">
+              <div class="flex items-baseline gap-1">
+                <span v-if="currentSleep" class="text-base font-bold text-primary">😴 正在睡觉</span>
+                <template v-else>
+                  <span class="text-3xl font-bold font-num text-primary">{{ formattedSleepDuration }}</span>
+                  <span class="text-sm text-text-secondary ml-1">· {{ stats.sleep_count }}次</span>
+                </template>
+              </div>
+              <div class="text-3xl">😴</div>
+            </div>
+            <div v-if="lastSleepAgo" class="mt-2 flex items-center justify-between">
+              <span class="text-xs text-text-secondary">距上次</span>
+              <span class="text-xs font-medium text-text-secondary">{{ lastSleepAgo.text }}</span>
+            </div>
+            <button v-if="currentSleep" @click.stop="stopSleep"
+              class="mt-3 w-full py-2 bg-red-500 text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+              <span>■</span> 停止睡觉
+            </button>
+            <button v-else @click.stop="startSleep"
+              class="mt-3 w-full py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+              <span>😴</span> 开始睡觉
+            </button>
+          </div>
+
+          <!-- 体温卡片 -->
+          <div @click="goToTimeline('temperature')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+            <div class="text-xs text-text-secondary mb-1">今日体温</div>
+            <div class="flex items-end justify-between">
+              <div class="flex items-baseline gap-1">
+                <span v-if="stats.latest_temperature > 0" class="text-3xl font-bold font-num" :class="stats.latest_temperature >= 37.5 ? 'text-red-500' : 'text-temperature'">{{ stats.latest_temperature }}</span>
+                <span class="text-sm text-text-secondary">°C</span>
+              </div>
+              <div class="text-3xl">🌡️</div>
+            </div>
+            <div v-if="lastTempAgo" class="mt-2 flex items-center justify-between">
+              <span class="text-xs text-text-secondary">距上次</span>
+              <span class="text-xs font-medium text-text-secondary">{{ lastTempAgo.text }}</span>
+            </div>
+            <button @click.stop="goToAddTemperature"
+              class="mt-3 w-full py-2 bg-temperature/10 text-temperature text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+              <span class="text-base">＋</span> 测温
+            </button>
+          </div>
         </div>
 
         <!-- 最近记录 -->
@@ -119,48 +159,6 @@
         </div>
       </template>
     </main>
-
-    <!-- 趋势图弹窗 -->
-    <div v-if="showTrendModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" @click.self="showTrendModal = false">
-      <div class="bg-white rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden">
-        <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-          <h3 class="text-lg font-bold text-text-primary">{{ app.currentBaby?.name }} 的趋势</h3>
-          <button @click="showTrendModal = false" class="p-1">
-            <svg class="w-6 h-6 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
-        </div>
-        <div class="px-4 py-4 overflow-y-auto max-h-[60vh] space-y-5">
-          <!-- 每日奶量折线图 -->
-          <div>
-            <h4 class="text-sm font-semibold text-text-secondary mb-2">🍼 每日奶量 (ml)</h4>
-            <svg v-if="trendData.length" viewBox="0 0 340 170" class="w-full block">
-              <polygon :points="feedingAreaPoints" class="chart-fill-primary" opacity="0.08"/>
-              <polyline :points="feedingLinePoints" class="chart-line-primary" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <g v-for="(pt, i) in feedingPoints" :key="'fp'+i">
-                <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-primary" stroke-width="2"/>
-                <text :x="pt.x" :y="pt.y - 8" text-anchor="middle" font-size="10" fill="#6b7280">{{ pt.value }}</text>
-              </g>
-              <text v-for="(d, i) in trendData" :key="'fx'+i" :x="feedingPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ d.date.slice(5) }}</text>
-            </svg>
-          </div>
-          <!-- 每日尿布次数折线图 -->
-          <div>
-            <h4 class="text-sm font-semibold text-text-secondary mb-2">🩲 每日尿布次数</h4>
-            <svg v-if="trendData.length" viewBox="0 0 340 170" class="w-full block">
-              <polygon :points="diaperAreaPoints" class="chart-fill-diaper" opacity="0.08"/>
-              <polyline :points="diaperLinePoints" class="chart-line-diaper" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <g v-for="(pt, i) in diaperPoints" :key="'dp'+i">
-                <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-diaper" stroke-width="2"/>
-                <text :x="pt.x" :y="pt.y - 8" text-anchor="middle" font-size="10" fill="#6b7280">{{ pt.value }}</text>
-              </g>
-              <text v-for="(d, i) in trendData" :key="'dx'+i" :x="diaperPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ d.date.slice(5) }}</text>
-            </svg>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- 删除确认弹窗 -->
     <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black/30 flex items-end z-50" @click.self="showDeleteConfirm = false">
@@ -187,56 +185,12 @@ const tick = ref(0)
 let tickTimer: number | null = null
 const router = useRouter()
 const app = useAppStore()
-const stats = ref({ feeding_count: 0, diaper_count: 0, total_ml_today: 0, last_feeding: '', last_diaper: '' })
+const stats = ref({ feeding_count: 0, diaper_count: 0, total_ml_today: 0, last_feeding: '', last_diaper: '', sleep_count: 0, sleep_duration: 0, last_sleep_end: '', temperature_count: 0, latest_temperature: 0, last_temperature: '' })
 const allRecords = ref<any[]>([])
 const showAllRecords = ref(false)
 const showDeleteConfirm = ref(false)
 const recordToDelete = ref<any>(null)
-const showTrendModal = ref(false)
-const trendData = ref<any[]>([])
-const CHART = { padL: 20, padR: 20, padT: 25, padB: 35, svgW: 340, svgH: 170 }
-function buildLineChart(getValue: (d: any) => number) {
-  const data = trendData.value
-  if (!data.length) return { points: [], line: '', area: '' }
-  const { padL, padR, padT, padB, svgW, svgH } = CHART
-  const chartW = svgW - padL - padR
-  const chartH = svgH - padT - padB
-
-  const values = data.map(getValue)
-  const rawMin = Math.min(...values)
-  const rawMax = Math.max(...values)
-  const range = rawMax - rawMin
-  const positiveValues = values.filter(v => v > 0)
-  const effectiveMin = (rawMin === 0 && positiveValues.length > 0)
-    ? Math.min(...positiveValues)
-    : rawMin
-  const yMin = range === 0 ? effectiveMin * 0.5 : effectiveMin - range * 0.15
-  const yMax = range === 0 ? effectiveMin * 1.5 : rawMax + range * 0.15
-  const yRange = yMax - yMin || 1
-
-  const step = data.length > 1 ? chartW / (data.length - 1) : 0
-  const points = data.map((d, i) => {
-    const val = getValue(d)
-    const y = padT + chartH - (Math.max(val, yMin) - yMin) / yRange * chartH
-    return {
-      x: data.length > 1 ? padL + i * step : padL + chartW / 2,
-      y,
-      value: val
-    }
-  })
-  const line = points.map(p => `${p.x},${p.y}`).join(' ')
-  const bY = padT + chartH
-  const area = [`${points[0].x},${bY}`, ...points.map(p => `${p.x},${p.y}`), `${points[points.length - 1].x},${bY}`].join(' ')
-  return { points, line, area }
-}
-const feedingChart = computed(() => buildLineChart(d => d.total_ml || 0))
-const feedingPoints = computed(() => feedingChart.value.points)
-const feedingLinePoints = computed(() => feedingChart.value.line)
-const feedingAreaPoints = computed(() => feedingChart.value.area)
-const diaperChart = computed(() => buildLineChart(d => d.diaper_count || 0))
-const diaperPoints = computed(() => diaperChart.value.points)
-const diaperLinePoints = computed(() => diaperChart.value.line)
-const diaperAreaPoints = computed(() => diaperChart.value.area)
+const currentSleep = ref<any>(null)
 const selectedBabyId = ref<number | null>(null)
 let loadGeneration = 0
 
@@ -293,6 +247,17 @@ function getTimeAgo(isoString: string | null) {
 
 const lastFeedingAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_feeding) })
 const lastDiaperAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_diaper) })
+const lastSleepAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_sleep_end) })
+const lastTempAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_temperature) })
+
+const formattedSleepDuration = computed(() => {
+  const mins = stats.value.sleep_duration
+  if (mins <= 0) return '0'
+  if (mins < 60) return `${mins}分钟`
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return m > 0 ? `${h}h${m}m` : `${h}小时`
+})
 
 async function loadData() {
   if (app.babies.length === 0) {
@@ -303,13 +268,15 @@ async function loadData() {
   selectedBabyId.value = baby.id
   const gen = ++loadGeneration
   try {
-    const [statsRes, recordsRes] = await Promise.all([
+    const [statsRes, recordsRes, sleepRes] = await Promise.all([
       babyAPI.stats(baby.id),
       recordAPI.list(baby.id),
+      recordAPI.getCurrentSleep(baby.id),
     ])
     if (gen !== loadGeneration) return
     stats.value = statsRes.data
     allRecords.value = recordsRes.data as any[]
+    currentSleep.value = sleepRes.data?.id ? sleepRes.data : null
   } catch {
     app.showToast('数据加载失败', 'error')
   }
@@ -320,19 +287,6 @@ function switchBaby() {
     app.setCurrentBaby(selectedBabyId.value)
     showAllRecords.value = false
     loadData()
-  }
-}
-
-async function showTrend() {
-  const baby = app.currentBaby
-  if (!baby) return
-  showTrendModal.value = true
-  try {
-    const res = await babyAPI.trend(baby.id)
-    trendData.value = res.data
-  } catch {
-    trendData.value = []
-    app.showToast('趋势数据加载失败', 'error')
   }
 }
 
@@ -348,8 +302,46 @@ function goToAddDiaper() {
   router.push('/record/diaper')
 }
 
+function goToAddTemperature() {
+  router.push('/temperature')
+}
+
+async function startSleep() {
+  const baby = app.currentBaby
+  if (!baby) return
+  try {
+    const now = new Date().toISOString()
+    const res = await recordAPI.createSleepStart(baby.id, { started_at: now })
+    currentSleep.value = res.data
+    window.dispatchEvent(new CustomEvent('record-created', { detail: res.data }))
+    app.showToast('😴 开始睡觉', 'success')
+  } catch {
+    app.showToast('开始睡眠失败', 'error')
+  }
+}
+
+async function stopSleep() {
+  const baby = app.currentBaby
+  if (!baby || !currentSleep.value) return
+  try {
+    const now = new Date().toISOString()
+    await recordAPI.stopSleep(baby.id, currentSleep.value.id, { ended_at: now })
+    currentSleep.value = null
+    loadData()
+    app.showToast('✅ 睡眠已结束', 'success')
+  } catch {
+    app.showToast('结束睡眠失败', 'error')
+  }
+}
+
 function editRecord(r: any) {
-  router.push(`/record/${r.record_type}/${r.id}/edit`)
+  if (r.record_type === 'sleep') {
+    router.push(`/sleep/${r.id}/edit`)
+  } else if (r.record_type === 'temperature') {
+    router.push(`/temperature/${r.id}/edit`)
+  } else {
+    router.push(`/record/${r.record_type}/${r.id}/edit`)
+  }
 }
 
 function deleteRecord(r: any) {
@@ -372,7 +364,12 @@ async function confirmDelete() {
 
 function onRecordCreated(e: Event) {
   const record = (e as CustomEvent).detail
-  if (record) allRecords.value.unshift(record)
+  if (record) {
+    allRecords.value.unshift(record)
+    if (record.record_type === 'sleep' && record.data?.ended_at) {
+      loadData()
+    }
+  }
 }
 
 function onRecordDeleted(e: Event) {

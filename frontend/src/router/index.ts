@@ -17,6 +17,7 @@ const router = createRouter({
       children: [
         { path: '', name: 'home', component: () => import('@/pages/HomePage.vue') },
         { path: 'timeline', name: 'timeline', component: () => import('@/pages/TimelinePage.vue') },
+        { path: 'trend', name: 'trend', component: () => import('@/pages/TrendPage.vue') },
         { path: 'profile', name: 'profile', component: () => import('@/pages/ProfilePage.vue') },
       ],
     },
@@ -42,6 +43,30 @@ const router = createRouter({
       path: '/record/:type/:id/edit',
       name: 'record-edit',
       component: () => import('@/pages/RecordFormPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/sleep',
+      name: 'sleep',
+      component: () => import('@/pages/SleepPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/sleep/:id/edit',
+      name: 'sleep-edit',
+      component: () => import('@/pages/SleepPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/temperature',
+      name: 'temperature',
+      component: () => import('@/pages/TemperaturePage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/temperature/:id/edit',
+      name: 'temperature-edit',
+      component: () => import('@/pages/TemperaturePage.vue'),
       meta: { requiresAuth: true },
     },
     { path: '/:pathMatch(.*)*', redirect: '/' },
