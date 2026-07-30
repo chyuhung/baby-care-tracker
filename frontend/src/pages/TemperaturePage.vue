@@ -90,7 +90,7 @@ function nowDatetime() {
   return `${y}-${M}-${D}T${h}:${m}`
 }
 
-const form = ref({ temperature: 0, location: '', note: '', occurred_at: nowDatetime() })
+const form = ref({ temperature: 0, location: localStorage.getItem('temp_last_location') || '', note: '', occurred_at: nowDatetime() })
 const editForm = ref({ temperature: 0, location: '腋下', occurred_at: '', note: '' })
 
 function toLocalDatetime(iso: string) {
@@ -133,6 +133,7 @@ async function submitTemperature() {
       note: form.value.note,
       occurred_at: occurredAt,
     })
+    localStorage.setItem('temp_last_location', form.value.location)
     window.dispatchEvent(new CustomEvent('record-created', { detail: res.data }))
     app.showToast('✅ 体温已记录', 'success')
     router.back()

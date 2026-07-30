@@ -111,10 +111,10 @@ const formattedDuration = computed(() => {
     return sum + Math.round((end.getTime() - start.getTime()) / 60000)
   }, 0)
   if (mins <= 0) return '0'
-  if (mins < 60) return `${mins}M`
+  if (mins < 60) return `${mins}m`
   const h = Math.floor(mins / 60)
   const m = mins % 60
-  return m > 0 ? `${h}H${m}M` : `${h}H`
+  return m > 0 ? `${h}h${m}` : `${h}h`
 })
 
 const elapsedText = computed(() => {
@@ -122,10 +122,10 @@ const elapsedText = computed(() => {
   if (!currentSleep.value?.started_at) return ''
   const start = new Date(currentSleep.value.started_at)
   const mins = Math.round((Date.now() - start.getTime()) / 60000)
-  if (mins < 60) return `${mins}分钟`
+  if (mins < 60) return `${mins}m`
   const h = Math.floor(mins / 60)
   const m = mins % 60
-  return m > 0 ? `${h}小时${m}分钟` : `${h}小时`
+  return m > 0 ? `${h}h${m}` : `${h}h`
 })
 
 function formatSleepTime(s: any) {
@@ -142,10 +142,10 @@ function formatDuration(s: any) {
   const start = new Date(s.started_at)
   const end = new Date(s.ended_at)
   const mins = Math.round((end.getTime() - start.getTime()) / 60000)
-  if (mins < 60) return `${mins}M`
+  if (mins < 60) return `${mins}m`
   const h = Math.floor(mins / 60)
   const m = mins % 60
-  return m > 0 ? `${h}H${m}M` : `${h}H`
+  return m > 0 ? `${h}h${m}` : `${h}h`
 }
 
 async function loadData() {

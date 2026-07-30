@@ -254,20 +254,20 @@ const elapsedSleepText = computed(() => {
   if (!currentSleep.value?.started_at) return ''
   const start = new Date(currentSleep.value.started_at)
   const mins = Math.round((Date.now() - start.getTime()) / 60000)
-  if (mins <= 0) return '0M'
-  if (mins < 60) return `${mins}M`
+  if (mins <= 0) return '0m'
+  if (mins < 60) return `${mins}m`
   const h = Math.floor(mins / 60)
   const m = mins % 60
-  return m > 0 ? `${h}H${m}M` : `${h}H`
+  return m > 0 ? `${h}h${m}` : `${h}h`
 })
 
 const formattedSleepDuration = computed(() => {
   const mins = stats.value.sleep_duration
   if (mins <= 0) return '0'
-  if (mins < 60) return `${mins}M`
+  if (mins < 60) return `${mins}m`
   const h = Math.floor(mins / 60)
   const m = mins % 60
-  return m > 0 ? `${h}H${m}M` : `${h}H`
+  return m > 0 ? `${h}h${m}` : `${h}h`
 })
 
 async function loadData() {

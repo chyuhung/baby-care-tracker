@@ -28,7 +28,7 @@
               <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-primary" stroke-width="2"/>
               <text :x="pt.x" :y="pt.y - 8" text-anchor="middle" font-size="10" fill="#6b7280">{{ pt.value }}</text>
             </g>
-            <text v-for="(d, i) in trendData" :key="'fx'+i" :x="feedingPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ d.date.slice(5) }}</text>
+            <text v-for="(d, i) in trendData" :key="'fx'+i" v-if="dateLabels[i]?.show" :x="feedingPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
           </svg>
         </div>
         <div>
@@ -40,7 +40,7 @@
               <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-diaper" stroke-width="2"/>
               <text :x="pt.x" :y="pt.y - 8" text-anchor="middle" font-size="10" fill="#6b7280">{{ pt.value }}</text>
             </g>
-            <text v-for="(d, i) in trendData" :key="'dx'+i" :x="diaperPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ d.date.slice(5) }}</text>
+            <text v-for="(d, i) in trendData" :key="'dx'+i" v-if="dateLabels[i]?.show" :x="diaperPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
           </svg>
         </div>
         <div>
@@ -52,11 +52,11 @@
               <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-primary" stroke-width="2"/>
               <text :x="pt.x" :y="pt.y - 8" text-anchor="middle" font-size="10" fill="#6b7280">{{ sleepLabels[i] }}</text>
             </g>
-            <text v-for="(d, i) in trendData" :key="'sx'+i" :x="sleepPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ d.date.slice(5) }}</text>
+            <text v-for="(d, i) in trendData" :key="'sx'+i" v-if="dateLabels[i]?.show" :x="sleepPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
           </svg>
         </div>
         <div>
-          <h4 class="text-sm font-semibold text-text-secondary mb-2">🌡️ 每日体温 (°C)</h4>
+          <h4 class="text-sm font-semibold text-text-secondary mb-2">🌡️ 每日最高体温 (°C)</h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <polygon :points="tempAreaPoints" class="chart-fill-temperature" opacity="0.08"/>
             <polyline :points="tempLinePoints" class="chart-line-temperature" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -65,7 +65,7 @@
               <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-temperature" stroke-width="2"/>
               <text :x="pt.x" :y="pt.y - 8" text-anchor="middle" font-size="10" fill="#6b7280">{{ pt.value }}</text>
             </g>
-            <text v-for="(d, i) in trendData" :key="'tx'+i" :x="tempPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ d.date.slice(5) }}</text>
+            <text v-for="(d, i) in trendData" :key="'tx'+i" v-if="dateLabels[i]?.show" :x="tempPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
           </svg>
         </div>
       </template>
@@ -82,6 +82,15 @@ const app = useAppStore()
 const trendData = ref<any[]>([])
 const loading = ref(false)
 const days = ref(7)
+
+const dateLabels = computed(() => {
+  return trendData.value.map((d, i) => {
+    const parts = d.date.split('-')
+    const label = `${parseInt(parts[1])}/${parseInt(parts[2])}`
+    const show = days.value < 30 || i % 2 === 0
+    return { label, show }
+  })
+})
 
 const dayOptions = [
   { label: '7天', value: 7 },
@@ -136,15 +145,15 @@ const sleepAreaPoints = computed(() => sleepChart.value.area)
 
 function formatMinutes(mins: number) {
   if (mins <= 0) return '0'
-  if (mins < 60) return `${mins}M`
+  if (mins < 60) return `${mins}m`
   const h = Math.floor(mins / 60)
   const m = mins % 60
-  return m > 0 ? `${h}H${m}M` : `${h}H`
+  return m > 0 ? `${h}h${m}` : `${h}h`
 }
 
 const sleepLabels = computed(() => trendData.value.map(d => formatMinutes(d.sleep_duration_minutes || 0)))
 
-const tempChart = computed(() => buildLineChart(d => d.temperature_avg || 0))
+const tempChart = computed(() => buildLineChart(d => d.temperature_high || 0))
 const tempPoints = computed(() => tempChart.value.points)
 const tempLinePoints = computed(() => tempChart.value.line)
 const tempAreaPoints = computed(() => tempChart.value.area)
@@ -152,7 +161,7 @@ const tempAreaPoints = computed(() => tempChart.value.area)
 const feverLineY = computed(() => {
   const { padT, padB, svgH } = CHART
   const chartH = svgH - padT - padB
-  const values = trendData.value.map(d => d.temperature_avg || 0)
+  const values = trendData.value.map(d => d.temperature_high || 0)
   if (!values.length) return padT + chartH / 2
   const rawMin = Math.min(...values)
   const rawMax = Math.max(...values)
