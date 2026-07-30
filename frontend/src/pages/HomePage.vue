@@ -86,7 +86,7 @@
             </div>
             <!-- 新增尿布入口 -->
             <button @click.stop="goToAddDiaper"
-              class="mt-3 w-full py-2 bg-diaper text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+              class="mt-3 w-full py-2 bg-diaper/10 text-diaper text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
               <span class="text-base">＋</span> 尿布
             </button>
           </div>
