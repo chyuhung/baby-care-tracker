@@ -18,7 +18,7 @@
           <label class="text-sm text-text-secondary block mb-2">测量位置</label>
           <div class="grid grid-cols-3 gap-3">
             <button v-for="loc in locations" :key="loc" @click="editForm.location = loc"
-              :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press', editForm.location === loc ? 'bg-primary text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
+              :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press', editForm.location === loc ? 'bg-temperature text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
           </div>
         </div>
         <div>
@@ -49,7 +49,7 @@
           <label class="text-sm text-text-secondary block mb-3">测量位置</label>
           <div class="grid grid-cols-3 gap-3">
             <button v-for="loc in locations" :key="loc" @click="form.location = loc"
-              :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press', form.location === loc ? 'bg-primary text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
+              :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press', form.location === loc ? 'bg-temperature text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
           </div>
         </div>
         <div>
@@ -70,6 +70,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { recordAPI } from '@/api'
+import { toLocalDatetime } from '@/utils'
 
 const router = useRouter()
 const route = useRoute()
@@ -91,12 +92,6 @@ function nowDatetime() {
 
 const form = ref({ temperature: 0, location: localStorage.getItem('temp_last_location') || '', note: '', occurred_at: nowDatetime() })
 const editForm = ref({ temperature: 0, location: '腋下', occurred_at: '', note: '' })
-
-function toLocalDatetime(iso: string) {
-  const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
 
 async function loadData() {
   const baby = app.currentBaby

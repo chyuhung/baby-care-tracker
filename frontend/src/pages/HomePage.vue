@@ -182,18 +182,20 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { babyAPI, recordAPI } from '@/api'
+import type { BabyStats, SleepRecord } from '@/api'
 import RecordCard from '@/components/RecordCard.vue'
+import { durationParts } from '@/utils'
 
 const tick = ref(0)
 let tickTimer: number | null = null
 const router = useRouter()
 const app = useAppStore()
-const stats = ref({ feeding_count: 0, diaper_count: 0, total_ml_today: 0, last_feeding: '', last_diaper: '', sleep_count: 0, sleep_duration: 0, last_sleep_end: '', temperature_count: 0, latest_temperature: 0, last_temperature: '' })
+const stats = ref<BabyStats>({ feeding_count: 0, diaper_count: 0, total_ml_today: 0, last_feeding: '', last_diaper: '', sleep_count: 0, sleep_duration: 0, last_sleep_end: '', temperature_count: 0, latest_temperature: 0, last_temperature: '' })
 const allRecords = ref<any[]>([])
 const showAllRecords = ref(false)
 const showDeleteConfirm = ref(false)
 const recordToDelete = ref<any>(null)
-const currentSleep = ref<any>(null)
+const currentSleep = ref<SleepRecord | null>(null)
 const selectedBabyId = ref<number | null>(null)
 let loadGeneration = 0
 
@@ -252,15 +254,6 @@ const lastFeedingAgo = computed(() => { tick.value; return getTimeAgo(stats.valu
 const lastDiaperAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_diaper) })
 const lastSleepAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_sleep_end) })
 const lastTempAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_temperature) })
-
-function durationParts(mins: number) {
-  if (mins <= 0) return [{ val: '0', unit: '' as string }]
-  if (mins < 60) return [{ val: `${mins}`, unit: 'min' }]
-  const h = Math.floor(mins / 60)
-  const m = mins % 60
-  if (m === 0) return [{ val: `${h}`, unit: 'h' }]
-  return [{ val: `${h}`, unit: 'h' }, { val: `${m}`, unit: 'min' }]
-}
 
 const elapsedSleepParts = computed(() => {
   tick.value
@@ -379,7 +372,8 @@ async function confirmDelete() {
 
 function onRecordCreated(e: Event) {
   const record = (e as CustomEvent).detail
-  if (record && record.baby_id === app.currentBaby?.id) {
+  if (!record) { loadData(); return }
+  if (record.baby_id === app.currentBaby?.id) {
     if (record.record_type === 'sleep' && !record.data?.ended_at) return
     allRecords.value.unshift(record)
     if (record.record_type === 'sleep' && record.data?.ended_at) {

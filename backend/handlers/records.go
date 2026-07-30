@@ -185,7 +185,7 @@ func GetRecords(c *gin.Context) {
 					UserID:     r.UserID,
 					RecordType: "sleep",
 					Data:       r,
-					OccurredAt: r.StartedAt,
+					OccurredAt: *r.EndedAt,
 					CreatedAt:  r.CreatedAt,
 				})
 			}

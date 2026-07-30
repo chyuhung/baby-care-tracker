@@ -133,7 +133,7 @@ func StopSleep(c *gin.Context) {
 		UserID:     record.UserID,
 		RecordType: "sleep",
 		Data:       record,
-		OccurredAt: record.StartedAt,
+		OccurredAt: *record.EndedAt,
 		CreatedAt:  record.CreatedAt,
 	}
 

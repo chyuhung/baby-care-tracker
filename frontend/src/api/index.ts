@@ -184,7 +184,7 @@ export const babyAPI = {
     const params = days ? { days } : {}
     return api.get<DailyStats[]>(`/babies/${id}/trend`, { params })
   },
-  latestFeeding: (id: number) => api.get(`/babies/${id}/latest-feeding`),
+  latestFeeding: (id: number) => api.get<FeedingRecord>(`/babies/${id}/latest-feeding`),
 }
 
 export const recordAPI = {
@@ -209,7 +209,7 @@ export const recordAPI = {
   createTemperature: (babyId: number, data: CreateTemperatureData) =>
     api.post<Record>(`/babies/${babyId}/temperature`, data),
   update: (id: number, type: string, data: UpdateRecordData) =>
-    api.put(`/records/${id}?type=${type}`, data),
+    api.put<Record>(`/records/${id}?type=${type}`, data),
   delete: (id: number, type: string) =>
     api.delete(`/records/${id}?type=${type}`),
 }

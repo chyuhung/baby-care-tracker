@@ -58,7 +58,7 @@
         <span class="text-xs text-text-secondary font-num">{{ timeAgo }}</span>
       </div>
       <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
-        <span class="bg-temperature/10 text-temperature px-2 py-0.5 rounded-full font-num">{{ t.temperature }}°C</span>
+        <span v-if="t.temperature" class="bg-temperature/10 text-temperature px-2 py-0.5 rounded-full font-num">{{ t.temperature }}°C</span>
         <span v-if="t.location" class="bg-gray-100 text-text-secondary px-2 py-0.5 rounded-full">{{ t.location }}</span>
         <span v-if="t.temperature >= 37.5" class="text-red-500 px-1">🔥</span>
       </div>
@@ -72,6 +72,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { formatDuration as fmtDuration } from '@/utils'
 
 const props = withDefaults(defineProps<{ record: any; showDate?: boolean }>(), { showDate: true })
 defineEmits(['edit', 'delete'])
@@ -105,10 +106,7 @@ const sleepDurationLabel = computed(() => {
   const start = new Date(s.value.started_at)
   const end = new Date(s.value.ended_at)
   const mins = Math.round((end.getTime() - start.getTime()) / 60000)
-  if (mins < 60) return `${mins}min`
-  const h = Math.floor(mins / 60)
-  const m = mins % 60
-  return m > 0 ? `${h}h${m}min` : `${h}h`
+  return fmtDuration(mins)
 })
 
 const timeAgo = computed(() => {

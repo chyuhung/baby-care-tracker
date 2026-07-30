@@ -141,6 +141,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { babyAPI, recordAPI } from '@/api'
+import { toLocalDatetime } from '@/utils'
 
 const router = useRouter()
 const route = useRoute()
@@ -169,16 +170,7 @@ const nowDatetime = () => {
   return `${y}-${M}-${D}T${h}:${m}`
 }
 
-// 把 UTC ISO 字符串转为本地 datetime-local 格式
-function utcToLocalDatetime(utcIso: string) {
-  const d = new Date(utcIso)
-  const y = d.getFullYear()
-  const M = String(d.getMonth() + 1).padStart(2, '0')
-  const D = String(d.getDate()).padStart(2, '0')
-  const h = String(d.getHours()).padStart(2, '0')
-  const m = String(d.getMinutes()).padStart(2, '0')
-  return `${y}-${M}-${D}T${h}:${m}`
-}
+// 该函数已提取到 src/utils.ts → toLocalDatetime
 
 const feedingTypes = [
   { value: 'breast', label: '亲喂', emoji: '🤱' },
@@ -258,11 +250,11 @@ async function loadRecord() {
         form.side = d.side || 'left'
         form.brand = d.brand || ''
         form.note = d.note || ''
-        form.occurred_at = d.occurred_at ? utcToLocalDatetime(d.occurred_at) : nowDatetime()
+        form.occurred_at = d.occurred_at ? toLocalDatetime(d.occurred_at) : nowDatetime()
       } else {
         form.type = r.data.type
         form.note = r.data.note || ''
-        form.occurred_at = r.occurred_at ? utcToLocalDatetime(r.occurred_at) : nowDatetime()
+        form.occurred_at = r.occurred_at ? toLocalDatetime(r.occurred_at) : nowDatetime()
       }
     }
   } catch {

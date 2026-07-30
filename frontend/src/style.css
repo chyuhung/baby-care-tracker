@@ -14,7 +14,7 @@
   --primary: 124 108 255;        /* #7C6CFF */
   --primary-light: 240 238 255;    /* #F0EEFF */
   --diaper: 255 122 89;          /* #FF7A59 暖珊瑚，三主题通用强调 */
-  --temperature: 102 187 106;     /* #66BB6A 红色，发烧感 */
+  --temperature: 102 187 106;     /* #66BB6A 绿色，清爽感 */
   --sleep: 78 205 196;           /* #4ECDC4 青绿，睡眠休息感 */
   --header-grad: linear-gradient(135deg, rgb(124 108 255 / 0.16), rgb(124 108 255 / 0.04));
   --chart-primary: #7C6CFF;

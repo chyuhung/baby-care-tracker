@@ -175,7 +175,8 @@ async function confirmDelete() {
 
 function onRecordCreated(e: Event) {
   const record = (e as CustomEvent).detail
-  if (record && record.baby_id === app.currentBaby?.id) records.value.unshift(record)
+  if (!record) { loadRecords(); return }
+  if (record.baby_id === app.currentBaby?.id) records.value.unshift(record)
 }
 
 function onRecordDeleted(e: Event) {

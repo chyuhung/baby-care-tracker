@@ -82,13 +82,15 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { recordAPI } from '@/api'
+import type { SleepRecord } from '@/api'
+import { toLocalDatetime, formatDuration as fmtDuration } from '@/utils'
 
 const router = useRouter()
 const route = useRoute()
 const app = useAppStore()
 
 const isEdit = computed(() => !!route.params.id)
-const currentSleep = ref<any>(null)
+const currentSleep = ref<SleepRecord | null>(null)
 const allSleeps = ref<any[]>([])
 const tick = ref(0)
 let tickTimer: number | null = null
@@ -142,10 +144,7 @@ function formatDuration(s: any) {
   const start = new Date(s.started_at)
   const end = new Date(s.ended_at)
   const mins = Math.round((end.getTime() - start.getTime()) / 60000)
-  if (mins < 60) return `${mins}min`
-  const h = Math.floor(mins / 60)
-  const m = mins % 60
-  return m > 0 ? `${h}h${m}min` : `${h}h`
+  return fmtDuration(mins)
 }
 
 async function loadData() {
@@ -172,12 +171,6 @@ async function loadData() {
   } catch {
     app.showToast('加载失败', 'error')
   }
-}
-
-function toLocalDatetime(iso: string) {
-  const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 async function startSleep() {
