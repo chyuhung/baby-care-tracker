@@ -96,11 +96,11 @@
             <div class="text-xs text-text-secondary mb-1">今日睡眠</div>
             <div class="flex items-end justify-between">
               <div v-if="currentSleep" class="flex items-baseline gap-1 min-w-0">
-                <span class="text-base font-bold text-primary truncate">已睡 <template v-for="(part, pi) in elapsedSleepParts" :key="pi"><span>{{ part.val }}</span><span v-if="part.unit" class="text-sm text-text-secondary font-normal">{{ part.unit }}</span> </template></span>
+                <span class="text-base font-bold text-sleep truncate">已睡 <template v-for="(part, pi) in elapsedSleepParts" :key="pi"><span>{{ part.val }}</span><span v-if="part.unit" class="text-sm text-text-secondary font-normal">{{ part.unit }}</span> </template></span>
               </div>
               <div v-else class="flex items-baseline gap-0.5">
                 <template v-for="(part, pi) in sleepDurationParts" :key="pi">
-                  <span class="text-3xl font-bold font-num text-primary">{{ part.val }}</span>
+                  <span class="text-3xl font-bold font-num text-sleep">{{ part.val }}</span>
                   <span v-if="part.unit" class="text-sm text-text-secondary">{{ part.unit }}</span>
                 </template>
                 
@@ -116,7 +116,7 @@
               <span>■</span> 结束
             </button>
             <button v-else @click.stop="startSleep"
-              class="mt-3 w-full py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+              class="mt-3 w-full py-2 bg-sleep/10 text-sleep text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
               <span>●</span> 开始
             </button>
           </div>

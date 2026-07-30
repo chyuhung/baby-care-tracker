@@ -34,14 +34,14 @@
   </div>
 
   <div v-else-if="record.record_type === 'sleep'" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
-    <div class="w-1.5 h-12 rounded-full bg-primary flex-shrink-0"></div>
+    <div class="w-1.5 h-12 rounded-full bg-sleep flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
         <span class="text-sm font-semibold text-text-primary">😴 睡眠</span>
         <span class="text-xs text-text-secondary font-num">{{ sleepTimeLabel }}</span>
       </div>
       <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
-        <span class="bg-primary/10 text-primary px-2 py-0.5 rounded-full">{{ sleepDurationLabel }}</span>
+        <span class="bg-sleep/10 text-sleep px-2 py-0.5 rounded-full">{{ sleepDurationLabel }}</span>
       </div>
       <div v-if="s.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ s.note }}</div>
     </div>

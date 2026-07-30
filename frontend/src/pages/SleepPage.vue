@@ -32,7 +32,7 @@
         <div class="bg-white rounded-2xl shadow-card p-5">
           <div class="text-xs text-text-secondary mb-1">今日睡眠总计</div>
           <div class="flex items-baseline gap-2">
-            <span class="text-3xl font-bold text-primary font-num">{{ formattedDuration }}</span>
+            <span class="text-3xl font-bold text-sleep font-num">{{ formattedDuration }}</span>
             <span class="text-sm text-text-secondary">· {{ todaySleeps.length }}次</span>
           </div>
         </div>
@@ -41,13 +41,13 @@
         <div class="bg-white rounded-2xl shadow-card p-5 text-center">
           <template v-if="currentSleep">
             <div class="text-lg text-text-primary mb-2">😴 正在睡觉</div>
-            <div class="text-4xl font-bold text-primary font-num mb-4">{{ elapsedText }}</div>
+            <div class="text-4xl font-bold text-sleep font-num mb-4">{{ elapsedText }}</div>
             <button @click="stopSleep" class="w-full py-3 bg-red-500 text-white rounded-xl font-medium shadow-card btn-press flex items-center justify-center gap-2">
               <span>■</span> 结束
             </button>
           </template>
           <template v-else>
-            <button @click="startSleep" class="w-full py-3 bg-primary/10 text-primary rounded-xl font-medium btn-press flex items-center justify-center gap-2">
+            <button @click="startSleep" class="w-full py-3 bg-sleep/10 text-sleep rounded-xl font-medium btn-press flex items-center justify-center gap-2">
               <span>●</span> 开始
             </button>
           </template>
@@ -61,13 +61,13 @@
           </div>
           <div v-for="s in todaySleeps" :key="s.id" @click="editSleep(s)"
             class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press">
-            <div class="w-1.5 h-12 rounded-full bg-primary flex-shrink-0"></div>
+            <div class="w-1.5 h-12 rounded-full bg-sleep flex-shrink-0"></div>
             <div class="flex-1 min-w-0">
               <div class="flex items-center justify-between">
                 <span class="text-sm font-semibold text-text-primary">😴 睡眠</span>
                 <span class="text-xs text-text-secondary font-num">{{ formatSleepTime(s) }}</span>
               </div>
-              <span class="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full mt-1 inline-block">{{ formatDuration(s) }}</span>
+              <span class="text-xs bg-sleep/10 text-sleep px-2 py-0.5 rounded-full mt-1 inline-block">{{ formatDuration(s) }}</span>
               <div v-if="s.note" class="text-xs text-text-secondary mt-1">{{ s.note }}</div>
             </div>
           </div>

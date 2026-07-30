@@ -12,6 +12,7 @@ export default {
         'primary-light': 'rgb(var(--primary-light) / <alpha-value>)',
         diaper: 'rgb(var(--diaper) / <alpha-value>)',
         temperature: 'rgb(var(--temperature) / <alpha-value>)',
+        sleep: 'rgb(var(--sleep) / <alpha-value>)',
         // 固定辅助色
         secondary: '#FFB6C1',
         accent: '#FFD93D',

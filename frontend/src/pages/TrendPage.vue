@@ -50,10 +50,10 @@
         <div>
           <h4 class="text-sm font-semibold text-text-secondary mb-2">😴 每日睡眠</h4>
           <svg viewBox="0 0 340 170" class="w-full block">
-            <polygon :points="sleepAreaPoints" class="chart-fill-primary" opacity="0.08"/>
-            <polyline :points="sleepLinePoints" class="chart-line-primary" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <polygon :points="sleepAreaPoints" class="chart-fill-sleep" opacity="0.08"/>
+            <polyline :points="sleepLinePoints" class="chart-line-sleep" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <g v-for="(pt, i) in sleepPoints" :key="'sp'+i">
-              <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-primary" stroke-width="2"/>
+              <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-sleep" stroke-width="2"/>
               <text :x="pt.x" :y="pt.y - 8" text-anchor="middle" font-size="10" fill="#6b7280">{{ sleepLabels[i] }}</text>
             </g>
             <template v-for="(d, i) in trendData" :key="'sx'+i">
