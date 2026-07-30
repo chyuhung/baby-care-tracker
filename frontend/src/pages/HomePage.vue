@@ -379,7 +379,8 @@ async function confirmDelete() {
 
 function onRecordCreated(e: Event) {
   const record = (e as CustomEvent).detail
-  if (record) {
+  if (record && record.baby_id === app.currentBaby?.id) {
+    if (record.record_type === 'sleep' && !record.data?.ended_at) return
     allRecords.value.unshift(record)
     if (record.record_type === 'sleep' && record.data?.ended_at) {
       loadData()
