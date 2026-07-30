@@ -18,7 +18,7 @@
           <label class="text-sm text-text-secondary block mb-2">测量位置</label>
           <div class="grid grid-cols-3 gap-3">
             <button v-for="loc in locations" :key="loc" @click="editForm.location = loc"
-              :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press', editForm.location === loc ? 'bg-temperature text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
+              :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press', editForm.location === loc ? 'bg-primary text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
           </div>
         </div>
         <div>
@@ -49,7 +49,7 @@
           <label class="text-sm text-text-secondary block mb-3">测量位置</label>
           <div class="grid grid-cols-3 gap-3">
             <button v-for="loc in locations" :key="loc" @click="form.location = loc"
-              :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press', form.location === loc ? 'bg-temperature text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
+              :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press', form.location === loc ? 'bg-primary text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
           </div>
         </div>
         <div>
