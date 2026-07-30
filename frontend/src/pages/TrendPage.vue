@@ -153,10 +153,10 @@ const sleepAreaPoints = computed(() => sleepChart.value.area)
 
 function formatMinutes(mins: number) {
   if (mins <= 0) return '0'
-  if (mins < 60) return `${mins}m`
+  if (mins < 60) return `${mins}min`
   const h = Math.floor(mins / 60)
   const m = mins % 60
-  return m > 0 ? `${h}h${m}` : `${h}h`
+  return m > 0 ? `${h}h${m}min` : `${h}h`
 }
 
 const sleepLabels = computed(() => trendData.value.map(d => formatMinutes(d.sleep_duration_minutes || 0)))
