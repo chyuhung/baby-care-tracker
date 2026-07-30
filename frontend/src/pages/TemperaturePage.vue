@@ -56,12 +56,11 @@
           <label class="text-sm text-text-secondary block mb-2">备注</label>
           <textarea v-model="form.note" rows="2" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors resize-none"></textarea>
         </div>
+        <button @click="submitTemperature" :disabled="!form.temperature"
+          class="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">
+          记录
+        </button>
       </template>
-
-      <button @click="submitTemperature" :disabled="!form.temperature"
-        class="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">
-        记录
-      </button>
     </main>
   </div>
 </template>
