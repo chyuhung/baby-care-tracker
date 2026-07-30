@@ -538,3 +538,35 @@ func GetLatestFeeding(c *gin.Context) {
 		"note":             note,
 	})
 }
+
+// GetLatestTemperature 获取最近一次测温记录（用于快捷填表）
+func GetLatestTemperature(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	babyID, ok := parseID(c)
+	if !ok {
+		return
+	}
+
+	if !checkBabyFamily(babyID, userID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
+		return
+	}
+
+	var temperature float64
+	var location, note string
+	err := database.DB.QueryRow(
+		"SELECT temperature, location, note FROM temperature_records WHERE baby_id = ? ORDER BY occurred_at DESC LIMIT 1",
+		babyID,
+	).Scan(&temperature, &location, &note)
+
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"temperature": temperature,
+		"location":    location,
+		"note":        note,
+	})
+}

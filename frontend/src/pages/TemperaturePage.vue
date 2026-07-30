@@ -69,7 +69,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { recordAPI } from '@/api'
+import { babyAPI, recordAPI } from '@/api'
 import { toLocalDatetime } from '@/utils'
 
 const router = useRouter()
@@ -109,6 +109,12 @@ async function loadData() {
           occurred_at: toLocalDatetime(d.occurred_at),
           note: d.note || '',
         }
+      }
+    } else {
+      const res = await babyAPI.latestTemperature(baby.id)
+      if (res.data && res.data.temperature) {
+        form.value.temperature = res.data.temperature
+        form.value.location = res.data.location || '腋下'
       }
     }
   } catch {

@@ -185,6 +185,7 @@ export const babyAPI = {
     return api.get<DailyStats[]>(`/babies/${id}/trend`, { params })
   },
   latestFeeding: (id: number) => api.get<FeedingRecord>(`/babies/${id}/latest-feeding`),
+  latestTemperature: (id: number) => api.get<{ temperature: number; location: string; note: string }>(`/babies/${id}/latest-temperature`),
 }
 
 export const recordAPI = {

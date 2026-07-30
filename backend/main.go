@@ -127,6 +127,7 @@ func main() {
 			protected.GET("/babies/:id/stats", handlers.GetStats)
 			protected.GET("/babies/:id/trend", handlers.GetTrendStats)
 			protected.GET("/babies/:id/latest-feeding", handlers.GetLatestFeeding)
+			protected.GET("/babies/:id/latest-temperature", handlers.GetLatestTemperature)
 
 			protected.GET("/babies/:id/records", handlers.GetRecords)
 			protected.GET("/babies/:id/records/count", handlers.GetRecordsCount)

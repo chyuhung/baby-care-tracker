@@ -5,7 +5,7 @@ export function toLocalDatetime(iso: string) {
 }
 
 export function formatDuration(mins: number) {
-  if (mins <= 0) return '0'
+  if (mins <= 0) return '0min'
   if (mins < 60) return `${mins}min`
   const h = Math.floor(mins / 60)
   const m = mins % 60
@@ -13,7 +13,7 @@ export function formatDuration(mins: number) {
 }
 
 export function durationParts(mins: number) {
-  if (mins <= 0) return [{ val: '0', unit: '' as string }]
+  if (mins <= 0) return [{ val: '0', unit: 'min' as string }]
   if (mins < 60) return [{ val: `${mins}`, unit: 'min' }]
   const h = Math.floor(mins / 60)
   const m = mins % 60
