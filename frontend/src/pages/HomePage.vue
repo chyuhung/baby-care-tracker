@@ -96,10 +96,14 @@
             <div class="text-xs text-text-secondary mb-1">今日睡眠</div>
             <div class="flex items-end justify-between">
               <div v-if="currentSleep" class="flex items-baseline gap-1 min-w-0">
-                <span class="text-base font-bold text-primary truncate">已睡 {{ elapsedSleepText }}</span>
+                <span class="text-base font-bold text-primary truncate">已睡 <template v-for="(part, pi) in elapsedSleepParts" :key="pi"><span>{{ part.val }}</span><span v-if="part.unit" class="text-sm text-text-secondary font-normal">{{ part.unit }}</span> </template></span>
               </div>
               <div v-else class="flex items-baseline gap-0.5">
-                <span class="text-3xl font-bold font-num text-primary">{{ formattedSleepDuration }}<sup v-if="stats.sleep_count > 0" class="text-[0.55em] font-bold text-primary font-num leading-none">{{ stats.sleep_count }}</sup></span>
+                <template v-for="(part, pi) in sleepDurationParts" :key="pi">
+                  <span class="text-3xl font-bold font-num text-primary">{{ part.val }}</span>
+                  <span v-if="part.unit" class="text-sm text-text-secondary">{{ part.unit }}</span>
+                </template>
+                
               </div>
               <div class="text-3xl">😴</div>
             </div>
@@ -249,26 +253,24 @@ const lastDiaperAgo = computed(() => { tick.value; return getTimeAgo(stats.value
 const lastSleepAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_sleep_end) })
 const lastTempAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_temperature) })
 
-const elapsedSleepText = computed(() => {
+function durationParts(mins: number) {
+  if (mins <= 0) return [{ val: '0', unit: '' as string }]
+  if (mins < 60) return [{ val: `${mins}`, unit: 'min' }]
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  if (m === 0) return [{ val: `${h}`, unit: 'h' }]
+  return [{ val: `${h}`, unit: 'h' }, { val: `${m}`, unit: 'min' }]
+}
+
+const elapsedSleepParts = computed(() => {
   tick.value
-  if (!currentSleep.value?.started_at) return ''
+  if (!currentSleep.value?.started_at) return []
   const start = new Date(currentSleep.value.started_at)
   const mins = Math.round((Date.now() - start.getTime()) / 60000)
-  if (mins <= 0) return '0m'
-  if (mins < 60) return `${mins}min`
-  const h = Math.floor(mins / 60)
-  const m = mins % 60
-  return m > 0 ? `${h}h${m}min` : `${h}h`
+  return durationParts(mins)
 })
 
-const formattedSleepDuration = computed(() => {
-  const mins = stats.value.sleep_duration
-  if (mins <= 0) return '0'
-  if (mins < 60) return `${mins}min`
-  const h = Math.floor(mins / 60)
-  const m = mins % 60
-  return m > 0 ? `${h}h${m}min` : `${h}h`
-})
+const sleepDurationParts = computed(() => durationParts(stats.value.sleep_duration))
 
 async function loadData() {
   if (app.babies.length === 0) {
