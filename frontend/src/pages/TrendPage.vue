@@ -34,7 +34,7 @@
           </svg>
         </div>
         <div>
-          <h4 class="text-sm font-semibold text-text-secondary mb-2">🩲 每日尿布次数</h4>
+          <h4 class="text-sm font-semibold text-text-secondary mb-2">🩲 每日尿布次数 (次)</h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <polygon :points="diaperAreaPoints" class="chart-fill-diaper" opacity="0.08"/>
             <polyline :points="diaperLinePoints" class="chart-line-diaper" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -48,7 +48,7 @@
           </svg>
         </div>
         <div>
-          <h4 class="text-sm font-semibold text-text-secondary mb-2">😴 每日睡眠</h4>
+          <h4 class="text-sm font-semibold text-text-secondary mb-2">😴 每日睡眠 (小时)</h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <polygon :points="sleepAreaPoints" class="chart-fill-sleep" opacity="0.08"/>
             <polyline :points="sleepLinePoints" class="chart-line-sleep" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
