@@ -85,7 +85,6 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { babyAPI } from '@/api'
-import { formatDuration } from '@/utils'
 
 const app = useAppStore()
 const trendData = ref<any[]>([])
@@ -152,7 +151,12 @@ const sleepPoints = computed(() => sleepChart.value.points)
 const sleepLinePoints = computed(() => sleepChart.value.line)
 const sleepAreaPoints = computed(() => sleepChart.value.area)
 
-const sleepLabels = computed(() => trendData.value.map(d => formatDuration(d.sleep_duration_minutes || 0)))
+function formatSleepLabel(mins: number) {
+  if (mins <= 0) return '0'
+  return `${Math.round(mins / 60 * 10) / 10}`
+}
+
+const sleepLabels = computed(() => trendData.value.map(d => formatSleepLabel(d.sleep_duration_minutes || 0)))
 
 const tempChart = computed(() => buildLineChart(d => d.temperature_high || 0))
 const tempPoints = computed(() => tempChart.value.points)
