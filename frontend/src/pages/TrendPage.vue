@@ -39,14 +39,18 @@
             <line :x1="axis.rightX" :x2="axis.rightX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">ml</text>
             <text :x="axis.rightX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">次</text>
-            <g v-for="(pt, i) in feedingPoints" :key="'fl'+i">
-              <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
-              <text :x="axis.leftX - 4" :y="pt.y + 3" text-anchor="end" font-size="9" fill="#9ca3af">{{ pt.value }}</text>
-            </g>
-            <g v-for="(pt, i) in feedingCountPoints" :key="'fc'+i">
-              <line :x1="pt.x" :y1="pt.y" :x2="axis.rightX" :y2="pt.y" class="chart-guide"/>
-              <text :x="axis.rightX + 4" :y="pt.y + 3" text-anchor="start" font-size="9" fill="#9ca3af">{{ pt.value }}</text>
-            </g>
+            <template v-for="(pt, i) in feedingPoints" :key="'fl'+i">
+              <g v-if="feedingLabelVis[i]">
+                <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
+                <text :x="axis.leftX - 4" :y="pt.y + 3" text-anchor="end" font-size="9" fill="#9ca3af">{{ pt.value }}</text>
+              </g>
+            </template>
+            <template v-for="(pt, i) in feedingCountPoints" :key="'fc'+i">
+              <g v-if="feedingCountLabelVis[i]">
+                <line :x1="pt.x" :y1="pt.y" :x2="axis.rightX" :y2="pt.y" class="chart-guide"/>
+                <text :x="axis.rightX + 4" :y="pt.y + 3" text-anchor="start" font-size="9" fill="#9ca3af">{{ pt.value }}</text>
+              </g>
+            </template>
             <g v-for="(pt, i) in feedingPoints" :key="'fp'+i">
               <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-primary" stroke-width="2"/>
             </g>
@@ -70,10 +74,12 @@
             <path :d="diaperPath" class="chart-line-diaper" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">次</text>
-            <g v-for="(pt, i) in diaperPoints" :key="'dl'+i">
-              <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
-              <text :x="axis.leftX - 4" :y="pt.y + 3" text-anchor="end" font-size="9" fill="#9ca3af">{{ pt.value }}</text>
-            </g>
+            <template v-for="(pt, i) in diaperPoints" :key="'dl'+i">
+              <g v-if="diaperLabelVis[i]">
+                <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
+                <text :x="axis.leftX - 4" :y="pt.y + 3" text-anchor="end" font-size="9" fill="#9ca3af">{{ pt.value }}</text>
+              </g>
+            </template>
             <g v-for="(pt, i) in diaperPoints" :key="'dp'+i">
               <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-diaper" stroke-width="2"/>
             </g>
@@ -94,10 +100,12 @@
             <path :d="sleepPath" class="chart-line-sleep" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">小时</text>
-            <g v-for="(pt, i) in sleepPoints" :key="'sl'+i">
-              <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
-              <text :x="axis.leftX - 4" :y="pt.y + 3" text-anchor="end" font-size="9" fill="#9ca3af">{{ sleepLabels[i] }}</text>
-            </g>
+            <template v-for="(pt, i) in sleepPoints" :key="'sl'+i">
+              <g v-if="sleepLabelVis[i]">
+                <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
+                <text :x="axis.leftX - 4" :y="pt.y + 3" text-anchor="end" font-size="9" fill="#9ca3af">{{ sleepLabels[i] }}</text>
+              </g>
+            </template>
             <g v-for="(pt, i) in sleepPoints" :key="'sp'+i">
               <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-sleep" stroke-width="2"/>
             </g>
@@ -119,10 +127,12 @@
             <line :x1="axis.leftX" :x2="axis.rightX" :y1="feverLineY" :y2="feverLineY" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">°C</text>
-            <g v-for="(pt, i) in tempPoints" :key="'tl'+i">
-              <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
-              <text :x="axis.leftX - 4" :y="pt.y + 3" text-anchor="end" font-size="9" fill="#9ca3af">{{ pt.value }}</text>
-            </g>
+            <template v-for="(pt, i) in tempPoints" :key="'tl'+i">
+              <g v-if="tempLabelVis[i]">
+                <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
+                <text :x="axis.leftX - 4" :y="pt.y + 3" text-anchor="end" font-size="9" fill="#9ca3af">{{ pt.value }}</text>
+              </g>
+            </template>
             <g v-for="(pt, i) in tempPoints" :key="'tp'+i">
               <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-temperature" stroke-width="2"/>
             </g>
@@ -150,7 +160,7 @@ const dateLabels = computed(() => {
   return trendData.value.map((d, i) => {
     const parts = d.date.split('-')
     const label = `${parseInt(parts[1])}/${parseInt(parts[2])}`
-    const show = days.value < 30 || i % 2 === 0
+    const show = days.value < 30 || i % 5 === 0
     return { label, show }
   })
 })
@@ -235,6 +245,24 @@ const feedingAreaPath = computed(() => feedingChart.value.areaPath)
 const feedingCountChart = computed(() => buildLineChart(d => d.feeding_count || 0))
 const feedingCountPoints = computed(() => feedingCountChart.value.points)
 const feedingCountPath = computed(() => feedingCountChart.value.path)
+
+function pickLabels(pts: { y: number }[], minGap = 13): boolean[] {
+  const vis = pts.map(() => false)
+  let lastY = -Infinity
+  for (let i = 0; i < pts.length; i++) {
+    if (Math.abs(pts[i].y - lastY) >= minGap) {
+      vis[i] = true
+      lastY = pts[i].y
+    }
+  }
+  return vis
+}
+
+const feedingLabelVis = computed(() => pickLabels(feedingPoints.value))
+const feedingCountLabelVis = computed(() => pickLabels(feedingCountPoints.value))
+const diaperLabelVis = computed(() => pickLabels(diaperPoints.value))
+const sleepLabelVis = computed(() => pickLabels(sleepPoints.value))
+const tempLabelVis = computed(() => pickLabels(tempPoints.value))
 
 const diaperChart = computed(() => buildLineChart(d => d.diaper_count || 0))
 const diaperPoints = computed(() => diaperChart.value.points)
