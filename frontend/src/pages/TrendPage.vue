@@ -186,7 +186,7 @@ function buildSmoothPath(pts: { x: number, y: number }[]): string {
 
 function buildLineChart(getValue: (d: any) => number) {
   const data = trendData.value
-  const empty = { points: [] as { x: number, y: number, value: number }[], path: '', ticks: [] as { y: number, label: string, value: number, frac: number }[], yMin: 0, yRange: 1 }
+  const empty = { points: [] as { x: number, y: number, value: number }[], path: '', ticks: [] as { y: number, label: string }[], yMin: 0, yRange: 1 }
   if (!data.length) return empty
   const { padL, padR, padT, padB, svgW, svgH } = CHART
   const chartW = svgW - padL - padR
@@ -222,8 +222,6 @@ function buildLineChart(getValue: (d: any) => number) {
   const ticks = tickVals.map(v => ({
     y: padT + chartH - (v - yMin) / yRange * chartH,
     label: formatTick(v, tickStep),
-    value: v,
-    frac: (v - yMin) / yRange,
   }))
 
   const path = buildSmoothPath(points)
@@ -267,15 +265,10 @@ function formatTick(v: number, step: number) {
 }
 
 const feedingTicks = computed(() => feedingChart.value.ticks)
-const feedingCountTicks = computed(() => {
-  const ml = feedingChart.value
-  const fc = feedingCountChart.value
-  if (!ml.ticks.length) return []
-  return ml.ticks.map(t => ({
-    y: t.y,
-    label: String(Math.round(fc.yMin + t.frac * fc.yRange)),
-  }))
-})
+const feedingCountTicks = computed(() => feedingCountChart.value.ticks.map(t => ({
+  y: t.y,
+  label: String(Math.round(Number(t.label))),
+})))
 const diaperTicks = computed(() => diaperChart.value.ticks)
 const sleepTicks = computed(() => sleepChart.value.ticks)
 const tempTicks = computed(() => tempChart.value.ticks)
