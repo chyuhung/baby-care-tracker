@@ -156,17 +156,9 @@ body {
 
 /* 趋势图 SVG 线条颜色（跟随主题） */
 .chart-grid { stroke: #e5e7eb; stroke-width: 0.8; stroke-dasharray: 4,3; }
+.chart-guide { stroke: #d1d5db; stroke-width: 0.8; stroke-dasharray: 3,3; }
 .chart-line-primary { stroke: var(--chart-primary); }
-.chart-fill-primary { fill: var(--chart-primary); }
 .chart-line-primary-count { stroke: var(--chart-primary-count); }
-.chart-fill-primary-count { fill: var(--chart-primary-count); }
 .chart-line-diaper { stroke: var(--chart-diaper); }
-.chart-fill-diaper { fill: var(--chart-diaper); }
 .chart-line-temperature { stroke: var(--chart-temperature); }
-.chart-fill-temperature { fill: var(--chart-temperature); }
-.chart-text-primary { fill: var(--chart-primary); }
-.chart-text-diaper { fill: var(--chart-diaper); }
-.chart-text-temperature { fill: var(--chart-temperature); }
 .chart-line-sleep { stroke: var(--chart-sleep); }
-.chart-fill-sleep { fill: var(--chart-sleep); }
-.chart-text-sleep { fill: var(--chart-sleep); }

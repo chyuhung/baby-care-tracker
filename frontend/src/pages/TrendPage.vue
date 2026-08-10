@@ -33,13 +33,16 @@
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <g v-for="(t, ti) in feedingTicks" :key="'fl'+ti">
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid chart-line-primary"/>
               <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
             </g>
             <g v-for="(t, ti) in feedingCountTicks" :key="'fr'+ti">
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid chart-line-primary-count"/>
               <text :x="axis.rightX + 5" :y="t.y + 3" text-anchor="start" font-size="9" fill="#9ca3af">{{ t.label }}</text>
             </g>
-            <path :d="feedingAreaPath" class="chart-fill-primary" opacity="0.08"/>
+            <g v-for="(pt, i) in feedingPoints" :key="'dv'+i">
+              <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
+            </g>
             <path :d="feedingPath" class="chart-line-primary" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <path :d="feedingCountPath" class="chart-line-primary-count" fill="none" stroke-width="2" stroke-dasharray="5,4" stroke-linecap="round" stroke-linejoin="round"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
@@ -63,7 +66,9 @@
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
               <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
             </g>
-            <path :d="diaperAreaPath" class="chart-fill-diaper" opacity="0.08"/>
+            <g v-for="(pt, i) in diaperPoints" :key="'dv'+i">
+              <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
+            </g>
             <path :d="diaperPath" class="chart-line-diaper" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">次</text>
@@ -84,7 +89,9 @@
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
               <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
             </g>
-            <path :d="sleepAreaPath" class="chart-fill-sleep" opacity="0.08"/>
+            <g v-for="(pt, i) in sleepPoints" :key="'sv'+i">
+              <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
+            </g>
             <path :d="sleepPath" class="chart-line-sleep" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">小时</text>
@@ -105,8 +112,10 @@
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
               <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
             </g>
+            <g v-for="(pt, i) in tempPoints" :key="'tv'+i">
+              <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
+            </g>
             <line :x1="axis.leftX" :x2="axis.rightX" :y1="feverLineY" :y2="feverLineY" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
-            <path :d="tempAreaPath" class="chart-fill-temperature" opacity="0.08"/>
             <path :d="tempPath" class="chart-line-temperature" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">°C</text>
@@ -178,7 +187,7 @@ function buildSmoothPath(pts: { x: number, y: number }[]): string {
 
 function buildLineChart(getValue: (d: any) => number) {
   const data = trendData.value
-  const empty = { points: [] as { x: number, y: number, value: number }[], path: '', areaPath: '', ticks: [] as { y: number, label: string }[], yMin: 0, yRange: 1 }
+  const empty = { points: [] as { x: number, y: number, value: number }[], path: '', ticks: [] as { y: number, label: string }[], yMin: 0, yRange: 1 }
   if (!data.length) return empty
   const { padL, padR, padT, padB, svgW, svgH } = CHART
   const chartW = svgW - padL - padR
@@ -217,20 +226,12 @@ function buildLineChart(getValue: (d: any) => number) {
   }))
 
   const path = buildSmoothPath(points)
-  const bY = padT + chartH
-  let areaPath = ''
-  if (points.length >= 2) {
-    const first = points[0]
-    const last = points[points.length - 1]
-    areaPath = `M ${first.x},${bY} ${path.slice(2)} L ${last.x},${bY} Z`
-  }
-  return { points, path, areaPath, ticks, yMin, yRange }
+  return { points, path, ticks, yMin, yRange }
 }
 
 const feedingChart = computed(() => buildLineChart(d => d.total_ml || 0))
 const feedingPoints = computed(() => feedingChart.value.points)
 const feedingPath = computed(() => feedingChart.value.path)
-const feedingAreaPath = computed(() => feedingChart.value.areaPath)
 
 const feedingCountChart = computed(() => buildLineChart(d => d.feeding_count || 0))
 const feedingCountPoints = computed(() => feedingCountChart.value.points)
@@ -273,17 +274,14 @@ const tempTicks = computed(() => tempChart.value.ticks)
 const diaperChart = computed(() => buildLineChart(d => d.diaper_count || 0))
 const diaperPoints = computed(() => diaperChart.value.points)
 const diaperPath = computed(() => diaperChart.value.path)
-const diaperAreaPath = computed(() => diaperChart.value.areaPath)
 
 const sleepChart = computed(() => buildLineChart(d => (d.sleep_duration_minutes || 0) / 60))
 const sleepPoints = computed(() => sleepChart.value.points)
 const sleepPath = computed(() => sleepChart.value.path)
-const sleepAreaPath = computed(() => sleepChart.value.areaPath)
 
 const tempChart = computed(() => buildLineChart(d => d.temperature_high || 0))
 const tempPoints = computed(() => tempChart.value.points)
 const tempPath = computed(() => tempChart.value.path)
-const tempAreaPath = computed(() => tempChart.value.areaPath)
 
 const feverLineY = computed(() => {
   const { padT, padB, svgH } = CHART
