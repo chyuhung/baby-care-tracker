@@ -282,7 +282,7 @@ const diaperPoints = computed(() => diaperChart.value.points)
 const diaperPath = computed(() => diaperChart.value.path)
 const diaperAreaPath = computed(() => diaperChart.value.areaPath)
 
-const sleepChart = computed(() => buildLineChart(d => d.sleep_duration_minutes || 0))
+const sleepChart = computed(() => buildLineChart(d => (d.sleep_duration_minutes || 0) / 60))
 const sleepPoints = computed(() => sleepChart.value.points)
 const sleepPath = computed(() => sleepChart.value.path)
 const sleepAreaPath = computed(() => sleepChart.value.areaPath)
