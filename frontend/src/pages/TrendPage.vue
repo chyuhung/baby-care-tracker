@@ -40,18 +40,19 @@
               <text :x="axis.rightX + 5" :y="t.y + 3" text-anchor="start" font-size="9" fill="#9ca3af">{{ t.label }}</text>
             </g>
             <path :d="feedingAreaPath" class="chart-fill-primary" opacity="0.08"/>
+            <g v-for="(pt, i) in feedingPoints" :key="'fv'+i">
+              <line :x1="pt.x" :y1="pt.y" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
+              <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
+            </g>
+            <g v-for="(pt, i) in feedingCountPoints" :key="'fc'+i">
+              <line :x1="pt.x" :y1="pt.y" :x2="axis.rightX" :y2="pt.y" class="chart-guide"/>
+            </g>
             <path :d="feedingPath" class="chart-line-primary" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <path :d="feedingCountPath" class="chart-line-primary-count" fill="none" stroke-width="2" stroke-dasharray="5,4" stroke-linecap="round" stroke-linejoin="round"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <line :x1="axis.rightX" :x2="axis.rightX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">ml</text>
             <text :x="axis.rightX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">次</text>
-            <g v-for="(pt, i) in feedingPoints" :key="'fp'+i">
-              <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-primary" stroke-width="2"/>
-            </g>
-            <g v-for="(pt, i) in feedingCountPoints" :key="'fcp'+i">
-              <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="white" class="chart-line-primary-count" stroke-width="2"/>
-            </g>
             <template v-for="(d, i) in trendData" :key="'fx'+i">
               <text v-if="dateLabels[i]?.show" :x="feedingPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
             </template>
@@ -70,12 +71,13 @@
               <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
             </g>
             <path :d="diaperAreaPath" class="chart-fill-diaper" opacity="0.08"/>
+            <g v-for="(pt, i) in diaperPoints" :key="'dv'+i">
+              <line :x1="pt.x" :y1="pt.y" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
+              <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
+            </g>
             <path :d="diaperPath" class="chart-line-diaper" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">次</text>
-            <g v-for="(pt, i) in diaperPoints" :key="'dp'+i">
-              <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-diaper" stroke-width="2"/>
-            </g>
             <template v-for="(d, i) in trendData" :key="'dx'+i">
               <text v-if="dateLabels[i]?.show" :x="diaperPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
             </template>
@@ -94,12 +96,13 @@
               <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
             </g>
             <path :d="sleepAreaPath" class="chart-fill-sleep" opacity="0.08"/>
+            <g v-for="(pt, i) in sleepPoints" :key="'sv'+i">
+              <line :x1="pt.x" :y1="pt.y" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
+              <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
+            </g>
             <path :d="sleepPath" class="chart-line-sleep" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">小时</text>
-            <g v-for="(pt, i) in sleepPoints" :key="'sp'+i">
-              <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-sleep" stroke-width="2"/>
-            </g>
             <template v-for="(d, i) in trendData" :key="'sx'+i">
               <text v-if="dateLabels[i]?.show" :x="sleepPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
             </template>
@@ -119,12 +122,13 @@
             </g>
             <line :x1="axis.leftX" :x2="axis.rightX" :y1="feverLineY" :y2="feverLineY" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
             <path :d="tempAreaPath" class="chart-fill-temperature" opacity="0.08"/>
+            <g v-for="(pt, i) in tempPoints" :key="'tv'+i">
+              <line :x1="pt.x" :y1="pt.y" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
+              <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
+            </g>
             <path :d="tempPath" class="chart-line-temperature" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">°C</text>
-            <g v-for="(pt, i) in tempPoints" :key="'tp'+i">
-              <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-temperature" stroke-width="2"/>
-            </g>
             <template v-for="(d, i) in trendData" :key="'tx'+i">
               <text v-if="dateLabels[i]?.show" :x="tempPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
             </template>
