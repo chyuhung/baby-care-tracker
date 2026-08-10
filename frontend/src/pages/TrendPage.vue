@@ -40,13 +40,6 @@
               <text :x="axis.rightX + 5" :y="t.y + 3" text-anchor="start" font-size="9" fill="#9ca3af">{{ t.label }}</text>
             </g>
             <path :d="feedingAreaPath" class="chart-fill-primary" opacity="0.08"/>
-            <g v-for="(pt, i) in feedingPoints" :key="'fv'+i">
-              <line :x1="pt.x" :y1="pt.y" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
-              <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
-            </g>
-            <g v-for="(pt, i) in feedingCountPoints" :key="'fc'+i">
-              <line :x1="pt.x" :y1="pt.y" :x2="axis.rightX" :y2="pt.y" class="chart-guide"/>
-            </g>
             <path :d="feedingPath" class="chart-line-primary" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <path :d="feedingCountPath" class="chart-line-primary-count" fill="none" stroke-width="2" stroke-dasharray="5,4" stroke-linecap="round" stroke-linejoin="round"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
@@ -71,10 +64,6 @@
               <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
             </g>
             <path :d="diaperAreaPath" class="chart-fill-diaper" opacity="0.08"/>
-            <g v-for="(pt, i) in diaperPoints" :key="'dv'+i">
-              <line :x1="pt.x" :y1="pt.y" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
-              <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
-            </g>
             <path :d="diaperPath" class="chart-line-diaper" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">次</text>
@@ -96,10 +85,6 @@
               <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
             </g>
             <path :d="sleepAreaPath" class="chart-fill-sleep" opacity="0.08"/>
-            <g v-for="(pt, i) in sleepPoints" :key="'sv'+i">
-              <line :x1="pt.x" :y1="pt.y" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
-              <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
-            </g>
             <path :d="sleepPath" class="chart-line-sleep" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">小时</text>
@@ -122,10 +107,6 @@
             </g>
             <line :x1="axis.leftX" :x2="axis.rightX" :y1="feverLineY" :y2="feverLineY" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
             <path :d="tempAreaPath" class="chart-fill-temperature" opacity="0.08"/>
-            <g v-for="(pt, i) in tempPoints" :key="'tv'+i">
-              <line :x1="pt.x" :y1="pt.y" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
-              <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
-            </g>
             <path :d="tempPath" class="chart-line-temperature" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">°C</text>
@@ -164,6 +145,7 @@ const dayOptions = [
 ]
 
 const CHART = { padL: 32, padR: 30, padT: 15, padB: 35, svgW: 340, svgH: 170 }
+const MAX_TICKS = 5
 
 const axis = computed(() => {
   const { padL, padR, padT, padB, svgW, svgH } = CHART
@@ -196,7 +178,7 @@ function buildSmoothPath(pts: { x: number, y: number }[]): string {
 
 function buildLineChart(getValue: (d: any) => number) {
   const data = trendData.value
-  const empty = { points: [] as { x: number, y: number, value: number }[], path: '', areaPath: '', rawMin: 0, rawMax: 0, yMin: 0, yMax: 0, yRange: 1 }
+  const empty = { points: [] as { x: number, y: number, value: number }[], path: '', areaPath: '', ticks: [] as { y: number, label: string }[], yMin: 0, yRange: 1 }
   if (!data.length) return empty
   const { padL, padR, padT, padB, svgW, svgH } = CHART
   const chartW = svgW - padL - padR
@@ -209,15 +191,30 @@ function buildLineChart(getValue: (d: any) => number) {
   const positiveValues = values.filter(v => v > 0)
   const effectiveMin = (rawMin === 0 && positiveValues.length > 0) ? Math.min(...positiveValues) : rawMin
   const yMin = range === 0 ? effectiveMin * 0.5 : effectiveMin - range * 0.15
-  const yMax = range === 0 ? effectiveMin * 1.5 : rawMax + range * 0.15
-  const yRange = yMax - yMin || 1
 
-  const step = data.length > 1 ? chartW / (data.length - 1) : 0
+  const tickVals = niceTicks(rawMin, rawMax, MAX_TICKS)
+  let yMax = range === 0 ? effectiveMin * 1.5 : rawMax + range * 0.15
+  if (tickVals.length) {
+    if (tickVals[0] > rawMin) {
+      const lower = tickVals[0] - (tickVals[1] - tickVals[0])
+      if (lower >= yMin) tickVals.unshift(lower)
+    }
+    if (tickVals[tickVals.length - 1] > yMax) yMax = tickVals[tickVals.length - 1]
+  }
+  const yRange = yMax - yMin || 1
+  const tickStep = niceStep((range || 1) / MAX_TICKS)
+
+  const xstep = data.length > 1 ? chartW / (data.length - 1) : 0
   const points = data.map((d, i) => {
     const val = getValue(d)
     const y = padT + chartH - (Math.max(val, yMin) - yMin) / yRange * chartH
-    return { x: data.length > 1 ? padL + i * step : padL + chartW / 2, y, value: val }
+    return { x: data.length > 1 ? padL + i * xstep : padL + chartW / 2, y, value: val }
   })
+
+  const ticks = tickVals.map(v => ({
+    y: padT + chartH - (v - yMin) / yRange * chartH,
+    label: formatTick(v, tickStep),
+  }))
 
   const path = buildSmoothPath(points)
   const bY = padT + chartH
@@ -227,7 +224,7 @@ function buildLineChart(getValue: (d: any) => number) {
     const last = points[points.length - 1]
     areaPath = `M ${first.x},${bY} ${path.slice(2)} L ${last.x},${bY} Z`
   }
-  return { points, path, areaPath, rawMin, rawMax, yMin, yMax, yRange }
+  return { points, path, areaPath, ticks, yMin, yRange }
 }
 
 const feedingChart = computed(() => buildLineChart(d => d.total_ml || 0))
@@ -243,7 +240,7 @@ function niceStep(raw: number) {
   if (raw <= 0) return 1
   const mag = Math.pow(10, Math.floor(Math.log10(raw)))
   const norm = raw / mag
-  const step = norm >= 5 ? 10 : norm >= 2 ? 5 : 1
+  const step = norm >= 5 ? 10 : norm >= 2 ? 5 : norm >= 1 ? 2 : 1
   return step * mag
 }
 
@@ -252,8 +249,11 @@ function niceTicks(min: number, max: number, maxCount = 5): number[] {
   const step = niceStep(span / maxCount)
   const start = Math.ceil(min / step) * step
   const ticks: number[] = []
-  for (let v = start; v <= max + step * 0.01; v += step) {
+  for (let v = start; v <= max; v += step) {
     ticks.push(v)
+  }
+  if (ticks.length && ticks[ticks.length - 1] < max) {
+    ticks.push(ticks[ticks.length - 1] + step)
   }
   return ticks
 }
@@ -264,22 +264,11 @@ function formatTick(v: number, step: number) {
   return v.toFixed(dp)
 }
 
-function seriesTicks(scale: { rawMin: number, rawMax: number, yMin: number, yRange: number }, maxCount = 5): { y: number, label: string }[] {
-  if (!scale || scale.rawMin === undefined) return []
-  const { padT, padB, svgH } = CHART
-  const chartH = svgH - padT - padB
-  const step = niceStep((scale.rawMax - scale.rawMin || 1) / maxCount)
-  return niceTicks(scale.rawMin, scale.rawMax, maxCount).map(v => ({
-    y: padT + chartH - (v - scale.yMin) / scale.yRange * chartH,
-    label: formatTick(v, step),
-  }))
-}
-
-const feedingTicks = computed(() => seriesTicks(feedingChart.value))
-const feedingCountTicks = computed(() => seriesTicks(feedingCountChart.value))
-const diaperTicks = computed(() => seriesTicks(diaperChart.value))
-const sleepTicks = computed(() => seriesTicks(sleepChart.value))
-const tempTicks = computed(() => seriesTicks(tempChart.value))
+const feedingTicks = computed(() => feedingChart.value.ticks)
+const feedingCountTicks = computed(() => feedingCountChart.value.ticks)
+const diaperTicks = computed(() => diaperChart.value.ticks)
+const sleepTicks = computed(() => sleepChart.value.ticks)
+const tempTicks = computed(() => tempChart.value.ticks)
 
 const diaperChart = computed(() => buildLineChart(d => d.diaper_count || 0))
 const diaperPoints = computed(() => diaperChart.value.points)
@@ -299,15 +288,9 @@ const tempAreaPath = computed(() => tempChart.value.areaPath)
 const feverLineY = computed(() => {
   const { padT, padB, svgH } = CHART
   const chartH = svgH - padT - padB
-  const values = trendData.value.map(d => d.temperature_high || 0)
-  if (!values.length) return padT + chartH / 2
-  const rawMin = Math.min(...values)
-  const rawMax = Math.max(...values)
-  const range = rawMax - rawMin
-  const yMin = range === 0 ? rawMin * 0.5 : rawMin - range * 0.15
-  const yMax = range === 0 ? rawMin * 1.5 : rawMax + range * 0.15
-  const yRange = yMax - yMin || 1
-  return padT + chartH - (37.5 - yMin) / yRange * chartH
+  const sc = tempChart.value
+  if (!sc.ticks.length) return padT + chartH / 2
+  return padT + chartH - (37.5 - sc.yMin) / sc.yRange * chartH
 })
 
 async function loadTrend() {
