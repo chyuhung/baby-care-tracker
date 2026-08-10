@@ -33,11 +33,10 @@
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <g v-for="(t, ti) in feedingTicks" :key="'fl'+ti">
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid chart-line-primary"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
               <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
             </g>
             <g v-for="(t, ti) in feedingCountTicks" :key="'fr'+ti">
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid chart-line-primary-count"/>
               <text :x="axis.rightX + 5" :y="t.y + 3" text-anchor="start" font-size="9" fill="#9ca3af">{{ t.label }}</text>
             </g>
             <g v-for="(pt, i) in feedingPoints" :key="'dv'+i">
@@ -187,7 +186,7 @@ function buildSmoothPath(pts: { x: number, y: number }[]): string {
 
 function buildLineChart(getValue: (d: any) => number) {
   const data = trendData.value
-  const empty = { points: [] as { x: number, y: number, value: number }[], path: '', ticks: [] as { y: number, label: string }[], yMin: 0, yRange: 1 }
+  const empty = { points: [] as { x: number, y: number, value: number }[], path: '', ticks: [] as { y: number, label: string, value: number, frac: number }[], yMin: 0, yRange: 1 }
   if (!data.length) return empty
   const { padL, padR, padT, padB, svgW, svgH } = CHART
   const chartW = svgW - padL - padR
@@ -223,6 +222,8 @@ function buildLineChart(getValue: (d: any) => number) {
   const ticks = tickVals.map(v => ({
     y: padT + chartH - (v - yMin) / yRange * chartH,
     label: formatTick(v, tickStep),
+    value: v,
+    frac: (v - yMin) / yRange,
   }))
 
   const path = buildSmoothPath(points)
@@ -266,7 +267,15 @@ function formatTick(v: number, step: number) {
 }
 
 const feedingTicks = computed(() => feedingChart.value.ticks)
-const feedingCountTicks = computed(() => feedingCountChart.value.ticks)
+const feedingCountTicks = computed(() => {
+  const ml = feedingChart.value
+  const fc = feedingCountChart.value
+  if (!ml.ticks.length) return []
+  return ml.ticks.map(t => ({
+    y: t.y,
+    label: String(Math.round(fc.yMin + t.frac * fc.yRange)),
+  }))
+})
 const diaperTicks = computed(() => diaperChart.value.ticks)
 const sleepTicks = computed(() => sleepChart.value.ticks)
 const tempTicks = computed(() => tempChart.value.ticks)
