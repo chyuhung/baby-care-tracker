@@ -32,6 +32,13 @@
             </span>
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
+            <g v-for="(t, ti) in feedingTicks" :key="'fl'+ti">
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
+              <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
+            </g>
+            <g v-for="(t, ti) in feedingCountTicks" :key="'fr'+ti">
+              <text :x="axis.rightX + 5" :y="t.y + 3" text-anchor="start" font-size="9" fill="#9ca3af">{{ t.label }}</text>
+            </g>
             <path :d="feedingAreaPath" class="chart-fill-primary" opacity="0.08"/>
             <path :d="feedingPath" class="chart-line-primary" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <path :d="feedingCountPath" class="chart-line-primary-count" fill="none" stroke-width="2" stroke-dasharray="5,4" stroke-linecap="round" stroke-linejoin="round"/>
@@ -39,18 +46,6 @@
             <line :x1="axis.rightX" :x2="axis.rightX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">ml</text>
             <text :x="axis.rightX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">次</text>
-            <template v-for="(pt, i) in feedingPoints" :key="'fl'+i">
-              <g v-if="feedingLabelVis[i]">
-                <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
-                <text :x="axis.leftX - 4" :y="pt.y + 3" text-anchor="end" font-size="9" fill="#9ca3af">{{ pt.value }}</text>
-              </g>
-            </template>
-            <template v-for="(pt, i) in feedingCountPoints" :key="'fc'+i">
-              <g v-if="feedingCountLabelVis[i]">
-                <line :x1="pt.x" :y1="pt.y" :x2="axis.rightX" :y2="pt.y" class="chart-guide"/>
-                <text :x="axis.rightX + 4" :y="pt.y + 3" text-anchor="start" font-size="9" fill="#9ca3af">{{ pt.value }}</text>
-              </g>
-            </template>
             <g v-for="(pt, i) in feedingPoints" :key="'fp'+i">
               <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-primary" stroke-width="2"/>
             </g>
@@ -70,16 +65,14 @@
             </span>
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
+            <g v-for="(t, ti) in diaperTicks" :key="'dl'+ti">
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
+              <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
+            </g>
             <path :d="diaperAreaPath" class="chart-fill-diaper" opacity="0.08"/>
             <path :d="diaperPath" class="chart-line-diaper" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">次</text>
-            <template v-for="(pt, i) in diaperPoints" :key="'dl'+i">
-              <g v-if="diaperLabelVis[i]">
-                <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
-                <text :x="axis.leftX - 4" :y="pt.y + 3" text-anchor="end" font-size="9" fill="#9ca3af">{{ pt.value }}</text>
-              </g>
-            </template>
             <g v-for="(pt, i) in diaperPoints" :key="'dp'+i">
               <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-diaper" stroke-width="2"/>
             </g>
@@ -96,16 +89,14 @@
             </span>
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
+            <g v-for="(t, ti) in sleepTicks" :key="'sl'+ti">
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
+              <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
+            </g>
             <path :d="sleepAreaPath" class="chart-fill-sleep" opacity="0.08"/>
             <path :d="sleepPath" class="chart-line-sleep" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">小时</text>
-            <template v-for="(pt, i) in sleepPoints" :key="'sl'+i">
-              <g v-if="sleepLabelVis[i]">
-                <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
-                <text :x="axis.leftX - 4" :y="pt.y + 3" text-anchor="end" font-size="9" fill="#9ca3af">{{ sleepLabels[i] }}</text>
-              </g>
-            </template>
             <g v-for="(pt, i) in sleepPoints" :key="'sp'+i">
               <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-sleep" stroke-width="2"/>
             </g>
@@ -122,17 +113,15 @@
             </span>
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
+            <g v-for="(t, ti) in tempTicks" :key="'tl'+ti">
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
+              <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
+            </g>
+            <line :x1="axis.leftX" :x2="axis.rightX" :y1="feverLineY" :y2="feverLineY" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
             <path :d="tempAreaPath" class="chart-fill-temperature" opacity="0.08"/>
             <path :d="tempPath" class="chart-line-temperature" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <line :x1="axis.leftX" :x2="axis.rightX" :y1="feverLineY" :y2="feverLineY" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">°C</text>
-            <template v-for="(pt, i) in tempPoints" :key="'tl'+i">
-              <g v-if="tempLabelVis[i]">
-                <line :x1="pt.x" :y1="pt.y" :x2="axis.leftX" :y2="pt.y" class="chart-guide"/>
-                <text :x="axis.leftX - 4" :y="pt.y + 3" text-anchor="end" font-size="9" fill="#9ca3af">{{ pt.value }}</text>
-              </g>
-            </template>
             <g v-for="(pt, i) in tempPoints" :key="'tp'+i">
               <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-temperature" stroke-width="2"/>
             </g>
@@ -203,7 +192,7 @@ function buildSmoothPath(pts: { x: number, y: number }[]): string {
 
 function buildLineChart(getValue: (d: any) => number) {
   const data = trendData.value
-  const empty = { points: [] as { x: number, y: number, value: number }[], path: '', areaPath: '' }
+  const empty = { points: [] as { x: number, y: number, value: number }[], path: '', areaPath: '', rawMin: 0, rawMax: 0, yMin: 0, yMax: 0, yRange: 1 }
   if (!data.length) return empty
   const { padL, padR, padT, padB, svgW, svgH } = CHART
   const chartW = svgW - padL - padR
@@ -234,7 +223,7 @@ function buildLineChart(getValue: (d: any) => number) {
     const last = points[points.length - 1]
     areaPath = `M ${first.x},${bY} ${path.slice(2)} L ${last.x},${bY} Z`
   }
-  return { points, path, areaPath }
+  return { points, path, areaPath, rawMin, rawMax, yMin, yMax, yRange }
 }
 
 const feedingChart = computed(() => buildLineChart(d => d.total_ml || 0))
@@ -246,23 +235,47 @@ const feedingCountChart = computed(() => buildLineChart(d => d.feeding_count || 
 const feedingCountPoints = computed(() => feedingCountChart.value.points)
 const feedingCountPath = computed(() => feedingCountChart.value.path)
 
-function pickLabels(pts: { y: number }[], minGap = 13): boolean[] {
-  const vis = pts.map(() => false)
-  let lastY = -Infinity
-  for (let i = 0; i < pts.length; i++) {
-    if (Math.abs(pts[i].y - lastY) >= minGap) {
-      vis[i] = true
-      lastY = pts[i].y
-    }
-  }
-  return vis
+function niceStep(raw: number) {
+  if (raw <= 0) return 1
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)))
+  const norm = raw / mag
+  const step = norm >= 5 ? 10 : norm >= 2 ? 5 : 1
+  return step * mag
 }
 
-const feedingLabelVis = computed(() => pickLabels(feedingPoints.value))
-const feedingCountLabelVis = computed(() => pickLabels(feedingCountPoints.value))
-const diaperLabelVis = computed(() => pickLabels(diaperPoints.value))
-const sleepLabelVis = computed(() => pickLabels(sleepPoints.value))
-const tempLabelVis = computed(() => pickLabels(tempPoints.value))
+function niceTicks(min: number, max: number, maxCount = 5): number[] {
+  const span = (max - min) || 1
+  const step = niceStep(span / maxCount)
+  const start = Math.ceil(min / step) * step
+  const ticks: number[] = []
+  for (let v = start; v <= max + step * 0.01; v += step) {
+    ticks.push(v)
+  }
+  return ticks
+}
+
+function formatTick(v: number, step: number) {
+  let dp = 0
+  if (step < 1) dp = Math.min(2, Math.ceil(-Math.log10(step)))
+  return v.toFixed(dp)
+}
+
+function seriesTicks(scale: { rawMin: number, rawMax: number, yMin: number, yRange: number }, maxCount = 5): { y: number, label: string }[] {
+  if (!scale || scale.rawMin === undefined) return []
+  const { padT, padB, svgH } = CHART
+  const chartH = svgH - padT - padB
+  const step = niceStep((scale.rawMax - scale.rawMin || 1) / maxCount)
+  return niceTicks(scale.rawMin, scale.rawMax, maxCount).map(v => ({
+    y: padT + chartH - (v - scale.yMin) / scale.yRange * chartH,
+    label: formatTick(v, step),
+  }))
+}
+
+const feedingTicks = computed(() => seriesTicks(feedingChart.value))
+const feedingCountTicks = computed(() => seriesTicks(feedingCountChart.value))
+const diaperTicks = computed(() => seriesTicks(diaperChart.value))
+const sleepTicks = computed(() => seriesTicks(sleepChart.value))
+const tempTicks = computed(() => seriesTicks(tempChart.value))
 
 const diaperChart = computed(() => buildLineChart(d => d.diaper_count || 0))
 const diaperPoints = computed(() => diaperChart.value.points)
@@ -273,13 +286,6 @@ const sleepChart = computed(() => buildLineChart(d => d.sleep_duration_minutes |
 const sleepPoints = computed(() => sleepChart.value.points)
 const sleepPath = computed(() => sleepChart.value.path)
 const sleepAreaPath = computed(() => sleepChart.value.areaPath)
-
-function formatSleepLabel(mins: number) {
-  if (mins <= 0) return '0'
-  return `${Math.round(mins / 60 * 10) / 10}`
-}
-
-const sleepLabels = computed(() => trendData.value.map(d => formatSleepLabel(d.sleep_duration_minutes || 0)))
 
 const tempChart = computed(() => buildLineChart(d => d.temperature_high || 0))
 const tempPoints = computed(() => tempChart.value.points)
