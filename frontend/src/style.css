@@ -21,6 +21,7 @@
   --chart-diaper: #FF7A59;
   --chart-temperature: #66BB6A;
   --chart-sleep: #4ECDC4;
+  --chart-primary-count: #F59E0B;
 }
 
 [data-theme='female'] {
@@ -34,6 +35,7 @@
   --chart-diaper: #FF7A59;
   --chart-temperature: #66BB6A;
   --chart-sleep: #4ECDC4;
+  --chart-primary-count: #F59E0B;
 }
 
 [data-theme='male'] {
@@ -47,6 +49,7 @@
   --chart-diaper: #FF7A59;
   --chart-temperature: #66BB6A;
   --chart-sleep: #4ECDC4;
+  --chart-primary-count: #F59E0B;
 }
 
 * {
@@ -154,6 +157,8 @@ body {
 /* 趋势图 SVG 线条颜色（跟随主题） */
 .chart-line-primary { stroke: var(--chart-primary); }
 .chart-fill-primary { fill: var(--chart-primary); }
+.chart-line-primary-count { stroke: var(--chart-primary-count); }
+.chart-fill-primary-count { fill: var(--chart-primary-count); }
 .chart-line-diaper { stroke: var(--chart-diaper); }
 .chart-fill-diaper { fill: var(--chart-diaper); }
 .chart-line-temperature { stroke: var(--chart-temperature); }

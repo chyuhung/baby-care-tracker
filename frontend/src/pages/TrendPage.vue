@@ -20,13 +20,27 @@
       </div>
       <template v-else>
         <div>
-          <h4 class="text-sm font-semibold text-text-secondary mb-2">🍼 每日奶量 (ml)</h4>
+          <h4 class="text-sm font-semibold text-text-secondary mb-2">
+            <span class="flex items-center gap-2">
+              🍼 每日奶量
+              <span class="flex items-center gap-1 text-[10px] font-normal">
+                <span class="inline-block w-4" style="border-top: 2px solid var(--chart-primary)"></span>
+                奶量
+                <span class="inline-block w-4" style="border-top: 2px dashed var(--chart-primary-count)"></span>
+                次数
+              </span>
+            </span>
+          </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <polygon :points="feedingAreaPoints" class="chart-fill-primary" opacity="0.08"/>
             <polyline :points="feedingLinePoints" class="chart-line-primary" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             <g v-for="(pt, i) in feedingPoints" :key="'fp'+i">
               <circle :cx="pt.x" :cy="pt.y" r="3" fill="white" class="chart-line-primary" stroke-width="2"/>
               <text :x="pt.x" :y="pt.y - 8" text-anchor="middle" font-size="10" fill="#6b7280">{{ pt.value }}</text>
+            </g>
+            <polyline :points="feedingCountLinePoints" class="chart-line-primary-count" fill="none" stroke-width="2" stroke-dasharray="5,4" stroke-linecap="round" stroke-linejoin="round"/>
+            <g v-for="(pt, i) in feedingCountPoints" :key="'fcp'+i">
+              <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="white" class="chart-line-primary-count" stroke-width="2"/>
             </g>
             <template v-for="(d, i) in trendData" :key="'fx'+i">
               <text v-if="dateLabels[i]?.show" :x="feedingPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
@@ -140,6 +154,10 @@ const feedingChart = computed(() => buildLineChart(d => d.total_ml || 0))
 const feedingPoints = computed(() => feedingChart.value.points)
 const feedingLinePoints = computed(() => feedingChart.value.line)
 const feedingAreaPoints = computed(() => feedingChart.value.area)
+
+const feedingCountChart = computed(() => buildLineChart(d => d.feeding_count || 0))
+const feedingCountPoints = computed(() => feedingCountChart.value.points)
+const feedingCountLinePoints = computed(() => feedingCountChart.value.line)
 
 const diaperChart = computed(() => buildLineChart(d => d.diaper_count || 0))
 const diaperPoints = computed(() => diaperChart.value.points)
