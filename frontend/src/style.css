@@ -155,6 +155,7 @@ body {
 }
 
 /* 趋势图 SVG 线条颜色（跟随主题） */
+.chart-guide { stroke: #d1d5db; stroke-width: 0.7; stroke-dasharray: 3,3; }
 .chart-line-primary { stroke: var(--chart-primary); }
 .chart-fill-primary { fill: var(--chart-primary); }
 .chart-line-primary-count { stroke: var(--chart-primary-count); }
