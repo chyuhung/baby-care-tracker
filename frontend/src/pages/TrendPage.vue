@@ -181,13 +181,15 @@ function buildSmoothPath(pts: { x: number, y: number }[]): string {
   return d
 }
 
-function buildLineChart(getValue: (d: any) => number) {
+function buildLineChart(getValue: (d: any) => number, opts: { integerTicks?: boolean } = {}) {
   const data = trendData.value
   const empty = { points: [] as { x: number, y: number, value: number }[], path: '', ticks: [] as { y: number, label: string }[], yMin: 0, yRange: 1 }
   if (!data.length) return empty
   const { padL, padR, padT, padB, svgW, svgH } = CHART
   const chartW = svgW - padL - padR
   const chartH = svgH - padT - padB
+  const { integerTicks = false } = opts
+  const maxTicks = integerTicks ? Math.max(4, Math.min(6, Math.floor(chartH / 20))) : MAX_TICKS
 
   const values = data.map(getValue)
   const rawMin = Math.min(...values)
@@ -197,7 +199,7 @@ function buildLineChart(getValue: (d: any) => number) {
   const effectiveMin = (rawMin === 0 && positiveValues.length > 0) ? Math.min(...positiveValues) : rawMin
   const yMin = rawMin === 0 ? 0 : (range === 0 ? effectiveMin * 0.5 : effectiveMin - range * 0.15)
 
-  const tickVals = niceTicks(rawMin, rawMax, MAX_TICKS)
+  const tickVals = integerTicks ? niceTicksInt(rawMin, rawMax, maxTicks) : niceTicks(rawMin, rawMax, maxTicks)
   let yMax = range === 0 ? effectiveMin * 1.5 : rawMax + range * 0.15
   if (tickVals.length) {
     if (tickVals[0] > rawMin) {
@@ -207,7 +209,7 @@ function buildLineChart(getValue: (d: any) => number) {
     if (tickVals[tickVals.length - 1] > yMax) yMax = tickVals[tickVals.length - 1]
   }
   const yRange = yMax - yMin || 1
-  const tickStep = niceStep((range || 1) / MAX_TICKS)
+  const tickStep = integerTicks ? Math.max(1, niceStep((range || 1) / maxTicks)) : niceStep((range || 1) / maxTicks)
 
   const xstep = data.length > 1 ? chartW / (data.length - 1) : 0
   const points = data.map((d, i) => {
@@ -225,11 +227,11 @@ function buildLineChart(getValue: (d: any) => number) {
   return { points, path, ticks, yMin, yRange }
 }
 
-const feedingChart = computed(() => buildLineChart(d => d.total_ml || 0))
+const feedingChart = computed(() => buildLineChart(d => d.total_ml || 0, { integerTicks: true }))
 const feedingPoints = computed(() => feedingChart.value.points)
 const feedingPath = computed(() => feedingChart.value.path)
 
-const feedingCountChart = computed(() => buildLineChart(d => d.feeding_count || 0))
+const feedingCountChart = computed(() => buildLineChart(d => d.feeding_count || 0, { integerTicks: true }))
 const feedingCountPoints = computed(() => feedingCountChart.value.points)
 const feedingCountPath = computed(() => feedingCountChart.value.path)
 
@@ -255,6 +257,20 @@ function niceTicks(min: number, max: number, maxCount = 5): number[] {
   return ticks
 }
 
+function niceTicksInt(min: number, max: number, maxCount = 5): number[] {
+  const span = (max - min) || 1
+  const step = Math.max(1, niceStep(span / maxCount))
+  const start = Math.ceil(min / step) * step
+  const ticks: number[] = []
+  for (let v = start; v <= max; v += step) {
+    ticks.push(v)
+  }
+  if (ticks.length && ticks[ticks.length - 1] < max) {
+    ticks.push(ticks[ticks.length - 1] + step)
+  }
+  return ticks
+}
+
 function formatTick(v: number, step: number) {
   let dp = 0
   if (step < 1) dp = Math.min(2, Math.ceil(-Math.log10(step)))
@@ -264,7 +280,7 @@ function formatTick(v: number, step: number) {
 const feedingTicks = computed(() => feedingChart.value.ticks)
 const feedingCountTicks = computed(() => feedingCountChart.value.ticks.map(t => ({
   y: t.y,
-  label: String(Math.round(Number(t.label))),
+  label: t.label,
 })))
 const diaperTicks = computed(() => diaperChart.value.ticks)
 const sleepTicks = computed(() => sleepChart.value.ticks)
