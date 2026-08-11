@@ -57,7 +57,6 @@
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
             <span class="flex items-center gap-2">
               🩲 每日尿布
-              <span class="text-[10px] font-normal">(次)</span>
             </span>
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
@@ -80,7 +79,6 @@
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
             <span class="flex items-center gap-2">
               😴 每日睡眠
-              <span class="text-[10px] font-normal">(小时)</span>
             </span>
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
@@ -103,7 +101,6 @@
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
             <span class="flex items-center gap-2">
               🌡️ 每日最高体温
-              <span class="text-[10px] font-normal">(°C)</span>
             </span>
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
@@ -153,7 +150,7 @@ const dayOptions = [
 ]
 
 const CHART = { padL: 32, padR: 30, padT: 15, padB: 35, svgW: 340, svgH: 170 }
-const MAX_TICKS = 5
+const MAX_TICKS = Math.max(5, Math.min(9, Math.floor((CHART.svgH - CHART.padT - CHART.padB) / 13)))
 
 const axis = computed(() => {
   const { padL, padR, padT, padB, svgW, svgH } = CHART
@@ -198,7 +195,7 @@ function buildLineChart(getValue: (d: any) => number) {
   const range = rawMax - rawMin
   const positiveValues = values.filter(v => v > 0)
   const effectiveMin = (rawMin === 0 && positiveValues.length > 0) ? Math.min(...positiveValues) : rawMin
-  const yMin = range === 0 ? effectiveMin * 0.5 : effectiveMin - range * 0.15
+  const yMin = rawMin === 0 ? 0 : (range === 0 ? effectiveMin * 0.5 : effectiveMin - range * 0.15)
 
   const tickVals = niceTicks(rawMin, rawMax, MAX_TICKS)
   let yMax = range === 0 ? effectiveMin * 1.5 : rawMax + range * 0.15
