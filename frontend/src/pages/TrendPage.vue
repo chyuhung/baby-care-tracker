@@ -206,7 +206,8 @@ function buildLineChart(getValue: (d: any) => number, opts: { integerTicks?: boo
       const lower = tickVals[0] - (tickVals[1] - tickVals[0])
       if (lower >= yMin) tickVals.unshift(lower)
     }
-    if (tickVals[tickVals.length - 1] > yMax) yMax = tickVals[tickVals.length - 1]
+    const lastTick = tickVals[tickVals.length - 1]
+    if (lastTick >= yMax) yMax = lastTick + ((tickVals[1] - tickVals[0]) || 1)
   }
   const yRange = yMax - yMin || 1
   const tickStep = integerTicks ? Math.max(1, niceStep((range || 1) / maxTicks)) : niceStep((range || 1) / maxTicks)
@@ -286,11 +287,11 @@ const diaperTicks = computed(() => diaperChart.value.ticks)
 const sleepTicks = computed(() => sleepChart.value.ticks)
 const tempTicks = computed(() => tempChart.value.ticks)
 
-const diaperChart = computed(() => buildLineChart(d => d.diaper_count || 0))
+const diaperChart = computed(() => buildLineChart(d => d.diaper_count || 0, { integerTicks: true }))
 const diaperPoints = computed(() => diaperChart.value.points)
 const diaperPath = computed(() => diaperChart.value.path)
 
-const sleepChart = computed(() => buildLineChart(d => (d.sleep_duration_minutes || 0) / 60))
+const sleepChart = computed(() => buildLineChart(d => (d.sleep_duration_minutes || 0) / 60, { integerTicks: true }))
 const sleepPoints = computed(() => sleepChart.value.points)
 const sleepPath = computed(() => sleepChart.value.path)
 
