@@ -32,26 +32,43 @@
               </span>
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
-            <g v-for="(t, ti) in feedingTicks" :key="'fl'+ti">
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
-              <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
-            </g>
-            <g v-for="(t, ti) in feedingCountTicks" :key="'fr'+ti">
-              <text :x="axis.rightX + 5" :y="t.y + 3" text-anchor="start" font-size="9" fill="#9ca3af">{{ t.label }}</text>
-            </g>
-            <g v-for="(pt, i) in feedingPoints" :key="'dv'+i">
-              <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
-            </g>
-            <g v-for="(b, i) in feedingCountBars" :key="'fb'+i">
-              <rect :x="b.x - b.w / 2" :y="b.y" :width="b.w" :height="b.h" rx="2" fill="var(--chart-primary-count)" opacity="0.75"/>
-            </g>
-            <path :d="feedingPath" class="chart-line-primary" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <template v-if="days === 30">
+              <g v-for="(t, ti) in feedingMlScatter.ticks" :key="'fl'+ti">
+                <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
+                <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
+              </g>
+              <g v-for="(t, ti) in feedingCountScatter.ticks" :key="'fr'+ti">
+                <text :x="axis.rightX + 5" :y="t.y + 3" text-anchor="start" font-size="9" fill="#9ca3af">{{ t.label }}</text>
+              </g>
+              <g v-for="(pt, i) in feedingMlScatter.points" :key="'dv'+i">
+                <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
+              </g>
+              <line v-if="feedingMlScatter.trend" :x1="feedingMlScatter.trend.x1" :y1="feedingMlScatter.trend.y1" :x2="feedingMlScatter.trend.x2" :y2="feedingMlScatter.trend.y2" stroke="var(--chart-primary)" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.85"/>
+              <line v-if="feedingCountScatter.trend" :x1="feedingCountScatter.trend.x1" :y1="feedingCountScatter.trend.y1" :x2="feedingCountScatter.trend.x2" :y2="feedingCountScatter.trend.y2" stroke="var(--chart-primary-count)" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.85"/>
+              <g v-for="(pt, i) in feedingMlScatter.points" :key="'dp'+i">
+                <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="var(--chart-primary)"/>
+              </g>
+              <g v-for="(pt, i) in feedingCountScatter.points" :key="'cp'+i">
+                <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="var(--chart-primary-count)"/>
+              </g>
+            </template>
+            <template v-else>
+              <g v-for="(b, i) in feedingMl.items" :key="'bm'+i">
+                <rect :x="b.x - w2 - 0.5" :y="b.y" :width="w2" :height="b.h" rx="2" fill="var(--chart-primary)" opacity="0.85"/>
+                <text v-if="b.h > 0" :x="b.x - w2 / 2 - 0.5" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#6b7280">{{ b.label }}</text>
+              </g>
+              <g v-for="(b, i) in feedingCount.items" :key="'bc'+i">
+                <rect :x="b.x + 0.5" :y="b.y" :width="w2" :height="b.h" rx="2" fill="var(--chart-primary-count)" opacity="0.85"/>
+                <text v-if="b.h > 0" :x="b.x + w2 / 2 + 0.5" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#6b7280">{{ b.label }}</text>
+              </g>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
+            </template>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <line :x1="axis.rightX" :x2="axis.rightX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">ml</text>
             <text :x="axis.rightX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">次</text>
             <template v-for="(d, i) in trendData" :key="'fx'+i">
-              <text v-if="dateLabels[i]?.show" :x="feedingPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="xPos(i)" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
@@ -62,18 +79,30 @@
             </span>
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
-            <g v-for="(t, ti) in diaperTicks" :key="'dl'+ti">
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
-              <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
-            </g>
-            <g v-for="(pt, i) in diaperPoints" :key="'dv'+i">
-              <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
-            </g>
-            <path :d="diaperPath" class="chart-line-diaper" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <template v-if="days === 30">
+              <g v-for="(t, ti) in diaperScatter.ticks" :key="'dl'+ti">
+                <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
+                <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
+              </g>
+              <g v-for="(pt, i) in diaperScatter.points" :key="'dv'+i">
+                <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
+              </g>
+              <line v-if="diaperScatter.trend" :x1="diaperScatter.trend.x1" :y1="diaperScatter.trend.y1" :x2="diaperScatter.trend.x2" :y2="diaperScatter.trend.y2" stroke="var(--chart-diaper)" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.85"/>
+              <g v-for="(pt, i) in diaperScatter.points" :key="'dp'+i">
+                <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="var(--chart-diaper)"/>
+              </g>
+            </template>
+            <template v-else>
+              <g v-for="(b, i) in diaper.items" :key="'db'+i">
+                <rect :x="b.x - barW / 2" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-diaper)" opacity="0.85"/>
+                <text v-if="b.h > 0" :x="b.x" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#6b7280">{{ b.label }}</text>
+              </g>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
+            </template>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">次</text>
             <template v-for="(d, i) in trendData" :key="'dx'+i">
-              <text v-if="dateLabels[i]?.show" :x="diaperPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="xPos(i)" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
@@ -84,18 +113,30 @@
             </span>
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
-            <g v-for="(t, ti) in sleepTicks" :key="'sl'+ti">
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
-              <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
-            </g>
-            <g v-for="(pt, i) in sleepPoints" :key="'sv'+i">
-              <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
-            </g>
-            <path :d="sleepPath" class="chart-line-sleep" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <template v-if="days === 30">
+              <g v-for="(t, ti) in sleepScatter.ticks" :key="'sl'+ti">
+                <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
+                <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
+              </g>
+              <g v-for="(pt, i) in sleepScatter.points" :key="'sv'+i">
+                <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
+              </g>
+              <line v-if="sleepScatter.trend" :x1="sleepScatter.trend.x1" :y1="sleepScatter.trend.y1" :x2="sleepScatter.trend.x2" :y2="sleepScatter.trend.y2" stroke="var(--chart-sleep)" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.85"/>
+              <g v-for="(pt, i) in sleepScatter.points" :key="'sp'+i">
+                <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="var(--chart-sleep)"/>
+              </g>
+            </template>
+            <template v-else>
+              <g v-for="(b, i) in sleep.items" :key="'sb'+i">
+                <rect :x="b.x - barW / 2" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-sleep)" opacity="0.85"/>
+                <text v-if="b.h > 0" :x="b.x" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#6b7280">{{ b.label }}</text>
+              </g>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
+            </template>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">小时</text>
             <template v-for="(d, i) in trendData" :key="'sx'+i">
-              <text v-if="dateLabels[i]?.show" :x="sleepPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="xPos(i)" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
@@ -165,6 +206,25 @@ const axis = computed(() => {
   }
 })
 
+function xPos(i: number) {
+  const n = trendData.value.length
+  const { leftX, rightX } = axis.value
+  if (n < 2) return leftX + (rightX - leftX) / 2
+  return leftX + i * ((rightX - leftX) / (n - 1))
+}
+
+const xstep = computed(() => {
+  const n = trendData.value.length
+  if (n < 2) return 0
+  return (axis.value.rightX - axis.value.leftX) / (n - 1)
+})
+
+const barW = computed(() => Math.max(4, Math.min(26, xstep.value * 0.6)))
+
+const groupW = computed(() => Math.max(6, Math.min(26, xstep.value * 0.72)))
+
+const w2 = computed(() => Math.max(3, Math.floor(groupW.value / 2) - 1))
+
 function buildSmoothPath(pts: { x: number, y: number }[]): string {
   if (pts.length === 0) return ''
   if (pts.length === 1) return `M ${pts[0].x},${pts[0].y}`
@@ -182,78 +242,6 @@ function buildSmoothPath(pts: { x: number, y: number }[]): string {
   }
   return d
 }
-
-function buildLineChart(getValue: (d: any) => number, opts: { integerTicks?: boolean, forceZero?: boolean } = {}) {
-  const data = trendData.value
-  const empty = { points: [] as { x: number, y: number, value: number }[], path: '', ticks: [] as { y: number, label: string }[], yMin: 0, yRange: 1 }
-  if (!data.length) return empty
-  const { padL, padR, padT, padB, svgW, svgH } = CHART
-  const chartW = svgW - padL - padR
-  const chartH = svgH - padT - padB
-  const { integerTicks = false, forceZero = false } = opts
-  const maxTicks = integerTicks ? Math.max(4, Math.min(6, Math.floor(chartH / 20))) : MAX_TICKS
-
-  const values = data.map(getValue)
-  const rawMin = Math.min(...values)
-  const rawMax = Math.max(...values)
-  const range = rawMax - rawMin
-  const positiveValues = values.filter(v => v > 0)
-  const effectiveMin = (rawMin === 0 && positiveValues.length > 0) ? Math.min(...positiveValues) : rawMin
-  const yMin = forceZero ? 0 : (rawMin === 0 ? 0 : (range === 0 ? effectiveMin * 0.5 : effectiveMin - range * 0.15))
-
-  const tickVals = integerTicks ? niceTicksInt(rawMin, rawMax, maxTicks) : niceTicks(rawMin, rawMax, maxTicks)
-  let yMax = range === 0 ? effectiveMin * 1.5 : rawMax + range * 0.15
-  if (tickVals.length) {
-    if (tickVals[0] > rawMin) {
-      const lower = tickVals[0] - (tickVals[1] - tickVals[0])
-      if (lower >= yMin) tickVals.unshift(lower)
-    }
-    const lastTick = tickVals[tickVals.length - 1]
-    if (lastTick >= yMax) yMax = lastTick + ((tickVals[1] - tickVals[0]) || 1)
-  }
-  const yRange = yMax - yMin || 1
-  const tickStep = integerTicks ? Math.max(1, niceStep((range || 1) / maxTicks)) : niceStep((range || 1) / maxTicks)
-
-  const xstep = data.length > 1 ? chartW / (data.length - 1) : 0
-  const points = data.map((d, i) => {
-    const val = getValue(d)
-    const y = padT + chartH - (Math.max(val, yMin) - yMin) / yRange * chartH
-    return { x: data.length > 1 ? padL + i * xstep : padL + chartW / 2, y, value: val }
-  })
-
-  const ticks = tickVals.map(v => ({
-    y: padT + chartH - (v - yMin) / yRange * chartH,
-    label: formatTick(v, tickStep),
-  }))
-
-  const path = buildSmoothPath(points)
-  return { points, path, ticks, yMin, yRange }
-}
-
-const feedingChart = computed(() => buildLineChart(d => d.total_ml || 0, { integerTicks: true }))
-const feedingPoints = computed(() => feedingChart.value.points)
-const feedingPath = computed(() => feedingChart.value.path)
-
-const feedingCountChart = computed(() => buildLineChart(d => d.feeding_count || 0, { integerTicks: true, forceZero: true }))
-const feedingCountPoints = computed(() => feedingCountChart.value.points)
-
-const feedingBarW = computed(() => {
-  const pts = feedingCountPoints.value
-  if (pts.length < 2) return 14
-  const xstep = pts[1].x - pts[0].x || 0
-  return Math.max(3, Math.min(22, xstep * 0.45))
-})
-
-const feedingCountBars = computed(() => {
-  const baseY = axis.value.baseY
-  const w = feedingBarW.value
-  return feedingCountPoints.value.map(pt => ({
-    x: pt.x,
-    y: pt.y,
-    h: Math.max(0, baseY - pt.y),
-    w,
-  }))
-})
 
 function niceStep(raw: number) {
   if (raw <= 0) return 1
@@ -297,24 +285,121 @@ function formatTick(v: number, step: number) {
   return v.toFixed(dp)
 }
 
-const feedingTicks = computed(() => feedingChart.value.ticks)
-const feedingCountTicks = computed(() => feedingCountChart.value.ticks.map(t => ({
-  y: t.y,
-  label: t.label,
-})))
-const diaperTicks = computed(() => diaperChart.value.ticks)
-const sleepTicks = computed(() => sleepChart.value.ticks)
-const tempTicks = computed(() => tempChart.value.ticks)
+function leastSquaresLine(values: number[]) {
+  const n = values.length
+  if (n < 2) return null
+  let sx = 0, sy = 0, sxx = 0, sxy = 0
+  for (let i = 0; i < n; i++) {
+    sx += i
+    sy += values[i]
+    sxx += i * i
+    sxy += i * values[i]
+  }
+  const denom = n * sxx - sx * sx
+  if (denom === 0) return null
+  const slope = (n * sxy - sx * sy) / denom
+  const intercept = (sy - slope * sx) / n
+  return { slope, intercept }
+}
 
-const diaperChart = computed(() => buildLineChart(d => d.diaper_count || 0, { integerTicks: true }))
-const diaperPoints = computed(() => diaperChart.value.points)
-const diaperPath = computed(() => diaperChart.value.path)
+function buildBars(getValue: (d: any) => number, opts: { decimals?: number } = {}) {
+  const data = trendData.value
+  const empty = { items: [] as { x: number, y: number, h: number, value: number, label: string }[], yMax: 1 }
+  if (!data.length) return empty
+  const { padL, padR, padT, padB, svgW, svgH } = CHART
+  const chartW = svgW - padL - padR
+  const chartH = svgH - padT - padB
+  const values = data.map(getValue)
+  const rawMax = Math.max(...values, 0)
+  const step = Math.max(1, niceStep(Math.max(rawMax, 1) / 5))
+  const yMax = Math.ceil(Math.max(rawMax * 1.2, step) / step) * step
+  const xstepN = data.length > 1 ? chartW / (data.length - 1) : chartW
+  const items = values.map((v, i) => {
+    const x = data.length > 1 ? padL + i * xstepN : padL + chartW / 2
+    const y = padT + chartH - (v / yMax) * chartH
+    const h = Math.max(0, padT + chartH - y)
+    return { x, y, h, value: v, label: opts.decimals != null ? v.toFixed(opts.decimals) : String(Math.round(v)) }
+  })
+  return { items, yMax }
+}
 
-const sleepChart = computed(() => buildLineChart(d => (d.sleep_duration_minutes || 0) / 60, { integerTicks: true }))
-const sleepPoints = computed(() => sleepChart.value.points)
-const sleepPath = computed(() => sleepChart.value.path)
+function buildLineChart(getValue: (d: any) => number, opts: { integerTicks?: boolean, forceZero?: boolean } = {}) {
+  const data = trendData.value
+  const empty = { points: [] as { x: number, y: number, value: number }[], path: '', ticks: [] as { y: number, label: string }[], yMin: 0, yRange: 1, trend: null as { x1: number, y1: number, x2: number, y2: number } | null }
+  if (!data.length) return empty
+  const { padL, padR, padT, padB, svgW, svgH } = CHART
+  const chartW = svgW - padL - padR
+  const chartH = svgH - padT - padB
+  const { integerTicks = false, forceZero = false } = opts
+  const maxTicks = integerTicks ? Math.max(4, Math.min(6, Math.floor(chartH / 20))) : MAX_TICKS
+
+  const values = data.map(getValue)
+  const rawMin = Math.min(...values)
+  const rawMax = Math.max(...values)
+  const range = rawMax - rawMin
+  const positiveValues = values.filter(v => v > 0)
+  const effectiveMin = (rawMin === 0 && positiveValues.length > 0) ? Math.min(...positiveValues) : rawMin
+  const yMin = forceZero ? 0 : (rawMin === 0 ? 0 : (range === 0 ? effectiveMin * 0.5 : effectiveMin - range * 0.15))
+
+  const tickVals = integerTicks ? niceTicksInt(rawMin, rawMax, maxTicks) : niceTicks(rawMin, rawMax, maxTicks)
+  let yMax = range === 0 ? effectiveMin * 1.5 : rawMax + range * 0.15
+  if (tickVals.length) {
+    if (tickVals[0] > rawMin) {
+      const lower = tickVals[0] - (tickVals[1] - tickVals[0])
+      if (lower >= yMin) tickVals.unshift(lower)
+    }
+    const lastTick = tickVals[tickVals.length - 1]
+    if (lastTick >= yMax) yMax = lastTick + ((tickVals[1] - tickVals[0]) || 1)
+  }
+  const yRange = yMax - yMin || 1
+  const tickStep = integerTicks ? Math.max(1, niceStep((range || 1) / maxTicks)) : niceStep((range || 1) / maxTicks)
+
+  const xstep = data.length > 1 ? chartW / (data.length - 1) : 0
+  const points = data.map((d, i) => {
+    const val = getValue(d)
+    const y = padT + chartH - (Math.max(val, yMin) - yMin) / yRange * chartH
+    return { x: data.length > 1 ? padL + i * xstep : padL + chartW / 2, y, value: val }
+  })
+
+  const ticks = tickVals.map(v => ({
+    y: padT + chartH - (v - yMin) / yRange * chartH,
+    label: formatTick(v, tickStep),
+  }))
+
+  const path = buildSmoothPath(points)
+
+  const reg = leastSquaresLine(values)
+  let trend = null as { x1: number, y1: number, x2: number, y2: number } | null
+  if (reg) {
+    const mapY = (v: number) => {
+      const c = Math.max(yMin, Math.min(v, yMax))
+      return padT + chartH - (c - yMin) / yRange * chartH
+    }
+    const x0 = points.length > 1 ? padL : padL + chartW / 2
+    const x1 = points.length > 1 ? padL + chartW : x0
+    trend = {
+      x1: x0,
+      y1: mapY(reg.intercept),
+      x2: x1,
+      y2: mapY(reg.slope * (values.length - 1) + reg.intercept),
+    }
+  }
+
+  return { points, path, ticks, yMin, yRange, trend }
+}
+
+const feedingMl = computed(() => buildBars(d => d.total_ml || 0))
+const feedingCount = computed(() => buildBars(d => d.feeding_count || 0))
+const diaper = computed(() => buildBars(d => d.diaper_count || 0))
+const sleep = computed(() => buildBars(d => (d.sleep_duration_minutes || 0) / 60, { decimals: 1 }))
+
+const feedingMlScatter = computed(() => buildLineChart(d => d.total_ml || 0, { integerTicks: true }))
+const feedingCountScatter = computed(() => buildLineChart(d => d.feeding_count || 0, { integerTicks: true, forceZero: true }))
+const diaperScatter = computed(() => buildLineChart(d => d.diaper_count || 0, { integerTicks: true }))
+const sleepScatter = computed(() => buildLineChart(d => (d.sleep_duration_minutes || 0) / 60, { integerTicks: true }))
 
 const tempChart = computed(() => buildLineChart(d => d.temperature_high || 0))
+const tempTicks = computed(() => tempChart.value.ticks)
 const tempPoints = computed(() => tempChart.value.points)
 const tempPath = computed(() => tempChart.value.path)
 
