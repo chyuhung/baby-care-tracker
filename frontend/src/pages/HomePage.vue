@@ -61,6 +61,10 @@
                 {{ lastFeedingAgo.text }}
               </span>
             </div>
+            <div v-if="feedingAvgInterval" class="mt-1 flex items-center justify-between">
+              <span class="text-xs text-text-secondary">平均间隔</span>
+              <span class="text-xs font-medium text-text-secondary">{{ feedingAvgInterval }}</span>
+            </div>
             <!-- 新增喂奶入口 -->
             <button @click.stop="goToAddFeeding"
               class="mt-3 w-full py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
@@ -83,6 +87,10 @@
               <span class="text-xs font-medium" :class="lastDiaperAgo.isLong ? 'text-orange-500' : 'text-text-secondary'">
                 {{ lastDiaperAgo.text }}
               </span>
+            </div>
+            <div v-if="diaperAvgInterval" class="mt-1 flex items-center justify-between">
+              <span class="text-xs text-text-secondary">平均间隔</span>
+              <span class="text-xs font-medium text-text-secondary">{{ diaperAvgInterval }}</span>
             </div>
             <!-- 新增尿布入口 -->
             <button @click.stop="goToAddDiaper"
@@ -249,6 +257,35 @@ function getTimeAgo(isoString: string | null) {
   else text = '刚刚'
   return { text, isLong: diffHours >= 4, minutes: diffMins }
 }
+
+function avgIntervalMinutes(records: any[], type: string): number | null {
+  const today = new Date().toDateString()
+  const times = records
+    .filter(r => r.record_type === type && new Date(r.occurred_at).toDateString() === today)
+    .map(r => new Date(r.occurred_at).getTime())
+    .sort((a, b) => a - b)
+  if (times.length < 2) return null
+  let sum = 0
+  for (let i = 1; i < times.length; i++) sum += (times[i] - times[i - 1]) / 60000
+  return Math.round(sum / (times.length - 1))
+}
+
+function formatInterval(mins: number) {
+  if (mins < 60) return `${mins}分钟`
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return m > 0 ? `${h}小时${m}分` : `${h}小时`
+}
+
+const feedingAvgInterval = computed(() => {
+  const m = avgIntervalMinutes(allRecords.value, 'feeding')
+  return m == null ? null : formatInterval(m)
+})
+
+const diaperAvgInterval = computed(() => {
+  const m = avgIntervalMinutes(allRecords.value, 'diaper')
+  return m == null ? null : formatInterval(m)
+})
 
 const lastFeedingAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_feeding) })
 const lastDiaperAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_diaper) })

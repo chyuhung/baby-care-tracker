@@ -21,15 +21,15 @@
       <template v-else>
         <div>
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
-            <span class="flex items-center gap-2">
-              🍼 每日奶量
-              <span class="flex items-center gap-1 text-[10px] font-normal">
-                <span class="inline-block w-4" style="border-top: 2px solid var(--chart-primary)"></span>
-                奶量
-                <span class="inline-block w-4" style="border-top: 2px dashed var(--chart-primary-count)"></span>
-                次数
+              <span class="flex items-center gap-2">
+                🍼 每日奶量
+                <span class="flex items-center gap-1 text-[10px] font-normal">
+                  <span class="inline-block w-4" style="border-top: 2px solid var(--chart-primary)"></span>
+                  奶量
+                  <span class="inline-block w-1.5 h-2.5 rounded-sm" style="background: var(--chart-primary-count)"></span>
+                  次数
+                </span>
               </span>
-            </span>
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <g v-for="(t, ti) in feedingTicks" :key="'fl'+ti">
@@ -42,8 +42,10 @@
             <g v-for="(pt, i) in feedingPoints" :key="'dv'+i">
               <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
             </g>
+            <g v-for="(b, i) in feedingCountBars" :key="'fb'+i">
+              <rect :x="b.x - b.w / 2" :y="b.y" :width="b.w" :height="b.h" rx="2" fill="var(--chart-primary-count)" opacity="0.75"/>
+            </g>
             <path :d="feedingPath" class="chart-line-primary" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path :d="feedingCountPath" class="chart-line-primary-count" fill="none" stroke-width="2" stroke-dasharray="5,4" stroke-linecap="round" stroke-linejoin="round"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <line :x1="axis.rightX" :x2="axis.rightX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">ml</text>
@@ -181,14 +183,14 @@ function buildSmoothPath(pts: { x: number, y: number }[]): string {
   return d
 }
 
-function buildLineChart(getValue: (d: any) => number, opts: { integerTicks?: boolean } = {}) {
+function buildLineChart(getValue: (d: any) => number, opts: { integerTicks?: boolean, forceZero?: boolean } = {}) {
   const data = trendData.value
   const empty = { points: [] as { x: number, y: number, value: number }[], path: '', ticks: [] as { y: number, label: string }[], yMin: 0, yRange: 1 }
   if (!data.length) return empty
   const { padL, padR, padT, padB, svgW, svgH } = CHART
   const chartW = svgW - padL - padR
   const chartH = svgH - padT - padB
-  const { integerTicks = false } = opts
+  const { integerTicks = false, forceZero = false } = opts
   const maxTicks = integerTicks ? Math.max(4, Math.min(6, Math.floor(chartH / 20))) : MAX_TICKS
 
   const values = data.map(getValue)
@@ -197,7 +199,7 @@ function buildLineChart(getValue: (d: any) => number, opts: { integerTicks?: boo
   const range = rawMax - rawMin
   const positiveValues = values.filter(v => v > 0)
   const effectiveMin = (rawMin === 0 && positiveValues.length > 0) ? Math.min(...positiveValues) : rawMin
-  const yMin = rawMin === 0 ? 0 : (range === 0 ? effectiveMin * 0.5 : effectiveMin - range * 0.15)
+  const yMin = forceZero ? 0 : (rawMin === 0 ? 0 : (range === 0 ? effectiveMin * 0.5 : effectiveMin - range * 0.15))
 
   const tickVals = integerTicks ? niceTicksInt(rawMin, rawMax, maxTicks) : niceTicks(rawMin, rawMax, maxTicks)
   let yMax = range === 0 ? effectiveMin * 1.5 : rawMax + range * 0.15
@@ -232,9 +234,26 @@ const feedingChart = computed(() => buildLineChart(d => d.total_ml || 0, { integ
 const feedingPoints = computed(() => feedingChart.value.points)
 const feedingPath = computed(() => feedingChart.value.path)
 
-const feedingCountChart = computed(() => buildLineChart(d => d.feeding_count || 0, { integerTicks: true }))
+const feedingCountChart = computed(() => buildLineChart(d => d.feeding_count || 0, { integerTicks: true, forceZero: true }))
 const feedingCountPoints = computed(() => feedingCountChart.value.points)
-const feedingCountPath = computed(() => feedingCountChart.value.path)
+
+const feedingBarW = computed(() => {
+  const pts = feedingCountPoints.value
+  if (pts.length < 2) return 14
+  const xstep = pts[1].x - pts[0].x || 0
+  return Math.max(3, Math.min(22, xstep * 0.45))
+})
+
+const feedingCountBars = computed(() => {
+  const baseY = axis.value.baseY
+  const w = feedingBarW.value
+  return feedingCountPoints.value.map(pt => ({
+    x: pt.x,
+    y: pt.y,
+    h: Math.max(0, baseY - pt.y),
+    w,
+  }))
+})
 
 function niceStep(raw: number) {
   if (raw <= 0) return 1
