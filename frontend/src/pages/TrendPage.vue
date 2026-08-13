@@ -69,7 +69,7 @@
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">ml</text>
             <text :x="axis.rightX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">次</text>
             <template v-for="(d, i) in trendData" :key="'fx'+i">
-              <text v-if="dateLabels[i]?.show" :x="xPos(i)" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
@@ -104,7 +104,7 @@
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">次</text>
             <template v-for="(d, i) in trendData" :key="'dx'+i">
-              <text v-if="dateLabels[i]?.show" :x="xPos(i)" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
@@ -139,7 +139,7 @@
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">小时</text>
             <template v-for="(d, i) in trendData" :key="'sx'+i">
-              <text v-if="dateLabels[i]?.show" :x="xPos(i)" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
@@ -217,15 +217,23 @@ function xPos(i: number) {
   return leftX + i * ((rightX - leftX) / (n - 1))
 }
 
-const xstep = computed(() => {
+function dateX(i: number) {
+  return days.value < 30 ? barCenter(i) : xPos(i)
+}
+
+const barSlot = computed(() => {
   const n = trendData.value.length
-  if (n < 2) return 0
-  return (axis.value.rightX - axis.value.leftX) / (n - 1)
+  if (!n) return 0
+  return (axis.value.rightX - axis.value.leftX) / n
 })
 
-const barW = computed(() => Math.max(4, Math.min(26, xstep.value * 0.6)))
+function barCenter(i: number) {
+  return axis.value.leftX + barSlot.value / 2 + i * barSlot.value
+}
 
-const groupW = computed(() => Math.max(6, Math.min(26, xstep.value * 0.72)))
+const barW = computed(() => Math.max(4, Math.min(26, barSlot.value * 0.6)))
+
+const groupW = computed(() => Math.max(6, Math.min(26, barSlot.value * 0.72)))
 
 const w2 = computed(() => Math.max(3, Math.floor(groupW.value / 2) - 1))
 
@@ -241,13 +249,13 @@ function clampSpan(cx: number, w: number) {
 function feedingRects(i: number) {
   const w = w2.value
   const total = 2 * w + 1
-  const { gl } = clampSpan(xPos(i), total)
+  const { gl } = clampSpan(barCenter(i), total)
   return { mlX: gl, countX: gl + w + 1, w }
 }
 
 function singleRects(i: number) {
   const w = barW.value
-  return { gl: clampSpan(xPos(i), w).gl, w }
+  return { gl: clampSpan(barCenter(i), w).gl, w }
 }
 
 function buildSmoothPath(pts: { x: number, y: number }[]): string {

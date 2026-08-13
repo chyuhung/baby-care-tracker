@@ -119,6 +119,10 @@
               <span class="text-xs text-text-secondary">距上次</span>
               <span class="text-xs font-medium" :class="lastSleepAgo.isLong ? 'text-orange-500' : 'text-text-secondary'">{{ lastSleepAgo.text }}</span>
             </div>
+            <div v-if="sleepAvgDuration" class="mt-1 flex items-center justify-between">
+              <span class="text-xs text-text-secondary">平均时长</span>
+              <span class="text-xs font-medium text-text-secondary">{{ sleepAvgDuration }}</span>
+            </div>
             <button v-if="currentSleep" @click.stop="stopSleep"
               class="mt-3 w-full py-2 bg-red-500 text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
               <span>■</span> 结束
@@ -142,6 +146,10 @@
             <div v-if="lastTempAgo" class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
               <span class="text-xs font-medium" :class="lastTempAgo.isLong ? 'text-orange-500' : 'text-text-secondary'">{{ lastTempAgo.text }}</span>
+            </div>
+            <div v-if="tempAvgValue" class="mt-1 flex items-center justify-between">
+              <span class="text-xs text-text-secondary">平均体温</span>
+              <span class="text-xs font-medium text-text-secondary">{{ tempAvgValue }}°C</span>
             </div>
             <button @click.stop="goToAddTemperature"
               class="mt-3 w-full py-2 bg-temperature/10 text-temperature text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
@@ -285,6 +293,30 @@ const feedingAvgInterval = computed(() => {
 const diaperAvgInterval = computed(() => {
   const m = avgIntervalMinutes(allRecords.value, 'diaper')
   return m == null ? null : formatInterval(m)
+})
+
+const sleepAvgDuration = computed(() => {
+  const recs = allRecords.value
+    .filter(r => r.record_type === 'sleep' && r.data?.started_at && r.data?.ended_at)
+    .map(r => ({
+      t: (new Date(r.data.ended_at).getTime() - new Date(r.data.started_at).getTime()) / 60000,
+      occurred: new Date(r.occurred_at).getTime(),
+    }))
+    .filter(x => x.t > 0)
+    .sort((a, b) => b.occurred - a.occurred)
+    .slice(0, 10)
+  if (!recs.length) return null
+  return formatInterval(Math.round(recs.reduce((sum, x) => sum + x.t, 0) / recs.length))
+})
+
+const tempAvgValue = computed(() => {
+  const recs = allRecords.value
+    .filter(r => r.record_type === 'temperature' && r.data?.temperature > 0)
+    .map(r => ({ v: r.data.temperature, occurred: new Date(r.occurred_at).getTime() }))
+    .sort((a, b) => b.occurred - a.occurred)
+    .slice(0, 10)
+  if (!recs.length) return null
+  return (recs.reduce((sum, x) => sum + x.v, 0) / recs.length).toFixed(1)
 })
 
 const lastFeedingAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_feeding) })
