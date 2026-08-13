@@ -147,9 +147,9 @@
               <span class="text-xs text-text-secondary">距上次</span>
               <span class="text-xs font-medium" :class="lastTempAgo.isLong ? 'text-orange-500' : 'text-text-secondary'">{{ lastTempAgo.text }}</span>
             </div>
-            <div v-if="tempAvgValue" class="mt-1 flex items-center justify-between">
-              <span class="text-xs text-text-secondary">平均体温</span>
-              <span class="text-xs font-medium text-text-secondary">{{ tempAvgValue }}°C</span>
+            <div v-if="tempHighValue" class="mt-1 flex items-center justify-between">
+              <span class="text-xs text-text-secondary">最高体温</span>
+              <span class="text-xs font-medium" :class="+tempHighValue >= 37.5 ? 'text-red-500' : 'text-text-secondary'">{{ tempHighValue }}°C</span>
             </div>
             <button @click.stop="goToAddTemperature"
               class="mt-3 w-full py-2 bg-temperature/10 text-temperature text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
@@ -309,14 +309,14 @@ const sleepAvgDuration = computed(() => {
   return formatInterval(Math.round(recs.reduce((sum, x) => sum + x.t, 0) / recs.length))
 })
 
-const tempAvgValue = computed(() => {
+const tempHighValue = computed(() => {
   const recs = allRecords.value
     .filter(r => r.record_type === 'temperature' && r.data?.temperature > 0)
     .map(r => ({ v: r.data.temperature, occurred: new Date(r.occurred_at).getTime() }))
     .sort((a, b) => b.occurred - a.occurred)
-    .slice(0, 10)
+    .slice(0, 3)
   if (!recs.length) return null
-  return (recs.reduce((sum, x) => sum + x.v, 0) / recs.length).toFixed(1)
+  return Math.max(...recs.map(x => x.v)).toFixed(1)
 })
 
 const lastFeedingAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_feeding) })
