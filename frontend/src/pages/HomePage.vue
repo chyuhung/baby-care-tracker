@@ -259,11 +259,11 @@ function getTimeAgo(isoString: string | null) {
 }
 
 function avgIntervalMinutes(records: any[], type: string): number | null {
-  const today = new Date().toDateString()
   const times = records
-    .filter(r => r.record_type === type && new Date(r.occurred_at).toDateString() === today)
+    .filter(r => r.record_type === type)
     .map(r => new Date(r.occurred_at).getTime())
     .sort((a, b) => a - b)
+    .slice(-10)
   if (times.length < 2) return null
   let sum = 0
   for (let i = 1; i < times.length; i++) sum += (times[i] - times[i - 1]) / 60000

@@ -33,6 +33,7 @@
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <template v-if="days === 30">
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
               <g v-for="(t, ti) in feedingMlScatter.ticks" :key="'fl'+ti">
                 <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
                 <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
@@ -54,12 +55,12 @@
             </template>
             <template v-else>
               <g v-for="(b, i) in feedingMl.items" :key="'bm'+i">
-                <rect :x="b.x - w2 - 0.5" :y="b.y" :width="w2" :height="b.h" rx="2" fill="var(--chart-primary)" opacity="0.85"/>
-                <text v-if="b.h > 0" :x="b.x - w2 / 2 - 0.5" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#6b7280">{{ b.label }}</text>
+                <rect :x="feedingRects(i).mlX" :y="b.y" :width="w2" :height="b.h" rx="2" fill="var(--chart-primary)" opacity="0.85"/>
+                <text v-if="b.h > 0" :x="feedingRects(i).mlX + w2 / 2" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#6b7280">{{ b.label }}</text>
               </g>
               <g v-for="(b, i) in feedingCount.items" :key="'bc'+i">
-                <rect :x="b.x + 0.5" :y="b.y" :width="w2" :height="b.h" rx="2" fill="var(--chart-primary-count)" opacity="0.85"/>
-                <text v-if="b.h > 0" :x="b.x + w2 / 2 + 0.5" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#6b7280">{{ b.label }}</text>
+                <rect :x="feedingRects(i).countX" :y="b.y" :width="w2" :height="b.h" rx="2" fill="var(--chart-primary-count)" opacity="0.85"/>
+                <text v-if="b.h > 0" :x="feedingRects(i).countX + w2 / 2" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#6b7280">{{ b.label }}</text>
               </g>
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             </template>
@@ -80,6 +81,7 @@
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <template v-if="days === 30">
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
               <g v-for="(t, ti) in diaperScatter.ticks" :key="'dl'+ti">
                 <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
                 <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
@@ -94,8 +96,8 @@
             </template>
             <template v-else>
               <g v-for="(b, i) in diaper.items" :key="'db'+i">
-                <rect :x="b.x - barW / 2" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-diaper)" opacity="0.85"/>
-                <text v-if="b.h > 0" :x="b.x" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#6b7280">{{ b.label }}</text>
+                <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-diaper)" opacity="0.85"/>
+                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#6b7280">{{ b.label }}</text>
               </g>
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             </template>
@@ -114,6 +116,7 @@
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <template v-if="days === 30">
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
               <g v-for="(t, ti) in sleepScatter.ticks" :key="'sl'+ti">
                 <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
                 <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
@@ -128,8 +131,8 @@
             </template>
             <template v-else>
               <g v-for="(b, i) in sleep.items" :key="'sb'+i">
-                <rect :x="b.x - barW / 2" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-sleep)" opacity="0.85"/>
-                <text v-if="b.h > 0" :x="b.x" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#6b7280">{{ b.label }}</text>
+                <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-sleep)" opacity="0.85"/>
+                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#6b7280">{{ b.label }}</text>
               </g>
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             </template>
@@ -147,6 +150,7 @@
             </span>
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
+            <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
             <g v-for="(t, ti) in tempTicks" :key="'tl'+ti">
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
               <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
@@ -224,6 +228,27 @@ const barW = computed(() => Math.max(4, Math.min(26, xstep.value * 0.6)))
 const groupW = computed(() => Math.max(6, Math.min(26, xstep.value * 0.72)))
 
 const w2 = computed(() => Math.max(3, Math.floor(groupW.value / 2) - 1))
+
+function clampSpan(cx: number, w: number) {
+  let gl = cx - w / 2
+  let gr = cx + w / 2
+  const { leftX, rightX } = axis.value
+  if (gl < leftX) { gl = leftX; gr = gl + w }
+  else if (gr > rightX) { gr = rightX; gl = gr - w }
+  return { gl }
+}
+
+function feedingRects(i: number) {
+  const w = w2.value
+  const total = 2 * w + 1
+  const { gl } = clampSpan(xPos(i), total)
+  return { mlX: gl, countX: gl + w + 1, w }
+}
+
+function singleRects(i: number) {
+  const w = barW.value
+  return { gl: clampSpan(xPos(i), w).gl, w }
+}
 
 function buildSmoothPath(pts: { x: number, y: number }[]): string {
   if (pts.length === 0) return ''
