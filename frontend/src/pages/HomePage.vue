@@ -267,19 +267,15 @@ function getTimeAgo(isoString: string | null) {
 }
 
 function avgIntervalMinutes(records: any[], type: string): number | null {
-  const entries = records
+  const times = records
     .filter(r => r.record_type === type)
-    .map(r => {
-      const start = new Date(r.occurred_at).getTime()
-      const end = type === 'feeding' ? start + (r.data?.duration_minutes || 0) * 60000 : start
-      return { start, end }
-    })
-    .sort((a, b) => a.start - b.start)
+    .map(r => new Date(r.occurred_at).getTime())
+    .sort((a, b) => a - b)
     .slice(-10)
-  if (entries.length < 2) return null
+  if (times.length < 2) return null
   let sum = 0
-  for (let i = 1; i < entries.length; i++) sum += (entries[i].start - entries[i - 1].end) / 60000
-  return Math.round(sum / (entries.length - 1))
+  for (let i = 1; i < times.length; i++) sum += (times[i] - times[i - 1]) / 60000
+  return Math.round(sum / (times.length - 1))
 }
 
 function formatInterval(mins: number) {
