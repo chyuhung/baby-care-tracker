@@ -258,20 +258,38 @@ function singleRects(i: number) {
   return { gl: clampSpan(barCenter(i), w).gl, w }
 }
 
-function buildSmoothPath(pts: { x: number, y: number }[]): string {
-  if (pts.length === 0) return ''
-  if (pts.length === 1) return `M ${pts[0].x},${pts[0].y}`
+function buildMonotonePath(pts: { x: number, y: number }[]): string {
+  const n = pts.length
+  if (n === 0) return ''
+  if (n === 1) return `M ${pts[0].x},${pts[0].y}`
+  const h: number[] = []
+  const s: number[] = []
+  for (let i = 0; i < n - 1; i++) {
+    const dx = pts[i + 1].x - pts[i].x
+    h.push(dx)
+    s.push(dx === 0 ? 0 : (pts[i + 1].y - pts[i].y) / dx)
+  }
+  const m: number[] = new Array(n).fill(0)
+  m[0] = s[0]
+  m[n - 1] = s[n - 2]
+  for (let i = 1; i < n - 1; i++) {
+    if (s[i - 1] * s[i] <= 0) {
+      m[i] = 0
+    } else {
+      const p = (s[i - 1] * h[i] + s[i] * h[i - 1]) / (h[i - 1] + h[i])
+      m[i] = (Math.sign(s[i - 1]) + Math.sign(s[i])) * Math.min(Math.abs(s[i - 1]), Math.abs(s[i]), 0.5 * Math.abs(p))
+    }
+  }
   let d = `M ${pts[0].x},${pts[0].y}`
-  for (let i = 0; i < pts.length - 1; i++) {
-    const p0 = pts[i - 1] || pts[i]
-    const p1 = pts[i]
-    const p2 = pts[i + 1]
-    const p3 = pts[i + 2] || p2
-    const c1x = p1.x + (p2.x - p0.x) / 3
-    const c1y = p1.y + (p2.y - p0.y) / 3
-    const c2x = p2.x - (p3.x - p1.x) / 3
-    const c2y = p2.y - (p3.y - p1.y) / 3
-    d += ` C ${c1x.toFixed(2)},${c1y.toFixed(2)} ${c2x.toFixed(2)},${c2y.toFixed(2)} ${p2.x},${p2.y}`
+  for (let i = 0; i < n - 1; i++) {
+    const p0 = pts[i]
+    const p1 = pts[i + 1]
+    const dx = h[i]
+    const c1x = p0.x + dx / 3
+    const c1y = p0.y + m[i] * dx / 3
+    const c2x = p1.x - dx / 3
+    const c2y = p1.y - m[i + 1] * dx / 3
+    d += ` C ${c1x.toFixed(2)},${c1y.toFixed(2)} ${c2x.toFixed(2)},${c2y.toFixed(2)} ${p1.x},${p1.y}`
   }
   return d
 }
@@ -356,14 +374,14 @@ function buildBars(getValue: (d: any) => number, opts: { decimals?: number } = {
   return { items, yMax }
 }
 
-function buildLineChart(getValue: (d: any) => number, opts: { integerTicks?: boolean, forceZero?: boolean } = {}) {
+function buildLineChart(getValue: (d: any) => number, opts: { integerTicks?: boolean, forceZero?: boolean, withPath?: boolean } = {}) {
   const data = trendData.value
   const empty = { points: [] as { x: number, y: number, value: number }[], path: '', ticks: [] as { y: number, label: string }[], yMin: 0, yRange: 1, trend: null as { x1: number, y1: number, x2: number, y2: number } | null }
   if (!data.length) return empty
   const { padL, padR, padT, padB, svgW, svgH } = CHART
   const chartW = svgW - padL - padR
   const chartH = svgH - padT - padB
-  const { integerTicks = false, forceZero = false } = opts
+  const { integerTicks = false, forceZero = false, withPath = false } = opts
   const maxTicks = integerTicks ? Math.max(4, Math.min(6, Math.floor(chartH / 20))) : MAX_TICKS
 
   const values = data.map(getValue)
@@ -399,7 +417,7 @@ function buildLineChart(getValue: (d: any) => number, opts: { integerTicks?: boo
     label: formatTick(v, tickStep),
   }))
 
-  const path = buildSmoothPath(points)
+  const path = withPath ? buildMonotonePath(points) : ''
 
   const reg = leastSquaresLine(values)
   let trend = null as { x1: number, y1: number, x2: number, y2: number } | null
@@ -431,7 +449,7 @@ const feedingCountScatter = computed(() => buildLineChart(d => d.feeding_count |
 const diaperScatter = computed(() => buildLineChart(d => d.diaper_count || 0, { integerTicks: true }))
 const sleepScatter = computed(() => buildLineChart(d => (d.sleep_duration_minutes || 0) / 60, { integerTicks: true }))
 
-const tempChart = computed(() => buildLineChart(d => d.temperature_high || 0))
+const tempChart = computed(() => buildLineChart(d => d.temperature_high || 0, { withPath: true }))
 const tempTicks = computed(() => tempChart.value.ticks)
 const tempPoints = computed(() => tempChart.value.points)
 const tempPath = computed(() => tempChart.value.path)
