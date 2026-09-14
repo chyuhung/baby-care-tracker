@@ -69,6 +69,18 @@ const router = createRouter({
       component: () => import('@/pages/TemperaturePage.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/outdoor',
+      name: 'outdoor',
+      component: () => import('@/pages/OutdoorPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/outdoor/:id/edit',
+      name: 'outdoor-edit',
+      component: () => import('@/pages/OutdoorPage.vue'),
+      meta: { requiresAuth: true },
+    },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 })

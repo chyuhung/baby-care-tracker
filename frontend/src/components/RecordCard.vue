@@ -50,7 +50,7 @@
     </button>
   </div>
 
-  <div v-else class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+  <div v-else-if="record.record_type === 'temperature'" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
     <div class="w-1.5 h-12 rounded-full bg-temperature flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -63,6 +63,23 @@
         <span v-if="t.temperature >= 37.5" class="text-red-500 px-1">🔥</span>
       </div>
       <div v-if="t.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ t.note }}</div>
+    </div>
+    <button @click.stop="$emit('delete')" class="p-1 text-text-secondary/50 hover:text-red-400 btn-press">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <div v-else class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+    <div class="w-1.5 h-12 rounded-full bg-outdoor flex-shrink-0"></div>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-sm font-semibold text-text-primary">🌳 户外活动</span>
+        <span class="text-xs text-text-secondary font-num">{{ outdoorTimeLabel }}</span>
+      </div>
+      <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
+        <span class="bg-outdoor/10 text-outdoor px-2 py-0.5 rounded-full">{{ outdoorDurationLabel }}</span>
+      </div>
+      <div v-if="o.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ o.note }}</div>
     </div>
     <button @click.stop="$emit('delete')" class="p-1 text-text-secondary/50 hover:text-red-400 btn-press">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -81,6 +98,7 @@ const f = computed(() => props.record.data || {})
 const d = computed(() => props.record.data || {})
 const s = computed(() => props.record.data || {})
 const t = computed(() => props.record.data || {})
+const o = computed(() => props.record.data || {})
 
 const feedingTypeMap: Record<string, string> = { breast: '🤱 母乳亲喂', bottle: '🍼 母乳瓶喂', formula: '🍼 配方奶' }
 const diaperTypeMap: Record<string, string> = { pee: '💧 小便', poop: '💩 大便', mixed: '🌪️ 混合' }
@@ -105,6 +123,23 @@ const sleepDurationLabel = computed(() => {
   if (!s.value.ended_at) return '进行中'
   const start = new Date(s.value.started_at)
   const end = new Date(s.value.ended_at)
+  const mins = Math.round((end.getTime() - start.getTime()) / 60000)
+  return fmtDuration(mins)
+})
+
+const outdoorTimeLabel = computed(() => {
+  const start = new Date(o.value.started_at)
+  const end = o.value.ended_at ? new Date(o.value.ended_at) : null
+  const hhmm1 = `${pad2(start.getHours())}:${pad2(start.getMinutes())}`
+  if (!end) return hhmm1
+  const hhmm2 = `${pad2(end.getHours())}:${pad2(end.getMinutes())}`
+  return `${hhmm1}~${hhmm2}`
+})
+
+const outdoorDurationLabel = computed(() => {
+  if (!o.value.ended_at) return '进行中'
+  const start = new Date(o.value.started_at)
+  const end = new Date(o.value.ended_at)
   const mins = Math.round((end.getTime() - start.getTime()) / 60000)
   return fmtDuration(mins)
 })

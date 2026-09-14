@@ -146,6 +146,41 @@
         <div>
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
             <span class="flex items-center gap-2">
+              🌳 每日户外活动
+            </span>
+          </h4>
+          <svg viewBox="0 0 340 170" class="w-full block">
+            <template v-if="days === 30">
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
+              <g v-for="(t, ti) in outdoorScatter.ticks" :key="'ol'+ti">
+                <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
+                <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
+              </g>
+              <g v-for="(pt, i) in outdoorScatter.points" :key="'ov'+i">
+                <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
+              </g>
+              <line v-if="outdoorScatter.trend" :x1="outdoorScatter.trend.x1" :y1="outdoorScatter.trend.y1" :x2="outdoorScatter.trend.x2" :y2="outdoorScatter.trend.y2" stroke="var(--chart-outdoor)" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.85"/>
+              <g v-for="(pt, i) in outdoorScatter.points" :key="'op'+i">
+                <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="var(--chart-outdoor)"/>
+              </g>
+            </template>
+            <template v-else>
+              <g v-for="(b, i) in outdoor.items" :key="'ob'+i">
+                <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-outdoor)" opacity="0.85"/>
+                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#6b7280">{{ b.label }}</text>
+              </g>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
+            </template>
+            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
+            <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">小时</text>
+            <template v-for="(d, i) in trendData" :key="'ox'+i">
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
+            </template>
+          </svg>
+        </div>
+        <div>
+          <h4 class="text-sm font-semibold text-text-secondary mb-2">
+            <span class="flex items-center gap-2">
               🌡️ 每日最高体温
             </span>
           </h4>
@@ -443,11 +478,13 @@ const feedingMl = computed(() => buildBars(d => d.total_ml || 0))
 const feedingCount = computed(() => buildBars(d => d.feeding_count || 0))
 const diaper = computed(() => buildBars(d => d.diaper_count || 0))
 const sleep = computed(() => buildBars(d => (d.sleep_duration_minutes || 0) / 60, { decimals: 1 }))
+const outdoor = computed(() => buildBars(d => (d.outdoor_duration_minutes || 0) / 60, { decimals: 1 }))
 
 const feedingMlScatter = computed(() => buildLineChart(d => d.total_ml || 0, { integerTicks: true }))
 const feedingCountScatter = computed(() => buildLineChart(d => d.feeding_count || 0, { integerTicks: true, forceZero: true }))
 const diaperScatter = computed(() => buildLineChart(d => d.diaper_count || 0, { integerTicks: true }))
 const sleepScatter = computed(() => buildLineChart(d => (d.sleep_duration_minutes || 0) / 60, { integerTicks: true }))
+const outdoorScatter = computed(() => buildLineChart(d => (d.outdoor_duration_minutes || 0) / 60, { integerTicks: true }))
 
 const tempChart = computed(() => buildLineChart(d => d.temperature_high || 0, { withPath: true }))
 const tempTicks = computed(() => tempChart.value.ticks)

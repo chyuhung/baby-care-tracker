@@ -97,12 +97,24 @@ type TemperatureRecord struct {
 	RecordType  string  `json:"record_type"` // temperature
 }
 
+// OutdoorRecord 户外活动记录
+type OutdoorRecord struct {
+	ID         int64   `json:"id"`
+	BabyID     int64   `json:"baby_id"`
+	UserID     int64   `json:"user_id"`
+	StartedAt  string  `json:"started_at"`
+	EndedAt    *string `json:"ended_at"`
+	Note       string  `json:"note"`
+	CreatedAt  string  `json:"created_at"`
+	RecordType string  `json:"record_type"` // outdoor
+}
+
 // Record 统一记录类型
 type Record struct {
 	ID         int64  `json:"id"`
 	BabyID     int64  `json:"baby_id"`
 	UserID     int64  `json:"user_id"`
-	RecordType string `json:"record_type"` // feeding, diaper, sleep, temperature
+	RecordType string `json:"record_type"` // feeding, diaper, sleep, temperature, outdoor
 	Data       any    `json:"data"`
 	OccurredAt string `json:"occurred_at"`
 	CreatedAt  string `json:"created_at"`
@@ -184,6 +196,16 @@ type CreateTemperatureRequest struct {
 	Location    string  `json:"location"`
 	Note        string  `json:"note"`
 	OccurredAt  string  `json:"occurred_at" binding:"required"`
+}
+
+type CreateOutdoorRequest struct {
+	StartedAt string `json:"started_at" binding:"required"`
+	Note      string `json:"note"`
+}
+
+type StopOutdoorRequest struct {
+	EndedAt string `json:"ended_at" binding:"required"`
+	Note    string `json:"note"`
 }
 
 type WebSocketMessage struct {

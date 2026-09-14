@@ -137,6 +137,9 @@ func main() {
 			protected.PUT("/babies/:id/sleep/:sid/stop", handlers.StopSleep)
 			protected.GET("/babies/:id/sleep/current", handlers.GetCurrentSleep)
 			protected.POST("/babies/:id/temperature", handlers.CreateTemperature)
+			protected.POST("/babies/:id/outdoor/start", handlers.StartOutdoor)
+			protected.PUT("/babies/:id/outdoor/:oid/stop", handlers.StopOutdoor)
+			protected.GET("/babies/:id/outdoor/current", handlers.GetCurrentOutdoor)
 			protected.PUT("/records/:id", handlers.UpdateRecord)
 			protected.DELETE("/records/:id", handlers.DeleteRecord)
 

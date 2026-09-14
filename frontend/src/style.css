@@ -16,11 +16,13 @@
   --diaper: 255 122 89;          /* #FF7A59 暖珊瑚，三主题通用强调 */
   --temperature: 102 187 106;     /* #66BB6A 绿色，清爽感 */
   --sleep: 78 205 196;           /* #4ECDC4 青绿，睡眠休息感 */
+  --outdoor: 132 204 22;         /* #84CC16 草绿，户外活力 */
   --header-grad: linear-gradient(135deg, rgb(124 108 255 / 0.16), rgb(124 108 255 / 0.04));
   --chart-primary: #7C6CFF;
   --chart-diaper: #FF7A59;
   --chart-temperature: #66BB6A;
   --chart-sleep: #4ECDC4;
+  --chart-outdoor: #84CC16;
   --chart-primary-count: #F59E0B;
 }
 
@@ -30,11 +32,13 @@
   --diaper: 255 122 89;          /* #FF7A59 */
   --temperature: 102 187 106;     /* #66BB6A */
   --sleep: 78 205 196;           /* #4ECDC4 */
+  --outdoor: 132 204 22;         /* #84CC16 */
   --header-grad: linear-gradient(135deg, rgb(255 126 179 / 0.18), rgb(255 126 179 / 0.04));
   --chart-primary: #FF7EB3;
   --chart-diaper: #FF7A59;
   --chart-temperature: #66BB6A;
   --chart-sleep: #4ECDC4;
+  --chart-outdoor: #84CC16;
   --chart-primary-count: #F59E0B;
 }
 
@@ -44,11 +48,13 @@
   --diaper: 255 122 89;          /* #FF7A59 */
   --temperature: 102 187 106;     /* #66BB6A */
   --sleep: 78 205 196;           /* #4ECDC4 */
+  --outdoor: 132 204 22;         /* #84CC16 */
   --header-grad: linear-gradient(135deg, rgb(77 157 253 / 0.18), rgb(77 157 253 / 0.04));
   --chart-primary: #4D9DFD;
   --chart-diaper: #FF7A59;
   --chart-temperature: #66BB6A;
   --chart-sleep: #4ECDC4;
+  --chart-outdoor: #84CC16;
   --chart-primary-count: #F59E0B;
 }
 
@@ -162,3 +168,4 @@ body {
 .chart-line-diaper { stroke: var(--chart-diaper); }
 .chart-line-temperature { stroke: var(--chart-temperature); }
 .chart-line-sleep { stroke: var(--chart-sleep); }
+.chart-line-outdoor { stroke: var(--chart-outdoor); }

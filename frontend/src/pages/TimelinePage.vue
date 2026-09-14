@@ -78,11 +78,12 @@ const filters = [
   { label: '🩲 尿布', value: 'diaper' },
   { label: '😴 睡眠', value: 'sleep' },
   { label: '🌡️ 体温', value: 'temperature' },
+  { label: '🌳 户外', value: 'outdoor' },
 ]
 
 // 监听路由参数变化，自动切换筛选
 watch(() => route.query.filter, (newFilter) => {
-  if (newFilter && ['feeding', 'diaper', 'sleep', 'temperature'].includes(newFilter as string)) {
+  if (newFilter && ['feeding', 'diaper', 'sleep', 'temperature', 'outdoor'].includes(newFilter as string)) {
     activeFilter.value = newFilter as string
   }
 }, { immediate: true })
@@ -150,6 +151,8 @@ function editRecord(r: any) {
     router.push(`/sleep/${r.id}/edit`)
   } else if (r.record_type === 'temperature') {
     router.push(`/temperature/${r.id}/edit`)
+  } else if (r.record_type === 'outdoor') {
+    router.push(`/outdoor/${r.id}/edit`)
   } else {
     router.push(`/record/${r.record_type}/${r.id}/edit`)
   }

@@ -34,6 +34,8 @@ func lookupBabyID(recordID int64, recordType string) int64 {
 		database.DB.QueryRow("SELECT baby_id FROM sleep_records WHERE id = ?", recordID).Scan(&babyID)
 	case "temperature":
 		database.DB.QueryRow("SELECT baby_id FROM temperature_records WHERE id = ?", recordID).Scan(&babyID)
+	case "outdoor":
+		database.DB.QueryRow("SELECT baby_id FROM outdoor_records WHERE id = ?", recordID).Scan(&babyID)
 	default:
 		database.DB.QueryRow("SELECT baby_id FROM feeding_records WHERE id = ?", recordID).Scan(&babyID)
 	}
@@ -48,8 +50,8 @@ func GetRecords(c *gin.Context) {
 		return
 	}
 	recordType := c.Query("type")
-	if recordType != "" && recordType != "feeding" && recordType != "diaper" && recordType != "sleep" && recordType != "temperature" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "type 必须为 feeding, diaper, sleep 或 temperature"})
+	if recordType != "" && recordType != "feeding" && recordType != "diaper" && recordType != "sleep" && recordType != "temperature" && recordType != "outdoor" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "type 必须为 feeding, diaper, sleep, temperature 或 outdoor"})
 		return
 	}
 	daysStr := c.Query("days")
@@ -63,16 +65,18 @@ func GetRecords(c *gin.Context) {
 	args := []interface{}{babyID}
 	daysFilter := ""
 	sleepDaysFilter := ""
+	outdoorDaysFilter := ""
 	if daysStr != "" {
 		if days, err := strconv.Atoi(daysStr); err == nil && days > 0 && days <= 365 {
 			start := daysAgoUTC(tzOffset, days)
 			daysFilter = " AND occurred_at >= ?"
 			sleepDaysFilter = " AND started_at >= ?"
+			outdoorDaysFilter = " AND started_at >= ?"
 			args = append(args, start)
 		}
 	}
 
-	var feedingCount, diaperCount, sleepCount, temperatureCount int
+	var feedingCount, diaperCount, sleepCount, temperatureCount, outdoorCount int
 	if recordType == "" || recordType == "feeding" {
 		fArgs := append([]interface{}{}, args...)
 		database.DB.QueryRow("SELECT COUNT(*) FROM feeding_records WHERE baby_id = ?"+daysFilter, fArgs...).Scan(&feedingCount)
@@ -89,7 +93,11 @@ func GetRecords(c *gin.Context) {
 		tArgs := append([]interface{}{}, args...)
 		database.DB.QueryRow("SELECT COUNT(*) FROM temperature_records WHERE baby_id = ?"+daysFilter, tArgs...).Scan(&temperatureCount)
 	}
-	c.Header("X-Total-Count", strconv.Itoa(feedingCount+diaperCount+sleepCount+temperatureCount))
+	if recordType == "" || recordType == "outdoor" {
+		oArgs := append([]interface{}{}, args...)
+		database.DB.QueryRow("SELECT COUNT(*) FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL"+outdoorDaysFilter, oArgs...).Scan(&outdoorCount)
+	}
+	c.Header("X-Total-Count", strconv.Itoa(feedingCount+diaperCount+sleepCount+temperatureCount+outdoorCount))
 
 	var records []models.Record
 
@@ -225,6 +233,40 @@ func GetRecords(c *gin.Context) {
 		}
 	}
 
+	if recordType == "" || recordType == "outdoor" {
+		oArgs := append([]interface{}{}, args...)
+		rows, err := database.DB.Query(
+			`SELECT id, baby_id, user_id, started_at, ended_at, note, created_at
+			FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL`+outdoorDaysFilter+` ORDER BY ended_at DESC LIMIT 500`,
+			oArgs...,
+		)
+		if err == nil {
+			defer rows.Close()
+			for rows.Next() {
+				var r models.OutdoorRecord
+				var note string
+				var endedAt sql.NullString
+				if err := rows.Scan(&r.ID, &r.BabyID, &r.UserID, &r.StartedAt, &endedAt, &note, &r.CreatedAt); err != nil {
+					continue
+				}
+				if endedAt.Valid {
+					r.EndedAt = &endedAt.String
+				}
+				r.Note = note
+				r.RecordType = "outdoor"
+				records = append(records, models.Record{
+					ID:         r.ID,
+					BabyID:     r.BabyID,
+					UserID:     r.UserID,
+					RecordType: "outdoor",
+					Data:       r,
+					OccurredAt: *r.EndedAt,
+					CreatedAt:  r.CreatedAt,
+				})
+			}
+		}
+	}
+
 	if records == nil {
 		records = []models.Record{}
 	} else {
@@ -251,18 +293,20 @@ func GetRecordsCount(c *gin.Context) {
 		return
 	}
 
-	var feedingCount, diaperCount, sleepCount, temperatureCount int
+	var feedingCount, diaperCount, sleepCount, temperatureCount, outdoorCount int
 	database.DB.QueryRow("SELECT COUNT(*) FROM feeding_records WHERE baby_id = ?", babyID).Scan(&feedingCount)
 	database.DB.QueryRow("SELECT COUNT(*) FROM diaper_records WHERE baby_id = ?", babyID).Scan(&diaperCount)
 	database.DB.QueryRow("SELECT COUNT(*) FROM sleep_records WHERE baby_id = ? AND ended_at IS NOT NULL", babyID).Scan(&sleepCount)
 	database.DB.QueryRow("SELECT COUNT(*) FROM temperature_records WHERE baby_id = ?", babyID).Scan(&temperatureCount)
+	database.DB.QueryRow("SELECT COUNT(*) FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL", babyID).Scan(&outdoorCount)
 
 	c.JSON(http.StatusOK, gin.H{
 		"feeding_count":     feedingCount,
 		"diaper_count":      diaperCount,
 		"sleep_count":       sleepCount,
 		"temperature_count": temperatureCount,
-		"total":             feedingCount + diaperCount + sleepCount + temperatureCount,
+		"outdoor_count":     outdoorCount,
+		"total":             feedingCount + diaperCount + sleepCount + temperatureCount + outdoorCount,
 	})
 }
 
@@ -450,6 +494,15 @@ func UpdateRecord(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "更新失败"})
 			return
 		}
+	case "outdoor":
+		_, err := database.DB.Exec(
+			"UPDATE outdoor_records SET started_at = ?, ended_at = ?, note = ? WHERE id = ?",
+			req.StartedAt, req.EndedAt, req.Note, recordID,
+		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "更新失败"})
+			return
+		}
 	default:
 		_, err := database.DB.Exec(
 			"UPDATE feeding_records SET type = ?, duration_minutes = ?, amount_ml = ?, side = ?, brand = ?, note = ?, occurred_at = ? WHERE id = ?",
@@ -487,6 +540,8 @@ func DeleteRecord(c *gin.Context) {
 		_, err = database.DB.Exec("DELETE FROM sleep_records WHERE id = ?", recordID)
 	case "temperature":
 		_, err = database.DB.Exec("DELETE FROM temperature_records WHERE id = ?", recordID)
+	case "outdoor":
+		_, err = database.DB.Exec("DELETE FROM outdoor_records WHERE id = ?", recordID)
 	default:
 		_, err = database.DB.Exec("DELETE FROM feeding_records WHERE id = ?", recordID)
 	}

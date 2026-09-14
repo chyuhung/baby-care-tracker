@@ -56,12 +56,22 @@ export interface TemperatureRecord {
   created_at: string
 }
 
+export interface OutdoorRecord {
+  id: number
+  baby_id: number
+  user_id: number
+  started_at: string
+  ended_at: string | null
+  note: string
+  created_at: string
+}
+
 export interface Record {
   id: number
   baby_id: number
   user_id: number
   record_type: string
-  data: FeedingRecord | DiaperRecord | SleepRecord | TemperatureRecord
+  data: FeedingRecord | DiaperRecord | SleepRecord | TemperatureRecord | OutdoorRecord
   occurred_at: string
   created_at: string
 }
@@ -78,6 +88,9 @@ export interface BabyStats {
   temperature_count: number
   latest_temperature: number
   last_temperature: string
+  outdoor_count: number
+  outdoor_duration: number
+  last_outdoor_end: string
 }
 
 export interface DailyStats {
@@ -88,6 +101,7 @@ export interface DailyStats {
   sleep_duration_minutes: number
   temperature_avg: number
   temperature_high: number
+  outdoor_duration_minutes: number
 }
 
 export interface CreateBabyData {
@@ -137,6 +151,11 @@ export interface CreateTemperatureData {
   location?: string
   note?: string
   occurred_at: string
+}
+
+export interface CreateOutdoorData {
+  started_at: string
+  note?: string
 }
 
 const api = axios.create({
@@ -196,7 +215,7 @@ export const recordAPI = {
     return api.get<Record[]>(`/babies/${babyId}/records`, { params })
   },
   count: (babyId: number) =>
-    api.get<{ feeding_count: number; diaper_count: number; sleep_count: number; temperature_count: number; total: number }>(`/babies/${babyId}/records/count`),
+    api.get<{ feeding_count: number; diaper_count: number; sleep_count: number; temperature_count: number; outdoor_count: number; total: number }>(`/babies/${babyId}/records/count`),
   createFeeding: (babyId: number, data: CreateFeedingData) =>
     api.post<Record>(`/babies/${babyId}/feeding`, data),
   createDiaper: (babyId: number, data: CreateDiaperData) =>
@@ -209,6 +228,12 @@ export const recordAPI = {
     api.get<SleepRecord | Record<string, never>>(`/babies/${babyId}/sleep/current`),
   createTemperature: (babyId: number, data: CreateTemperatureData) =>
     api.post<Record>(`/babies/${babyId}/temperature`, data),
+  createOutdoorStart: (babyId: number, data: CreateOutdoorData) =>
+    api.post<Record>(`/babies/${babyId}/outdoor/start`, data),
+  stopOutdoor: (babyId: number, outdoorId: number, data: { ended_at: string; note?: string }) =>
+    api.put<Record>(`/babies/${babyId}/outdoor/${outdoorId}/stop`, data),
+  getCurrentOutdoor: (babyId: number) =>
+    api.get<OutdoorRecord | Record<string, never>>(`/babies/${babyId}/outdoor/current`),
   update: (id: number, type: string, data: UpdateRecordData) =>
     api.put<Record>(`/records/${id}?type=${type}`, data),
   delete: (id: number, type: string) =>

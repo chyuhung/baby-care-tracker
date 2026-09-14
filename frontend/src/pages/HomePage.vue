@@ -156,6 +156,39 @@
               <span class="text-base">＋</span> 测温
             </button>
           </div>
+
+          <!-- 户外活动卡片 -->
+          <div @click="goToTimeline('outdoor')" class="col-span-2 bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+            <div class="text-xs text-text-secondary mb-1">今日户外活动</div>
+            <div class="flex items-end justify-between">
+              <div v-if="currentOutdoor" class="flex items-baseline gap-1 min-w-0">
+                <span class="text-base font-bold text-outdoor truncate">已活动 <template v-for="(part, pi) in elapsedOutdoorParts" :key="pi"><span>{{ part.val }}</span><span v-if="part.unit" class="text-sm text-text-secondary font-normal">{{ part.unit }}</span> </template></span>
+              </div>
+              <div v-else class="flex items-baseline gap-0.5">
+                <template v-for="(part, pi) in outdoorDurationParts" :key="pi">
+                  <span class="text-3xl font-bold font-num text-outdoor">{{ part.val }}</span>
+                  <span v-if="part.unit" class="text-sm text-text-secondary">{{ part.unit }}</span>
+                </template>
+              </div>
+              <div class="text-3xl">🌳</div>
+            </div>
+            <div v-if="lastOutdoorAgo" class="mt-2 flex items-center justify-between">
+              <span class="text-xs text-text-secondary">距上次</span>
+              <span class="text-xs font-medium" :class="lastOutdoorAgo.isLong ? 'text-orange-500' : 'text-text-secondary'">{{ lastOutdoorAgo.text }}</span>
+            </div>
+            <div v-if="stats.outdoor_count > 0" class="mt-1 flex items-center justify-between">
+              <span class="text-xs text-text-secondary">今日次数</span>
+              <span class="text-xs font-medium text-text-secondary">{{ stats.outdoor_count }}次</span>
+            </div>
+            <button v-if="currentOutdoor" @click.stop="stopOutdoor"
+              class="mt-3 w-full py-2 bg-red-500 text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+              <span>■</span> 结束
+            </button>
+            <button v-else @click.stop="startOutdoor"
+              class="mt-3 w-full py-2 bg-outdoor/10 text-outdoor text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+              <span>●</span> 开始
+            </button>
+          </div>
         </div>
 
         <!-- 最近记录 -->
@@ -198,7 +231,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { babyAPI, recordAPI } from '@/api'
-import type { BabyStats, SleepRecord } from '@/api'
+import type { BabyStats, SleepRecord, OutdoorRecord } from '@/api'
 import RecordCard from '@/components/RecordCard.vue'
 import { durationParts } from '@/utils'
 
@@ -206,12 +239,13 @@ const tick = ref(0)
 let tickTimer: number | null = null
 const router = useRouter()
 const app = useAppStore()
-const stats = ref<BabyStats>({ feeding_count: 0, diaper_count: 0, total_ml_today: 0, last_feeding: '', last_diaper: '', sleep_count: 0, sleep_duration: 0, last_sleep_end: '', temperature_count: 0, latest_temperature: 0, last_temperature: '' })
+const stats = ref<BabyStats>({ feeding_count: 0, diaper_count: 0, total_ml_today: 0, last_feeding: '', last_diaper: '', sleep_count: 0, sleep_duration: 0, last_sleep_end: '', temperature_count: 0, latest_temperature: 0, last_temperature: '', outdoor_count: 0, outdoor_duration: 0, last_outdoor_end: '' })
 const allRecords = ref<any[]>([])
 const showAllRecords = ref(false)
 const showDeleteConfirm = ref(false)
 const recordToDelete = ref<any>(null)
 const currentSleep = ref<SleepRecord | null>(null)
+const currentOutdoor = ref<OutdoorRecord | null>(null)
 const selectedBabyId = ref<number | null>(null)
 let loadGeneration = 0
 
@@ -323,6 +357,7 @@ const lastFeedingAgo = computed(() => { tick.value; return getTimeAgo(stats.valu
 const lastDiaperAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_diaper) })
 const lastSleepAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_sleep_end) })
 const lastTempAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_temperature) })
+const lastOutdoorAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_outdoor_end) })
 
 const elapsedSleepParts = computed(() => {
   tick.value
@@ -334,6 +369,16 @@ const elapsedSleepParts = computed(() => {
 
 const sleepDurationParts = computed(() => durationParts(stats.value.sleep_duration))
 
+const elapsedOutdoorParts = computed(() => {
+  tick.value
+  if (!currentOutdoor.value?.started_at) return []
+  const start = new Date(currentOutdoor.value.started_at)
+  const mins = Math.round((Date.now() - start.getTime()) / 60000)
+  return durationParts(mins)
+})
+
+const outdoorDurationParts = computed(() => durationParts(stats.value.outdoor_duration))
+
 async function loadData() {
   if (app.babies.length === 0) {
     await app.loadBabies()
@@ -343,15 +388,17 @@ async function loadData() {
   selectedBabyId.value = baby.id
   const gen = ++loadGeneration
   try {
-    const [statsRes, recordsRes, sleepRes] = await Promise.all([
+    const [statsRes, recordsRes, sleepRes, outdoorRes] = await Promise.all([
       babyAPI.stats(baby.id),
       recordAPI.list(baby.id),
       recordAPI.getCurrentSleep(baby.id),
+      recordAPI.getCurrentOutdoor(baby.id),
     ])
     if (gen !== loadGeneration) return
     stats.value = statsRes.data
     allRecords.value = recordsRes.data as any[]
     currentSleep.value = sleepRes.data?.id ? sleepRes.data : null
+    currentOutdoor.value = outdoorRes.data?.id ? outdoorRes.data : null
   } catch {
     app.showToast('数据加载失败', 'error')
   }
@@ -411,11 +458,43 @@ async function stopSleep() {
   }
 }
 
+async function startOutdoor() {
+  const baby = app.currentBaby
+  if (!baby) return
+  try {
+    const now = new Date().toISOString()
+    const res = await recordAPI.createOutdoorStart(baby.id, { started_at: now })
+    currentOutdoor.value = res.data
+    window.dispatchEvent(new CustomEvent('record-created', { detail: res.data }))
+    app.showToast('🌳 开始户外活动', 'success')
+  } catch (e: any) {
+    console.error('开始户外活动失败:', e?.response?.data || e)
+    app.showToast(e?.response?.data?.error || '开始户外活动失败', 'error')
+  }
+}
+
+async function stopOutdoor() {
+  const baby = app.currentBaby
+  if (!baby || !currentOutdoor.value) return
+  try {
+    const now = new Date().toISOString()
+    await recordAPI.stopOutdoor(baby.id, currentOutdoor.value.id, { ended_at: now })
+    currentOutdoor.value = null
+    await loadData()
+    app.showToast('✅ 户外活动已结束', 'success')
+  } catch (e: any) {
+    console.error('结束户外活动失败:', e?.response?.data || e)
+    app.showToast(e?.response?.data?.error || '结束户外活动失败', 'error')
+  }
+}
+
 function editRecord(r: any) {
   if (r.record_type === 'sleep') {
     router.push(`/sleep/${r.id}/edit`)
   } else if (r.record_type === 'temperature') {
     router.push(`/temperature/${r.id}/edit`)
+  } else if (r.record_type === 'outdoor') {
+    router.push(`/outdoor/${r.id}/edit`)
   } else {
     router.push(`/record/${r.record_type}/${r.id}/edit`)
   }
@@ -443,9 +522,9 @@ function onRecordCreated(e: Event) {
   const record = (e as CustomEvent).detail
   if (!record) { loadData(); return }
   if (record.baby_id === app.currentBaby?.id) {
-    if (record.record_type === 'sleep' && !record.data?.ended_at) return
+    if ((record.record_type === 'sleep' || record.record_type === 'outdoor') && !record.data?.ended_at) return
     allRecords.value.unshift(record)
-    if (record.record_type === 'sleep' && record.data?.ended_at) {
+    if ((record.record_type === 'sleep' || record.record_type === 'outdoor') && record.data?.ended_at) {
       loadData()
     }
   }

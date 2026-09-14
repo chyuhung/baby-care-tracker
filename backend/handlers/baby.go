@@ -256,6 +256,24 @@ func GetStats(c *gin.Context) {
 		babyID,
 	).Scan(&lastTemperature)
 
+	var outdoorCount int
+	database.DB.QueryRow(
+		"SELECT COUNT(*) FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL AND started_at >= ? AND started_at < ?",
+		babyID, todayStart, todayEnd,
+	).Scan(&outdoorCount)
+
+	var outdoorDuration int
+	database.DB.QueryRow(
+		"SELECT COALESCE(SUM(CAST((julianday(ended_at) - julianday(started_at)) * 24 * 60 AS INTEGER)), 0) FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL AND started_at >= ? AND started_at < ?",
+		babyID, todayStart, todayEnd,
+	).Scan(&outdoorDuration)
+
+	var lastOutdoorEnd string
+	database.DB.QueryRow(
+		"SELECT ended_at FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL ORDER BY ended_at DESC LIMIT 1",
+		babyID,
+	).Scan(&lastOutdoorEnd)
+
 	c.JSON(http.StatusOK, gin.H{
 		"feeding_count":      feedingCount,
 		"diaper_count":       diaperCount,
@@ -268,18 +286,22 @@ func GetStats(c *gin.Context) {
 		"temperature_count":  temperatureCount,
 		"latest_temperature": latestTemp,
 		"last_temperature":   lastTemperature,
+		"outdoor_count":      outdoorCount,
+		"outdoor_duration":   outdoorDuration,
+		"last_outdoor_end":   lastOutdoorEnd,
 	})
 }
 
 // DailyStats 每日统计数据结构
 type DailyStats struct {
-	Date                string  `json:"date"`
-	FeedingCount        int     `json:"feeding_count"`
-	DiaperCount         int     `json:"diaper_count"`
-	TotalMl             int     `json:"total_ml"`
-	SleepDuration       int     `json:"sleep_duration_minutes"`
-	TemperatureAvg      float64 `json:"temperature_avg"`
-	TemperatureHigh     float64 `json:"temperature_high"`
+	Date            string  `json:"date"`
+	FeedingCount    int     `json:"feeding_count"`
+	DiaperCount     int     `json:"diaper_count"`
+	TotalMl         int     `json:"total_ml"`
+	SleepDuration   int     `json:"sleep_duration_minutes"`
+	TemperatureAvg  float64 `json:"temperature_avg"`
+	TemperatureHigh float64 `json:"temperature_high"`
+	OutdoorMinutes  int     `json:"outdoor_duration_minutes"`
 }
 
 // GetTrendStats 获取宝宝趋势统计（最近7天）
@@ -424,6 +446,30 @@ func GetTrendStats(c *gin.Context) {
 		}
 	}
 
+	outdoorRows, err := database.DB.Query(`
+		SELECT started_at, ended_at FROM outdoor_records
+		WHERE baby_id = ? AND ended_at IS NOT NULL AND started_at >= ?
+	`, babyID, startDate)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
+		return
+	}
+	defer outdoorRows.Close()
+
+	outdoorMap := make(map[string]int)
+	for outdoorRows.Next() {
+		var startedAt, endedAt string
+		if outdoorRows.Scan(&startedAt, &endedAt) != nil {
+			continue
+		}
+		t := parseTime(startedAt).In(loc)
+		date := fmt.Sprintf("%d-%02d-%02d", t.Year(), t.Month(), t.Day())
+		duration := int(parseTime(endedAt).Sub(parseTime(startedAt)).Minutes())
+		if duration > 0 {
+			outdoorMap[date] += duration
+		}
+	}
+
 	var trends []DailyStats
 	for _, date := range dates {
 		f := feedingMap[date]
@@ -446,6 +492,7 @@ func GetTrendStats(c *gin.Context) {
 			SleepDuration:   sleepMap[date],
 			TemperatureAvg:  tempAvg,
 			TemperatureHigh: tempHigh,
+			OutdoorMinutes:  outdoorMap[date],
 		})
 	}
 
