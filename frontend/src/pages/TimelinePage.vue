@@ -3,7 +3,7 @@
     <header class="app-header pt-safe px-4 py-3 border-b border-border-color">
       <h1 class="text-lg font-bold text-text-primary">时间线</h1>
       <!-- 筛选 -->
-      <div class="flex gap-2 mt-2 overflow-x-auto">
+      <div class="flex flex-wrap gap-2 mt-2">
         <button v-for="f in filters" :key="f.value"
           @click="activeFilter = f.value"
           :class="['px-3 py-1 rounded-full text-xs font-medium transition-colors btn-press whitespace-nowrap',

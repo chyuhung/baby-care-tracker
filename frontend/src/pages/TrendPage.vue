@@ -2,6 +2,16 @@
   <div class="flex flex-col min-h-screen">
     <header class="app-header pt-safe px-4 py-3 border-b border-border-color">
       <h1 class="text-lg font-bold text-text-primary">趋势</h1>
+      <!-- 类别筛选 -->
+      <div class="flex flex-wrap gap-2 mt-2">
+        <button v-for="c in categoryOptions" :key="c.value"
+          @click="category = c.value"
+          :class="['px-3 py-1 rounded-full text-xs font-medium transition-colors btn-press whitespace-nowrap',
+            category === c.value ? 'bg-primary text-white' : 'bg-gray-100 text-text-secondary']">
+          {{ c.label }}
+        </button>
+      </div>
+      <!-- 时间筛选 -->
       <div class="flex gap-2 mt-2">
         <button v-for="d in dayOptions" :key="d.value"
           @click="days = d.value; loadTrend()"
@@ -19,7 +29,7 @@
         <p class="text-text-secondary">暂无趋势数据</p>
       </div>
       <template v-else>
-        <div>
+        <div v-if="category === 'feeding'">
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
               <span class="flex items-center gap-2">
                 🍼 每日奶量
@@ -73,7 +83,7 @@
             </template>
           </svg>
         </div>
-        <div>
+        <div v-if="category === 'diaper'">
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
             <span class="flex items-center gap-2">
               🩲 每日尿布
@@ -108,7 +118,7 @@
             </template>
           </svg>
         </div>
-        <div>
+        <div v-if="category === 'sleep'">
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
             <span class="flex items-center gap-2">
               😴 每日睡眠
@@ -143,7 +153,7 @@
             </template>
           </svg>
         </div>
-        <div>
+        <div v-if="category === 'outdoor'">
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
             <span class="flex items-center gap-2">
               🌳 每日户外活动
@@ -178,7 +188,7 @@
             </template>
           </svg>
         </div>
-        <div>
+        <div v-if="category === 'temperature'">
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
             <span class="flex items-center gap-2">
               🌡️ 每日最高体温
@@ -216,6 +226,15 @@ const app = useAppStore()
 const trendData = ref<any[]>([])
 const loading = ref(false)
 const days = ref(7)
+const category = ref('feeding')
+
+const categoryOptions = [
+  { label: '🍼 喂奶', value: 'feeding' },
+  { label: '🩲 尿布', value: 'diaper' },
+  { label: '😴 睡眠', value: 'sleep' },
+  { label: '🌡️ 体温', value: 'temperature' },
+  { label: '🌳 户外', value: 'outdoor' },
+]
 
 const dateLabels = computed(() => {
   return trendData.value.map((d, i) => {
