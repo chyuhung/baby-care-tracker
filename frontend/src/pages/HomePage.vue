@@ -176,9 +176,9 @@
               <span class="text-xs text-text-secondary">距上次</span>
               <span class="text-xs font-medium" :class="lastOutdoorAgo.isLong ? 'text-orange-500' : 'text-text-secondary'">{{ lastOutdoorAgo.text }}</span>
             </div>
-            <div v-if="stats.outdoor_count > 0" class="mt-1 flex items-center justify-between">
-              <span class="text-xs text-text-secondary">今日次数</span>
-              <span class="text-xs font-medium text-text-secondary">{{ stats.outdoor_count }}次</span>
+            <div v-if="avgOutdoorDuration > 0" class="mt-1 flex items-center justify-between">
+              <span class="text-xs text-text-secondary">平均时长</span>
+              <span class="text-xs font-medium text-text-secondary">{{ formatAvgOutdoor }}</span>
             </div>
             <button v-if="currentOutdoor" @click.stop="stopOutdoor"
               class="mt-3 w-full py-2 bg-red-500 text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
@@ -378,6 +378,15 @@ const elapsedOutdoorParts = computed(() => {
 })
 
 const outdoorDurationParts = computed(() => durationParts(stats.value.outdoor_duration))
+
+const avgOutdoorDuration = computed(() => stats.value.outdoor_count > 0
+  ? Math.round(stats.value.outdoor_duration / stats.value.outdoor_count)
+  : 0)
+
+const formatAvgOutdoor = computed(() => {
+  const parts = durationParts(avgOutdoorDuration.value)
+  return parts.map(p => p.val + (p.unit || '')).join(' ')
+})
 
 async function loadData() {
   if (app.babies.length === 0) {
