@@ -263,56 +263,65 @@ const dayOptions = [
 const summary = computed(() => {
   const data = trendData.value
   const cards: { label: string, value: string, sub?: string }[] = []
-  const n = data.length
-  if (!n) return { cards }
+  if (!data.length) return { cards }
 
-  const sum = (f: (d: any) => number) => data.reduce((a, d) => a + (f(d) || 0), 0)
-  const avg = (f: (d: any) => number) => sum(f) / n
-  const maxOf = (f: (d: any) => number) => Math.max(...data.map(d => f(d) || 0))
-  const dayCount = (f: (d: any) => number) => data.filter(d => (f(d) || 0) > 0).length
+  const sumOf = (rows: any[], f: (d: any) => number) => rows.reduce((a, d) => a + (f(d) || 0), 0)
+  const avgOf = (rows: any[], f: (d: any) => number) => rows.length ? sumOf(rows, f) / rows.length : 0
+  const maxOf = (rows: any[], f: (d: any) => number) => rows.length ? Math.max(...rows.map(d => f(d) || 0)) : 0
+  const fmtHours = (mins: number) => `${(mins / 60).toFixed(1)}`
 
   const feeding = () => {
+    const days = data.filter(d => (d.total_ml || 0) > 0 || (d.feeding_count || 0) > 0)
+    if (!days.length) return
     cards.push(
-      { label: '日均奶量', value: `${Math.round(avg(d => d.total_ml || 0))} ml`, sub: `共 ${n} 天` },
-      { label: '日均次数', value: avg(d => d.feeding_count || 0).toFixed(1), sub: `共 ${sum(d => d.feeding_count || 0)} 次` },
-      { label: '期间总奶量', value: `${Math.round(sum(d => d.total_ml || 0))} ml` },
-      { label: '单日最高奶量', value: `${Math.round(maxOf(d => d.total_ml || 0))} ml` },
+      { label: '日均奶量', value: `${Math.round(avgOf(days, d => d.total_ml || 0))} ml`, sub: `共 ${days.length} 天` },
+      { label: '日均次数', value: avgOf(days, d => d.feeding_count || 0).toFixed(1), sub: `共 ${sumOf(days, d => d.feeding_count || 0)} 次` },
+      { label: '期间总奶量', value: `${Math.round(sumOf(days, d => d.total_ml || 0))} ml` },
+      { label: '单日最高奶量', value: `${Math.round(maxOf(days, d => d.total_ml || 0))} ml` },
     )
   }
 
   const diaper = () => {
+    const days = data.filter(d => (d.diaper_count || 0) > 0)
+    if (!days.length) return
     cards.push(
-      { label: '日均次数', value: avg(d => d.diaper_count || 0).toFixed(1), sub: `共 ${n} 天` },
-      { label: '期间总次数', value: String(sum(d => d.diaper_count || 0)) },
-      { label: '单日最多', value: `${maxOf(d => d.diaper_count || 0)} 次` },
-      { label: '有记录天数', value: `${dayCount(d => d.diaper_count || 0)} 天` },
+      { label: '日均次数', value: avgOf(days, d => d.diaper_count || 0).toFixed(1), sub: `共 ${days.length} 天` },
+      { label: '期间总次数', value: String(sumOf(days, d => d.diaper_count || 0)) },
+      { label: '单日最多', value: `${maxOf(days, d => d.diaper_count || 0)} 次` },
+      { label: '有记录天数', value: `${days.length} 天` },
     )
   }
 
   const sleep = () => {
+    const days = data.filter(d => (d.sleep_duration_minutes || 0) > 0)
+    if (!days.length) return
     cards.push(
-      { label: '日均睡眠', value: (avg(d => d.sleep_duration_minutes || 0) / 60).toFixed(1), sub: '小时' },
-      { label: '单日最长', value: (maxOf(d => d.sleep_duration_minutes || 0) / 60).toFixed(1), sub: '小时' },
-      { label: '期间总时长', value: (sum(d => d.sleep_duration_minutes || 0) / 60).toFixed(1), sub: '小时' },
-      { label: '有记录天数', value: `${dayCount(d => d.sleep_duration_minutes || 0)} 天` },
+      { label: '日均睡眠', value: fmtHours(avgOf(days, d => d.sleep_duration_minutes || 0)), sub: '小时' },
+      { label: '单日最长', value: fmtHours(maxOf(days, d => d.sleep_duration_minutes || 0)), sub: '小时' },
+      { label: '期间总时长', value: fmtHours(sumOf(days, d => d.sleep_duration_minutes || 0)), sub: '小时' },
+      { label: '有记录天数', value: `${days.length} 天` },
     )
   }
 
   const outdoor = () => {
+    const days = data.filter(d => (d.outdoor_duration_minutes || 0) > 0)
+    if (!days.length) return
     cards.push(
-      { label: '日均时长', value: (avg(d => d.outdoor_duration_minutes || 0) / 60).toFixed(1), sub: '小时' },
-      { label: '单日最长', value: (maxOf(d => d.outdoor_duration_minutes || 0) / 60).toFixed(1), sub: '小时' },
-      { label: '期间总时长', value: (sum(d => d.outdoor_duration_minutes || 0) / 60).toFixed(1), sub: '小时' },
-      { label: '有记录天数', value: `${dayCount(d => d.outdoor_duration_minutes || 0)} 天` },
+      { label: '日均时长', value: fmtHours(avgOf(days, d => d.outdoor_duration_minutes || 0)), sub: '小时' },
+      { label: '单日最长', value: fmtHours(maxOf(days, d => d.outdoor_duration_minutes || 0)), sub: '小时' },
+      { label: '期间总时长', value: fmtHours(sumOf(days, d => d.outdoor_duration_minutes || 0)), sub: '小时' },
+      { label: '有记录天数', value: `${days.length} 天` },
     )
   }
 
   const temperature = () => {
+    const days = data.filter(d => (d.temperature_high || 0) > 0)
+    if (!days.length) return
     cards.push(
-      { label: '平均最高体温', value: `${avg(d => d.temperature_high || 0).toFixed(1)} °C`, sub: `共 ${n} 天` },
-      { label: '期间最高', value: `${maxOf(d => d.temperature_high || 0).toFixed(1)} °C` },
-      { label: '发烧天数（≥37.5°C）', value: `${dayCount(d => (d.temperature_high || 0) >= 37.5)} 天` },
-      { label: '有记录天数', value: `${dayCount(d => d.temperature_high || 0)} 天` },
+      { label: '平均最高体温', value: `${avgOf(days, d => d.temperature_high || 0).toFixed(1)} °C`, sub: `共 ${days.length} 天` },
+      { label: '期间最高', value: `${maxOf(days, d => d.temperature_high || 0).toFixed(1)} °C` },
+      { label: '发烧天数（≥37.5°C）', value: `${days.filter(d => (d.temperature_high || 0) >= 37.5).length} 天` },
+      { label: '有记录天数', value: `${days.length} 天` },
     )
   }
 
