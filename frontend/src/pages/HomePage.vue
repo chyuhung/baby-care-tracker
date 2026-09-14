@@ -267,14 +267,28 @@ const ageText = computed(() => {
   if (!baby?.birth_date) return ''
   const m = baby.birth_date.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/)
   if (!m) return ''
-  const birth = new Date(+m[1], +m[2] - 1, +m[3], +(m[4] || 0), +(m[5] || 0))
+  const birthYear = +m[1]
+  const birthMonth = +m[2] - 1
+  const birthDay = +m[3]
   const now = new Date()
-  const diff = Math.floor((now.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24))
-  if (diff < 0) return '未出生'
-  const months = Math.floor(diff / 30)
-  const days = diff % 30
+  if (now.getFullYear() < birthYear ||
+      (now.getFullYear() === birthYear && (now.getMonth() < birthMonth ||
+        (now.getMonth() === birthMonth && now.getDate() < birthDay)))) {
+    return '未出生'
+  }
+  let months = (now.getFullYear() - birthYear) * 12 + now.getMonth() - birthMonth
+  const prevMonthDays = new Date(now.getFullYear(), now.getMonth(), 0).getDate()
+  const effBirthDay = Math.min(birthDay, prevMonthDays)
+  let days: number
+  if (now.getDate() >= effBirthDay) {
+    days = now.getDate() - effBirthDay
+  } else {
+    months--
+    days = prevMonthDays - effBirthDay + now.getDate()
+  }
+  if (months > 0 && days === 0) return `${months}个月`
   if (months > 0) return `${months}个月${days}天`
-  return `${diff}天`
+  return `${days}天`
 })
 
 const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
