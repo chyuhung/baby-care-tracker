@@ -33,7 +33,7 @@
 
     <!-- Content -->
     <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-4 pb-[calc(5rem+env(safe-area-inset-bottom))]"
-      :refresh="loadData" :load-more="loadMoreFromPull">
+      :refresh="loadData">
       <!-- 空状态：无宝宝 -->
       <div v-if="app.babies.length === 0" class="text-center py-16">
         <div class="text-5xl mb-4">👶</div>
@@ -436,10 +436,6 @@ async function loadData() {
   } catch {
     app.showToast('数据加载失败', 'error')
   }
-}
-
-function loadMoreFromPull() {
-  if (!showAllRecords.value) showAllRecords.value = true
 }
 
 function switchBaby() {

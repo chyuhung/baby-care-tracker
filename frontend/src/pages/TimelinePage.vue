@@ -14,7 +14,7 @@
     </header>
 
     <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(5rem+env(safe-area-inset-bottom))]"
-      :refresh="() => loadRecords(true, true)" :load-more="loadMoreByGesture">
+      :refresh="() => loadRecords(true, true)">
       <div v-if="loading" class="text-center py-16 text-text-secondary">加载中...</div>
       <div v-else-if="groupedRecords.length === 0" class="text-center py-16">
         <img src="/icon-192.png" alt="" class="w-14 h-14 mx-auto block mb-4" />
@@ -146,10 +146,6 @@ async function loadRecords(reset: boolean = true, silent: boolean = false) {
 function loadMore() {
   days.value += 7
   loadRecords(false)
-}
-
-function loadMoreByGesture() {
-  if (hasMore.value) return loadMore()
 }
 
 function editRecord(r: any) {
