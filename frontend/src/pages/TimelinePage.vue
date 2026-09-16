@@ -7,7 +7,7 @@
         <button v-for="f in filters" :key="f.value"
           @click="activeFilter = f.value"
           :class="['px-3 py-2 min-h-[44px] flex items-center justify-center rounded-full text-xs font-medium transition-colors btn-press whitespace-nowrap',
-            activeFilter === f.value ? 'bg-primary text-white' : 'bg-gray-100 text-text-secondary']">
+            activeFilter === f.value ? 'bg-primary text-white' : 'bg-muted text-text-secondary']">
           {{ f.label }}
         </button>
       </div>
@@ -16,7 +16,7 @@
     <main class="flex-1 min-h-0 px-4 py-4 overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))]">
       <div v-if="loading" class="text-center py-16 text-text-secondary">加载中...</div>
       <div v-else-if="groupedRecords.length === 0" class="text-center py-16">
-        <img src="/icon-192.png" alt="" class="w-14 h-14 mx-auto mb-4" />
+        <img src="/icon-192.png" alt="" class="w-14 h-14 mx-auto block mb-4" />
         <p class="text-text-secondary">暂无记录</p>
       </div>
       <div v-else class="space-y-6">
@@ -44,8 +44,8 @@
       <div class="bg-white w-full rounded-t-2xl p-6 space-y-4 pb-safe animate-slide-up">
         <p class="text-text-secondary text-sm text-center">确定要删除这条记录吗？</p>
         <div class="flex gap-3">
-          <button @click="showDeleteConfirm = false" class="flex-1 py-3 bg-gray-100 text-text-primary rounded-xl font-medium btn-press">取消</button>
-          <button @click="confirmDelete" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-medium btn-press">确认删除</button>
+          <button @click="showDeleteConfirm = false" class="flex-1 py-3 bg-muted text-text-primary rounded-xl font-medium btn-press">取消</button>
+          <button @click="confirmDelete" class="flex-1 py-3 bg-danger text-white rounded-xl font-medium btn-press">确认删除</button>
         </div>
       </div>
     </div>

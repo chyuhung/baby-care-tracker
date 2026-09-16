@@ -13,49 +13,49 @@
 [data-theme='neutral'] {
   --primary: 214 126 116;        /* #D67E74 灰调珊瑚粉 */
   --primary-light: 247 230 226;    /* #F7E6E2 暖粉灰 */
-  --diaper: 255 122 89;          /* #FF7A59 暖珊瑚，三主题通用强调 */
-  --temperature: 102 187 106;     /* #66BB6A 绿色，清爽感 */
-  --sleep: 78 205 196;           /* #4ECDC4 青绿，睡眠休息感 */
-  --outdoor: 132 204 22;         /* #84CC16 草绿，户外活力 */
+  --diaper: 230 118 79;          /* #E6764F 暖珊瑚，三主题通用强调 */
+  --temperature: 101 159 115;     /* #659F73 绿色，清爽感 */
+  --sleep: 72 163 155;           /* #48A39B 青绿，睡眠休息感 */
+  --outdoor: 127 172 69;         /* #7FAC45 草绿，户外活力 */
   --header-grad: linear-gradient(135deg, rgb(214 126 116 / 0.16), rgb(214 126 116 / 0.04));
   --chart-primary: #D67E74;
-  --chart-diaper: #FF7A59;
-  --chart-temperature: #66BB6A;
-  --chart-sleep: #4ECDC4;
-  --chart-outdoor: #84CC16;
-  --chart-primary-count: #F59E0B;
+  --chart-diaper: #E6764F;
+  --chart-temperature: #659F73;
+  --chart-sleep: #48A39B;
+  --chart-outdoor: #7FAC45;
+  --chart-primary-count: #D8953C;
 }
 
 [data-theme='female'] {
   --primary: 208 124 148;        /* #D07C94 干枯玫瑰粉 */
   --primary-light: 247 231 236;    /* #F7E7EC 玫瑰粉白 */
-  --diaper: 255 122 89;          /* #FF7A59 */
-  --temperature: 102 187 106;     /* #66BB6A */
-  --sleep: 78 205 196;           /* #4ECDC4 */
-  --outdoor: 132 204 22;         /* #84CC16 */
+  --diaper: 230 118 79;          /* #E6764F */
+  --temperature: 101 159 115;     /* #659F73 */
+  --sleep: 72 163 155;           /* #48A39B */
+  --outdoor: 127 172 69;         /* #7FAC45 */
   --header-grad: linear-gradient(135deg, rgb(208 124 148 / 0.18), rgb(208 124 148 / 0.04));
   --chart-primary: #D07C94;
-  --chart-diaper: #FF7A59;
-  --chart-temperature: #66BB6A;
-  --chart-sleep: #4ECDC4;
-  --chart-outdoor: #84CC16;
-  --chart-primary-count: #F59E0B;
+  --chart-diaper: #E6764F;
+  --chart-temperature: #659F73;
+  --chart-sleep: #48A39B;
+  --chart-outdoor: #7FAC45;
+  --chart-primary-count: #D8953C;
 }
 
 [data-theme='male'] {
   --primary: 104 146 178;        /* #6892B2 静谧雾霾蓝 */
   --primary-light: 233 240 245;    /* #E9F0F5 灰蓝白 */
-  --diaper: 255 122 89;          /* #FF7A59 */
-  --temperature: 102 187 106;     /* #66BB6A */
-  --sleep: 78 205 196;           /* #4ECDC4 */
-  --outdoor: 132 204 22;         /* #84CC16 */
+  --diaper: 230 118 79;          /* #E6764F */
+  --temperature: 101 159 115;     /* #659F73 */
+  --sleep: 72 163 155;           /* #48A39B */
+  --outdoor: 127 172 69;         /* #7FAC45 */
   --header-grad: linear-gradient(135deg, rgb(104 146 178 / 0.18), rgb(104 146 178 / 0.04));
   --chart-primary: #6892B2;
-  --chart-diaper: #FF7A59;
-  --chart-temperature: #66BB6A;
-  --chart-sleep: #4ECDC4;
-  --chart-outdoor: #84CC16;
-  --chart-primary-count: #F59E0B;
+  --chart-diaper: #E6764F;
+  --chart-temperature: #659F73;
+  --chart-sleep: #48A39B;
+  --chart-outdoor: #7FAC45;
+  --chart-primary-count: #D8953C;
 }
 
 * {
@@ -185,6 +185,6 @@ input, select, textarea {
 }
 
 /* 趋势图 SVG 线条颜色（跟随主题） */
-.chart-grid { stroke: #e5e7eb; stroke-width: 0.8; stroke-dasharray: 4,3; }
-.chart-guide { stroke: #d1d5db; stroke-width: 0.8; stroke-dasharray: 3,3; }
+.chart-grid { stroke: #ECE4E0; stroke-width: 0.8; stroke-dasharray: 4,3; }
+.chart-guide { stroke: #DFD3CD; stroke-width: 0.8; stroke-dasharray: 3,3; }
 .chart-line-temperature { stroke: var(--chart-temperature); }

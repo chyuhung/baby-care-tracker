@@ -110,7 +110,7 @@
         </div>
       </template>
 
-      <div v-if="error" class="bg-red-50 text-red-500 text-sm px-4 py-2 rounded-xl text-center">{{ error }}</div>
+      <div v-if="error" class="bg-danger-light text-danger text-sm px-4 py-2 rounded-xl text-center">{{ error }}</div>
 
       <button @click="submit" :disabled="loading"
         class="btn-press w-full py-3 bg-primary text-white font-semibold rounded-xl shadow-card disabled:opacity-50">
@@ -118,7 +118,7 @@
       </button>
 
       <button v-if="isEdit" @click="confirmDelete"
-        class="btn-press w-full py-3 bg-white text-red-500 font-medium rounded-xl border border-red-200">
+        class="btn-press w-full py-3 bg-white text-danger font-medium rounded-xl border border-danger/25">
         删除此记录
       </button>
     </main>
@@ -128,8 +128,8 @@
       <div class="bg-white w-full rounded-t-2xl p-6 space-y-4 pb-safe animate-slide-up">
         <p class="text-text-secondary text-sm text-center">确定要删除这条记录吗？</p>
         <div class="flex gap-3">
-          <button @click="showDelete = false" class="flex-1 py-3 bg-gray-100 text-text-primary rounded-xl font-medium btn-press">取消</button>
-          <button @click="doDelete" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-medium btn-press">确认删除</button>
+          <button @click="showDelete = false" class="flex-1 py-3 bg-muted text-text-primary rounded-xl font-medium btn-press">取消</button>
+          <button @click="doDelete" class="flex-1 py-3 bg-danger text-white rounded-xl font-medium btn-press">确认删除</button>
         </div>
       </div>
     </div>

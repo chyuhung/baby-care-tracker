@@ -60,7 +60,7 @@
             </div>
             <div v-if="lastFeedingAgo" class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
-              <span class="text-xs font-medium" :class="lastFeedingAgo.isLong ? 'text-orange-500' : 'text-text-secondary'">
+              <span class="text-xs font-medium" :class="lastFeedingAgo.isLong ? 'text-warning' : 'text-text-secondary'">
                 {{ lastFeedingAgo.text }}
               </span>
             </div>
@@ -87,7 +87,7 @@
             </div>
             <div v-if="lastDiaperAgo" class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
-              <span class="text-xs font-medium" :class="lastDiaperAgo.isLong ? 'text-orange-500' : 'text-text-secondary'">
+              <span class="text-xs font-medium" :class="lastDiaperAgo.isLong ? 'text-warning' : 'text-text-secondary'">
                 {{ lastDiaperAgo.text }}
               </span>
             </div>
@@ -120,14 +120,14 @@
             </div>
             <div v-if="lastSleepAgo" class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
-              <span class="text-xs font-medium" :class="lastSleepAgo.isLong ? 'text-orange-500' : 'text-text-secondary'">{{ lastSleepAgo.text }}</span>
+              <span class="text-xs font-medium" :class="lastSleepAgo.isLong ? 'text-warning' : 'text-text-secondary'">{{ lastSleepAgo.text }}</span>
             </div>
             <div v-if="sleepAvgDuration" class="mt-1 flex items-center justify-between">
               <span class="text-xs text-text-secondary">平均时长</span>
               <span class="text-xs font-medium text-text-secondary">{{ sleepAvgDuration }}</span>
             </div>
             <button v-if="currentSleep" @click.stop="stopSleep"
-              class="mt-3 w-full py-2 bg-red-500 text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+              class="mt-3 w-full py-2 bg-danger text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
               结束
             </button>
@@ -143,18 +143,18 @@
             <div class="text-xs text-text-secondary mb-1">今日体温</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-1">
-                <span v-if="stats.latest_temperature > 0" class="text-3xl font-bold font-num" :class="stats.latest_temperature >= 37.5 ? 'text-red-500' : 'text-temperature'">{{ stats.latest_temperature }}</span>
+                <span v-if="stats.latest_temperature > 0" class="text-3xl font-bold font-num" :class="stats.latest_temperature >= 37.5 ? 'text-danger' : 'text-temperature'">{{ stats.latest_temperature }}</span>
                 <span class="text-sm text-text-secondary">°C</span>
               </div>
               <div class="text-3xl">🌡️</div>
             </div>
             <div v-if="lastTempAgo" class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
-              <span class="text-xs font-medium" :class="lastTempAgo.isLong ? 'text-orange-500' : 'text-text-secondary'">{{ lastTempAgo.text }}</span>
+              <span class="text-xs font-medium" :class="lastTempAgo.isLong ? 'text-warning' : 'text-text-secondary'">{{ lastTempAgo.text }}</span>
             </div>
             <div v-if="tempHighValue" class="mt-1 flex items-center justify-between">
               <span class="text-xs text-text-secondary">最高体温</span>
-              <span class="text-xs font-medium" :class="+tempHighValue >= 37.5 ? 'text-red-500' : 'text-text-secondary'">{{ tempHighValue }}°C</span>
+              <span class="text-xs font-medium" :class="+tempHighValue >= 37.5 ? 'text-danger' : 'text-text-secondary'">{{ tempHighValue }}°C</span>
             </div>
             <button @click.stop="goToAddTemperature"
               class="mt-3 w-full py-2 bg-temperature/10 text-temperature text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
@@ -179,14 +179,14 @@
             </div>
             <div v-if="lastOutdoorAgo" class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
-              <span class="text-xs font-medium" :class="lastOutdoorAgo.isLong ? 'text-orange-500' : 'text-text-secondary'">{{ lastOutdoorAgo.text }}</span>
+              <span class="text-xs font-medium" :class="lastOutdoorAgo.isLong ? 'text-warning' : 'text-text-secondary'">{{ lastOutdoorAgo.text }}</span>
             </div>
             <div v-if="avgOutdoorDuration > 0" class="mt-1 flex items-center justify-between">
               <span class="text-xs text-text-secondary">平均时长</span>
               <span class="text-xs font-medium text-text-secondary">{{ formatAvgOutdoor }}</span>
             </div>
             <button v-if="currentOutdoor" @click.stop="stopOutdoor"
-              class="mt-3 w-full py-2 bg-red-500 text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+              class="mt-3 w-full py-2 bg-danger text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
               结束
             </button>
@@ -202,7 +202,7 @@
         <div class="space-y-2">
           <h2 class="text-sm font-semibold text-text-secondary uppercase tracking-wide">最近记录</h2>
           <div v-if="displayRecords.length === 0" class="bg-white rounded-2xl p-6 text-center shadow-card">
-            <img src="/icon-192.png" alt="" class="w-12 h-12 mx-auto mb-2" />
+            <img src="/icon-192.png" alt="" class="w-12 h-12 mx-auto block mb-2" />
             <p class="text-text-secondary text-sm">还没有记录</p>
           </div>
           <RecordCard v-for="(r, i) in displayRecords" :key="r.record_type + '-' + r.id" :record="r"
@@ -224,8 +224,8 @@
       <div class="bg-white w-full rounded-t-2xl p-6 space-y-4 pb-safe animate-slide-up">
         <p class="text-text-secondary text-sm text-center">确定要删除这条记录吗？</p>
         <div class="flex gap-3">
-          <button @click="showDeleteConfirm = false" class="flex-1 py-3 bg-gray-100 text-text-primary rounded-xl font-medium btn-press">取消</button>
-          <button @click="confirmDelete" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-medium btn-press">确认删除</button>
+          <button @click="showDeleteConfirm = false" class="flex-1 py-3 bg-muted text-text-primary rounded-xl font-medium btn-press">取消</button>
+          <button @click="confirmDelete" class="flex-1 py-3 bg-danger text-white rounded-xl font-medium btn-press">确认删除</button>
         </div>
       </div>
     </div>

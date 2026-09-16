@@ -2,7 +2,7 @@
   <div class="min-h-dvh bg-bg-main flex flex-col items-center justify-center px-6">
     <!-- Logo -->
     <div class="mb-10 text-center">
-      <img src="/icon-192.png" alt="宝宝护理记录" class="w-20 h-20 mb-4 drop-shadow-sm" />
+      <img src="/icon-192.png" alt="宝宝护理记录" class="w-20 h-20 mb-4 mx-auto block drop-shadow-sm" />
       <h1 class="text-2xl font-bold text-text-primary">宝宝护理记录</h1>
       <p class="text-text-secondary text-sm mt-1">记录宝宝成长，每一刻都珍贵</p>
     </div>
@@ -21,7 +21,7 @@
           class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary placeholder-text-secondary/50 focus:border-primary focus:outline-none transition-colors" />
       </div>
 
-      <div v-if="error" class="bg-red-50 text-red-500 text-sm px-4 py-2 rounded-xl text-center">
+      <div v-if="error" class="bg-danger-light text-danger text-sm px-4 py-2 rounded-xl text-center">
         {{ error }}
       </div>
 

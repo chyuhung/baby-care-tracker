@@ -7,7 +7,7 @@
         <button v-for="c in categoryOptions" :key="c.value"
           @click="category = c.value"
           :class="['px-3 py-2 min-h-[44px] flex items-center justify-center rounded-full text-xs font-medium transition-colors btn-press whitespace-nowrap',
-            category === c.value ? 'bg-primary text-white' : 'bg-gray-100 text-text-secondary']">
+            category === c.value ? 'bg-primary text-white' : 'bg-muted text-text-secondary']">
           {{ c.label }}
         </button>
       </div>
@@ -16,7 +16,7 @@
         <button v-for="d in dayOptions" :key="d.value"
           @click="days = d.value; loadTrend()"
           :class="['px-3 py-2 min-h-[44px] flex items-center justify-center rounded-full text-xs font-medium transition-colors btn-press',
-            days === d.value ? 'bg-primary text-white' : 'bg-gray-100 text-text-secondary']">
+            days === d.value ? 'bg-primary text-white' : 'bg-muted text-text-secondary']">
           {{ d.label }}
         </button>
       </div>
@@ -43,13 +43,13 @@
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <template v-if="days === 30">
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
               <g v-for="(t, ti) in feedingMlScatter.ticks" :key="'fl'+ti">
                 <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
-                <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
+                <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#766B66">{{ t.label }}</text>
               </g>
               <g v-for="(t, ti) in feedingCountScatter.ticks" :key="'fr'+ti">
-                <text :x="axis.rightX + 5" :y="t.y + 3" text-anchor="start" font-size="9" fill="#9ca3af">{{ t.label }}</text>
+                <text :x="axis.rightX + 5" :y="t.y + 3" text-anchor="start" font-size="9" fill="#A29792">{{ t.label }}</text>
               </g>
               <g v-for="(pt, i) in feedingMlScatter.points" :key="'dv'+i">
                 <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
@@ -66,20 +66,20 @@
             <template v-else>
               <g v-for="(b, i) in feedingMl.items" :key="'bm'+i">
                 <rect :x="feedingRects(i).mlX" :y="b.y" :width="w2" :height="b.h" rx="2" fill="var(--chart-primary)" opacity="0.85"/>
-                <text v-if="b.h > 0" :x="feedingRects(i).mlX + w2 / 2" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#6b7280">{{ b.label }}</text>
+                <text v-if="b.h > 0" :x="feedingRects(i).mlX + w2 / 2" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#766B66">{{ b.label }}</text>
               </g>
               <g v-for="(b, i) in feedingCount.items" :key="'bc'+i">
                 <rect :x="feedingRects(i).countX" :y="b.y" :width="w2" :height="b.h" rx="2" fill="var(--chart-primary-count)" opacity="0.85"/>
-                <text v-if="b.h > 0" :x="feedingRects(i).countX + w2 / 2" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#6b7280">{{ b.label }}</text>
+                <text v-if="b.h > 0" :x="feedingRects(i).countX + w2 / 2" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#766B66">{{ b.label }}</text>
               </g>
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
             </template>
-            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
-            <line :x1="axis.rightX" :x2="axis.rightX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
-            <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">ml</text>
-            <text :x="axis.rightX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">次</text>
+            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+            <line :x1="axis.rightX" :x2="axis.rightX" :y1="axis.topY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+            <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#A29792">ml</text>
+            <text :x="axis.rightX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#A29792">次</text>
             <template v-for="(d, i) in trendData" :key="'fx'+i">
-              <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" fill="#A29792">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
@@ -91,10 +91,10 @@
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <template v-if="days === 30">
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
               <g v-for="(t, ti) in diaperScatter.ticks" :key="'dl'+ti">
                 <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
-                <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
+                <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#766B66">{{ t.label }}</text>
               </g>
               <g v-for="(pt, i) in diaperScatter.points" :key="'dv'+i">
                 <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
@@ -107,14 +107,14 @@
             <template v-else>
               <g v-for="(b, i) in diaper.items" :key="'db'+i">
                 <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-diaper)" opacity="0.85"/>
-                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#6b7280">{{ b.label }}</text>
+                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#766B66">{{ b.label }}</text>
               </g>
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
             </template>
-            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
-            <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">次</text>
+            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+            <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#A29792">次</text>
             <template v-for="(d, i) in trendData" :key="'dx'+i">
-              <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" fill="#A29792">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
@@ -126,10 +126,10 @@
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <template v-if="days === 30">
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
               <g v-for="(t, ti) in sleepScatter.ticks" :key="'sl'+ti">
                 <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
-                <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
+                <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#766B66">{{ t.label }}</text>
               </g>
               <g v-for="(pt, i) in sleepScatter.points" :key="'sv'+i">
                 <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
@@ -142,14 +142,14 @@
             <template v-else>
               <g v-for="(b, i) in sleep.items" :key="'sb'+i">
                 <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-sleep)" opacity="0.85"/>
-                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#6b7280">{{ b.label }}</text>
+                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#766B66">{{ b.label }}</text>
               </g>
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
             </template>
-            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
-            <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">小时</text>
+            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+            <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#A29792">小时</text>
             <template v-for="(d, i) in trendData" :key="'sx'+i">
-              <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" fill="#A29792">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
@@ -161,10 +161,10 @@
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <template v-if="days === 30">
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
               <g v-for="(t, ti) in outdoorScatter.ticks" :key="'ol'+ti">
                 <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
-                <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
+                <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#766B66">{{ t.label }}</text>
               </g>
               <g v-for="(pt, i) in outdoorScatter.points" :key="'ov'+i">
                 <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
@@ -177,14 +177,14 @@
             <template v-else>
               <g v-for="(b, i) in outdoor.items" :key="'ob'+i">
                 <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-outdoor)" opacity="0.85"/>
-                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#6b7280">{{ b.label }}</text>
+                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" fill="#766B66">{{ b.label }}</text>
               </g>
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
             </template>
-            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
-            <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">小时</text>
+            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+            <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#A29792">小时</text>
             <template v-for="(d, i) in trendData" :key="'ox'+i">
-              <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" fill="#A29792">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
@@ -195,20 +195,20 @@
             </span>
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
-            <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
+            <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
             <g v-for="(t, ti) in tempTicks" :key="'tl'+ti">
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
-              <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#6b7280">{{ t.label }}</text>
+              <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" fill="#766B66">{{ t.label }}</text>
             </g>
             <g v-for="(pt, i) in tempPoints" :key="'tv'+i">
               <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
             </g>
             <line :x1="axis.leftX" :x2="axis.rightX" :y1="feverLineY" :y2="feverLineY" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
             <path :d="tempPath" class="chart-line-temperature" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#d1d5db" stroke-width="1"/>
-            <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#9ca3af">°C</text>
+            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+            <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" fill="#A29792">°C</text>
             <template v-for="(d, i) in trendData" :key="'tx'+i">
-              <text v-if="dateLabels[i]?.show" :x="tempPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#9ca3af">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="tempPoints[i]?.x" y="158" text-anchor="middle" font-size="9" fill="#A29792">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>

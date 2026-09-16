@@ -23,7 +23,7 @@
           <textarea v-model="editForm.note" rows="3" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary resize-none focus:border-primary focus:outline-none transition-colors" />
         </div>
         <button @click="saveEdit" class="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press">更新记录</button>
-        <button @click="deleteRecord" class="w-full py-3 bg-white text-red-500 font-medium rounded-xl border border-red-200 btn-press">删除此记录</button>
+        <button @click="deleteRecord" class="w-full py-3 bg-white text-danger font-medium rounded-xl border border-danger/25 btn-press">删除此记录</button>
       </template>
 
       <!-- 删除确认弹窗 -->
@@ -31,8 +31,8 @@
         <div class="bg-white w-full rounded-t-2xl p-6 space-y-4 pb-safe animate-slide-up">
           <p class="text-text-secondary text-sm text-center">确定要删除这条记录吗？</p>
           <div class="flex gap-3">
-            <button @click="showDeleteConfirm = false" class="flex-1 py-3 bg-gray-100 text-text-primary rounded-xl font-medium btn-press">取消</button>
-            <button @click="confirmDelete" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-medium btn-press">确认删除</button>
+            <button @click="showDeleteConfirm = false" class="flex-1 py-3 bg-muted text-text-primary rounded-xl font-medium btn-press">取消</button>
+            <button @click="confirmDelete" class="flex-1 py-3 bg-danger text-white rounded-xl font-medium btn-press">确认删除</button>
           </div>
         </div>
       </div>
@@ -53,7 +53,7 @@
           <template v-if="currentSleep">
             <div class="text-lg text-text-primary mb-2">😴 正在睡觉</div>
             <div class="text-4xl font-bold text-sleep font-num mb-4">{{ elapsedText }}</div>
-            <button @click="stopSleep" class="w-full py-3 bg-red-500 text-white rounded-xl font-medium shadow-card btn-press flex items-center justify-center gap-2">
+            <button @click="stopSleep" class="w-full py-3 bg-danger text-white rounded-xl font-medium shadow-card btn-press flex items-center justify-center gap-2">
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
               <span>结束</span>
             </button>

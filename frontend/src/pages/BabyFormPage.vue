@@ -21,13 +21,13 @@
       </div>
 
       <div>
-        <label class="text-sm text-text-secondary block mb-2">宝宝姓名 <span class="text-red-500">*</span></label>
+        <label class="text-sm text-text-secondary block mb-2">宝宝姓名 <span class="text-danger">*</span></label>
         <input v-model="form.name" type="text" placeholder="输入宝宝姓名"
           class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
       </div>
 
       <div>
-        <label class="text-sm text-text-secondary block mb-2">出生日期 <span class="text-red-500">*</span></label>
+        <label class="text-sm text-text-secondary block mb-2">出生日期 <span class="text-danger">*</span></label>
         <input v-model="form.birth_date" type="datetime-local"
           class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
       </div>
@@ -44,7 +44,7 @@
         </div>
       </div>
 
-      <div v-if="error" class="bg-red-50 text-red-500 text-sm px-4 py-2 rounded-xl text-center">{{ error }}</div>
+      <div v-if="error" class="bg-danger-light text-danger text-sm px-4 py-2 rounded-xl text-center">{{ error }}</div>
 
       <div class="space-y-3 pt-2">
         <button @click="submit" :disabled="loading"
@@ -52,7 +52,7 @@
           {{ loading ? '保存中...' : '保存' }}
         </button>
         <button v-if="isEdit" @click="confirmDelete"
-          class="btn-press w-full py-3 bg-white text-red-500 font-medium rounded-xl border border-red-200">
+          class="btn-press w-full py-3 bg-white text-danger font-medium rounded-xl border border-danger/25">
           删除宝宝
         </button>
       </div>
@@ -63,8 +63,8 @@
       <div class="bg-white w-full rounded-t-2xl p-6 space-y-4 pb-safe animate-slide-up">
         <p class="text-text-secondary text-sm text-center">删除后所有记录将无法恢复</p>
         <div class="flex gap-3">
-          <button @click="showDelete = false" class="flex-1 py-3 bg-gray-100 text-text-primary rounded-xl font-medium btn-press">取消</button>
-          <button @click="doDelete" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-medium btn-press">确认删除</button>
+          <button @click="showDelete = false" class="flex-1 py-3 bg-muted text-text-primary rounded-xl font-medium btn-press">取消</button>
+          <button @click="doDelete" class="flex-1 py-3 bg-danger text-white rounded-xl font-medium btn-press">确认删除</button>
         </div>
       </div>
     </div>
@@ -86,7 +86,7 @@ const loading = ref(false)
 const error = ref('')
 const showDelete = ref(false)
 
-const colors = ['#D07C94', '#6892B2', '#D67E74', '#43C59E', '#FFD93D', '#FF9F68', '#74B9FF', '#FDA7DF']
+const colors = ['#D07C94', '#6892B2', '#D67E74', '#6FA587', '#C79B45', '#DC875C', '#9283BC', '#C2829F']
 const genders = [
   { value: 'male', label: '男孩', emoji: '👦' },
   { value: 'female', label: '女孩', emoji: '👧' },

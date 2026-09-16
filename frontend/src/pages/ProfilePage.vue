@@ -18,7 +18,7 @@
       <div class="bg-white rounded-2xl p-4 shadow-card space-y-3">
         <div class="flex items-center justify-between">
           <h2 class="text-sm font-semibold text-text-secondary uppercase tracking-wide">我的家庭</h2>
-          <button v-if="family && family.members.length > 1" @click="leaveFamily" class="text-xs text-red-400 font-medium">退出家庭</button>
+          <button v-if="family && family.members.length > 1" @click="leaveFamily" class="text-xs text-danger/80 font-medium">退出家庭</button>
         </div>
 
         <!-- 当前家庭信息 -->
@@ -89,7 +89,7 @@
       </div>
 
       <!-- 登出 -->
-      <button @click="logout" class="w-full py-3 bg-white text-red-500 font-medium rounded-xl shadow-card btn-press mt-8">
+      <button @click="logout" class="w-full py-3 bg-white text-danger font-medium rounded-xl shadow-card btn-press mt-8">
         退出登录
       </button>
     </main>

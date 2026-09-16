@@ -3,7 +3,7 @@
     <transition-group name="toast">
       <div v-for="toast in app.toasts" :key="toast.id"
          :class="['px-4 py-3 rounded-xl shadow-lg text-white text-sm font-medium pointer-events-auto',
-           toast.type === 'success' ? 'bg-success' : toast.type === 'error' ? 'bg-red-500' : 'bg-text-secondary']">
+           toast.type === 'success' ? 'bg-success' : toast.type === 'error' ? 'bg-danger' : 'bg-text-secondary']">
          {{ toast.message }}
       </div>
     </transition-group>
