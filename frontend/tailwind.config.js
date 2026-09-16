@@ -29,7 +29,7 @@ export default {
         'border-color': '#F3E7E3',
       },
       fontFamily: {
-        sans: ['"PingFang SC"', '"Hiragino Sans GB"', '"Microsoft YaHei"', 'sans-serif'],
+        sans: ['-apple-system', 'BlinkMacSystemFont', '"PingFang SC"', '"Hiragino Sans GB"', '"Microsoft YaHei"', 'sans-serif'],
         mono: ['"DIN Alternate"', '"Roboto Mono"', 'monospace'],
       },
       borderRadius: {

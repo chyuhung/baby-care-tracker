@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-dvh bg-bg-main">
-    <header class="pt-safe bg-white px-4 py-3 border-b border-border-color flex items-center gap-3">
+    <header class="pt-safe glass-surface px-4 py-3 border-b border-border-color flex items-center gap-3">
       <button aria-label="返回" @click="router.back()" class="p-2 -ml-2 flex items-center justify-center min-w-[44px] min-h-[44px] btn-press">
         <svg class="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
       </button>

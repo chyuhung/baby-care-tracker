@@ -1,14 +1,17 @@
 <template>
-  <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] bg-white border-t border-border-color pb-safe z-40">
+  <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] glass-surface border-t border-border-color pb-safe z-40">
     <div class="flex items-center justify-around h-16">
       <router-link v-for="tab in tabs" :key="tab.to" :to="tab.to"
         :class="['flex flex-col items-center justify-center w-16 h-full transition-colors relative',
           isActive(tab.to) ? 'text-primary' : 'text-text-secondary']">
-        <svg v-if="isActive(tab.to)" class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-          <path :d="tab.activeIcon" />
-        </svg>
-        <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" :d="tab.icon" />
+        <svg class="w-6 h-6 transition-transform duration-[350ms] ease-[cubic-bezier(0.34,1.56,0.64,1)]"
+             :class="isActive(tab.to) ? 'scale-110' : 'scale-100'"
+             :fill="isActive(tab.to) ? 'currentColor' : 'none'"
+             :stroke="isActive(tab.to) ? 'none' : 'currentColor'"
+             :stroke-width="isActive(tab.to) ? 0 : 2"
+             stroke-linecap="round" stroke-linejoin="round"
+             viewBox="0 0 24 24">
+          <path :d="isActive(tab.to) ? tab.activeIcon : tab.icon" />
         </svg>
         <span class="text-xs mt-1 font-medium">{{ tab.label }}</span>
         <span v-if="isActive(tab.to)" class="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-primary rounded-full"></span>

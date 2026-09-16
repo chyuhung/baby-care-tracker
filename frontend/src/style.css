@@ -67,7 +67,7 @@ html, body {
   margin: 0;
   padding: 0;
   background-color: #FDF7F5;
-  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
 }
@@ -94,12 +94,18 @@ body {
 
 
 
-/* 按钮按压反馈 */
+/* 按钮按压反馈（弹簧回弹曲线） */
 .btn-press {
-  transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.3s ease;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease, background-color 0.3s ease;
 }
 .btn-press:active {
   transform: scale(0.96);
+}
+
+/* 键盘焦点环（a11y，苹果风格） */
+:focus-visible {
+  outline: 2px solid rgb(var(--primary) / 0.85);
+  outline-offset: 2px;
 }
 
 /* 页面切换动画 */
@@ -152,6 +158,15 @@ body {
 /* 统一头部渐变（柔和，贴合母婴风） */
 .app-header {
   background: var(--header-grad);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+/* 毛玻璃表面（页头 / 底部导航，苹果风格） */
+.glass-surface {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
 }
 
 /* 数字字体 */
