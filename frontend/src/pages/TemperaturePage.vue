@@ -29,7 +29,7 @@
           <label class="text-sm text-text-secondary block mb-2">备注</label>
           <textarea v-model="editForm.note" rows="2" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary resize-none focus:border-primary focus:outline-none transition-colors" />
         </div>
-        <button @click="saveEdit" class="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press">更新记录</button>
+        <button @click="saveEdit" :disabled="loading" class="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">{{ loading ? '保存中...' : '更新记录' }}</button>
         <button @click="deleteRecord" class="w-full py-3 bg-white text-danger font-medium rounded-xl border border-danger/25 btn-press">删除此记录</button>
       </template>
 
@@ -39,7 +39,7 @@
           <p class="text-text-secondary text-sm text-center">确定要删除这条记录吗？</p>
           <div class="flex gap-3">
             <button @click="showDeleteConfirm = false" class="flex-1 py-3 bg-muted text-text-primary rounded-xl font-medium btn-press">取消</button>
-            <button @click="confirmDelete" class="flex-1 py-3 bg-danger text-white rounded-xl font-medium btn-press">确认删除</button>
+            <button @click="confirmDelete" :disabled="loading" class="flex-1 py-3 bg-danger text-white rounded-xl font-medium btn-press disabled:opacity-50">确认删除</button>
           </div>
         </div>
       </div>
@@ -49,7 +49,7 @@
         <div>
           <label class="text-sm text-text-secondary block mb-2">发生时间</label>
           <input v-model="form.occurred_at" type="datetime-local"
-            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary focus:border-primary focus:outline-none transition-colors" />
         </div>
         <div>
           <label class="text-sm text-text-secondary block mb-2">体温</label>
@@ -67,9 +67,9 @@
           <label class="text-sm text-text-secondary block mb-2">备注</label>
           <textarea v-model="form.note" rows="2" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors resize-none"></textarea>
         </div>
-        <button @click="submitTemperature" :disabled="!form.temperature"
+        <button @click="submitTemperature" :disabled="!form.temperature || loading"
           class="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">
-          记录
+          {{ loading ? '保存中...' : '记录' }}
         </button>
       </template>
     </main>
@@ -89,6 +89,7 @@ const app = useAppStore()
 
 const isEdit = computed(() => !!route.params.id)
 const showDeleteConfirm = ref(false)
+const loading = ref(false)
 
 const locations = ['腋下', '口腔', '耳温', '额温', '肛门']
 
@@ -136,7 +137,8 @@ async function loadData() {
 
 async function submitTemperature() {
   const baby = app.currentBaby
-  if (!baby || !form.value.temperature) return
+  if (!baby || !form.value.temperature || loading.value) return
+  loading.value = true
   try {
     const occurredAt = new Date(form.value.occurred_at).toISOString()
     const res = await recordAPI.createTemperature(baby.id, {
@@ -151,11 +153,14 @@ async function submitTemperature() {
     router.back()
   } catch {
     app.showToast('记录体温失败', 'error')
+  } finally {
+    loading.value = false
   }
 }
 
 async function saveEdit() {
-  if (!route.params.id) return
+  if (!route.params.id || loading.value) return
+  loading.value = true
   try {
     const occurredAt = new Date(editForm.value.occurred_at).toISOString()
     await recordAPI.update(Number(route.params.id), 'temperature', {
@@ -169,6 +174,8 @@ async function saveEdit() {
     router.back()
   } catch {
     app.showToast('保存失败', 'error')
+  } finally {
+    loading.value = false
   }
 }
 
@@ -178,7 +185,8 @@ function deleteRecord() {
 }
 
 async function confirmDelete() {
-  if (!route.params.id) return
+  if (!route.params.id || loading.value) return
+  loading.value = true
   try {
     await recordAPI.delete(Number(route.params.id), 'temperature')
     window.dispatchEvent(new CustomEvent('record-deleted', { detail: { id: Number(route.params.id), type: 'temperature' } }))
@@ -187,6 +195,8 @@ async function confirmDelete() {
     router.back()
   } catch {
     app.showToast('删除失败', 'error')
+  } finally {
+    loading.value = false
   }
 }
 

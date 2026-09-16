@@ -14,7 +14,7 @@
         <div class="flex gap-3 flex-wrap">
           <button v-for="color in colors" :key="color"
             @click="form.avatar_color = color"
-            :class="['w-10 h-10 rounded-full btn-press transition-transform', form.avatar_color === color ? 'ring-2 ring-offset-2 ring-primary scale-110' : '']"
+            :class="['w-11 h-11 rounded-full btn-press transition-transform', form.avatar_color === color ? 'ring-2 ring-offset-2 ring-primary scale-110' : '']"
             :style="{ background: color }">
           </button>
         </div>

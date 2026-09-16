@@ -126,15 +126,15 @@
               <span class="text-xs text-text-secondary">平均时长</span>
               <span class="text-xs font-medium text-text-secondary">{{ sleepAvgDuration }}</span>
             </div>
-            <button v-if="currentSleep" @click.stop="stopSleep"
-              class="mt-3 w-full py-2 bg-danger text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+            <button v-if="currentSleep" @click.stop="stopSleep" :disabled="loadingAction === 'stop-sleep'"
+              class="mt-3 w-full py-2 bg-danger text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1 disabled:opacity-50">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
-              结束
+              {{ loadingAction === 'stop-sleep' ? '处理中...' : '结束' }}
             </button>
-            <button v-else @click.stop="startSleep"
-              class="mt-3 w-full py-2 bg-sleep/10 text-sleep text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+            <button v-else @click.stop="startSleep" :disabled="loadingAction === 'start-sleep'"
+              class="mt-3 w-full py-2 bg-sleep/10 text-sleep text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1 disabled:opacity-50">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-              开始
+              {{ loadingAction === 'start-sleep' ? '处理中...' : '开始' }}
             </button>
           </div>
 
@@ -185,15 +185,15 @@
               <span class="text-xs text-text-secondary">平均时长</span>
               <span class="text-xs font-medium text-text-secondary">{{ formatAvgOutdoor }}</span>
             </div>
-            <button v-if="currentOutdoor" @click.stop="stopOutdoor"
-              class="mt-3 w-full py-2 bg-danger text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+            <button v-if="currentOutdoor" @click.stop="stopOutdoor" :disabled="loadingAction === 'stop-outdoor'"
+              class="mt-3 w-full py-2 bg-danger text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1 disabled:opacity-50">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
-              结束
+              {{ loadingAction === 'stop-outdoor' ? '处理中...' : '结束' }}
             </button>
-            <button v-else @click.stop="startOutdoor"
-              class="mt-3 w-full py-2 bg-outdoor/10 text-outdoor text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+            <button v-else @click.stop="startOutdoor" :disabled="loadingAction === 'start-outdoor'"
+              class="mt-3 w-full py-2 bg-outdoor/10 text-outdoor text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1 disabled:opacity-50">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-              开始
+              {{ loadingAction === 'start-outdoor' ? '处理中...' : '开始' }}
             </button>
           </div>
         </div>
@@ -225,7 +225,7 @@
         <p class="text-text-secondary text-sm text-center">确定要删除这条记录吗？</p>
         <div class="flex gap-3">
           <button @click="showDeleteConfirm = false" class="flex-1 py-3 bg-muted text-text-primary rounded-xl font-medium btn-press">取消</button>
-          <button @click="confirmDelete" class="flex-1 py-3 bg-danger text-white rounded-xl font-medium btn-press">确认删除</button>
+          <button @click="confirmDelete" :disabled="deleting" class="flex-1 py-3 bg-danger text-white rounded-xl font-medium btn-press disabled:opacity-50">确认删除</button>
         </div>
       </div>
     </div>
@@ -253,6 +253,8 @@ const showDeleteConfirm = ref(false)
 const recordToDelete = ref<any>(null)
 const currentSleep = ref<SleepRecord | null>(null)
 const currentOutdoor = ref<OutdoorRecord | null>(null)
+const loadingAction = ref<string | null>(null)
+const deleting = ref(false)
 const selectedBabyId = ref<number | null>(null)
 let loadGeneration = 0
 
@@ -460,7 +462,8 @@ function goToAddTemperature() {
 
 async function startSleep() {
   const baby = app.currentBaby
-  if (!baby) return
+  if (!baby || loadingAction.value) return
+  loadingAction.value = 'start-sleep'
   try {
     const now = new Date().toISOString()
     const res = await recordAPI.createSleepStart(baby.id, { started_at: now })
@@ -470,12 +473,15 @@ async function startSleep() {
   } catch (e: any) {
     console.error('开始睡眠失败:', e?.response?.data || e)
     app.showToast(e?.response?.data?.error || '开始睡眠失败', 'error')
+  } finally {
+    loadingAction.value = null
   }
 }
 
 async function stopSleep() {
   const baby = app.currentBaby
-  if (!baby || !currentSleep.value) return
+  if (!baby || !currentSleep.value || loadingAction.value) return
+  loadingAction.value = 'stop-sleep'
   try {
     const now = new Date().toISOString()
     await recordAPI.stopSleep(baby.id, currentSleep.value.id, { ended_at: now })
@@ -485,12 +491,15 @@ async function stopSleep() {
   } catch (e: any) {
     console.error('结束睡眠失败:', e?.response?.data || e)
     app.showToast(e?.response?.data?.error || '结束睡眠失败', 'error')
+  } finally {
+    loadingAction.value = null
   }
 }
 
 async function startOutdoor() {
   const baby = app.currentBaby
-  if (!baby) return
+  if (!baby || loadingAction.value) return
+  loadingAction.value = 'start-outdoor'
   try {
     const now = new Date().toISOString()
     const res = await recordAPI.createOutdoorStart(baby.id, { started_at: now })
@@ -500,12 +509,15 @@ async function startOutdoor() {
   } catch (e: any) {
     console.error('开始户外活动失败:', e?.response?.data || e)
     app.showToast(e?.response?.data?.error || '开始户外活动失败', 'error')
+  } finally {
+    loadingAction.value = null
   }
 }
 
 async function stopOutdoor() {
   const baby = app.currentBaby
-  if (!baby || !currentOutdoor.value) return
+  if (!baby || !currentOutdoor.value || loadingAction.value) return
+  loadingAction.value = 'stop-outdoor'
   try {
     const now = new Date().toISOString()
     await recordAPI.stopOutdoor(baby.id, currentOutdoor.value.id, { ended_at: now })
@@ -515,6 +527,8 @@ async function stopOutdoor() {
   } catch (e: any) {
     console.error('结束户外活动失败:', e?.response?.data || e)
     app.showToast(e?.response?.data?.error || '结束户外活动失败', 'error')
+  } finally {
+    loadingAction.value = null
   }
 }
 
@@ -536,7 +550,8 @@ function deleteRecord(r: any) {
 }
 
 async function confirmDelete() {
-  if (!recordToDelete.value) return
+  if (!recordToDelete.value || deleting.value) return
+  deleting.value = true
   try {
     const { id, record_type: typ } = recordToDelete.value
     await recordAPI.delete(id, typ)
@@ -545,6 +560,8 @@ async function confirmDelete() {
     showDeleteConfirm.value = false
   } catch (e: any) {
     app.showToast(e.response?.data?.error || '删除失败', 'error')
+  } finally {
+    deleting.value = false
   }
 }
 

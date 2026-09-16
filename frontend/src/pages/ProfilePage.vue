@@ -18,7 +18,7 @@
       <div class="bg-white rounded-2xl p-4 shadow-card space-y-3">
         <div class="flex items-center justify-between">
           <h2 class="text-sm font-semibold text-text-secondary uppercase tracking-wide">我的家庭</h2>
-          <button v-if="family && family.members.length > 1" @click="leaveFamily" class="text-xs text-danger/80 font-medium">退出家庭</button>
+          <button v-if="family && family.members.length > 1" @click="leaveFamily" class="text-xs text-danger/80 font-medium py-2 px-3 -mr-2 flex items-center min-h-[44px]">退出家庭</button>
         </div>
 
         <!-- 当前家庭信息 -->
@@ -27,7 +27,7 @@
             <div class="text-xs text-text-secondary mb-1">邀请码</div>
             <div class="flex items-center justify-between">
               <span class="text-lg font-bold tracking-widest text-primary select-all">{{ family.invite_code }}</span>
-              <button @click="copyCode" class="text-xs text-primary font-medium">复制</button>
+              <button @click="copyCode" class="text-xs text-primary font-medium py-2 px-3 min-h-[44px] flex items-center">复制</button>
             </div>
           </div>
 
@@ -42,7 +42,7 @@
             </div>
           </div>
 
-          <button @click="regenerateCode" class="w-full py-2 text-sm text-primary font-medium rounded-xl border border-primary/30 btn-press">
+          <button @click="regenerateCode" class="w-full py-3 text-sm text-primary font-medium rounded-xl border border-primary/30 btn-press min-h-[44px]">
             重新生成邀请码
           </button>
         </div>
@@ -52,7 +52,7 @@
           <p class="text-xs text-text-secondary mb-2">加入其他家庭后，你和你的宝宝数据将切换到新家庭</p>
           <div class="flex gap-2">
             <input v-model="joinCode" placeholder="输入对方的邀请码" maxlength="6" class="flex-1 px-3 py-2 border border-border-color rounded-xl text-sm focus:border-primary focus:outline-none transition-colors uppercase" />
-            <button @click="joinFamily" class="px-4 py-2 bg-primary text-white text-sm font-medium rounded-xl btn-press">加入</button>
+            <button @click="joinFamily" class="px-4 py-3 bg-primary text-white text-sm font-medium rounded-xl btn-press min-h-[44px]">加入</button>
           </div>
         </div>
       </div>

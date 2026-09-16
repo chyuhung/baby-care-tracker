@@ -22,7 +22,7 @@
           <label class="text-sm text-text-secondary block mb-2">备注</label>
           <textarea v-model="editForm.note" rows="3" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary resize-none focus:border-primary focus:outline-none transition-colors" />
         </div>
-        <button @click="saveEdit" class="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press">更新记录</button>
+        <button @click="saveEdit" :disabled="submitting" class="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">{{ submitting ? '保存中...' : '更新记录' }}</button>
         <button @click="deleteRecord" class="w-full py-3 bg-white text-danger font-medium rounded-xl border border-danger/25 btn-press">删除此记录</button>
       </template>
 
@@ -32,7 +32,7 @@
           <p class="text-text-secondary text-sm text-center">确定要删除这条记录吗？</p>
           <div class="flex gap-3">
             <button @click="showDeleteConfirm = false" class="flex-1 py-3 bg-muted text-text-primary rounded-xl font-medium btn-press">取消</button>
-            <button @click="confirmDelete" class="flex-1 py-3 bg-danger text-white rounded-xl font-medium btn-press">确认删除</button>
+            <button @click="confirmDelete" :disabled="submitting" class="flex-1 py-3 bg-danger text-white rounded-xl font-medium btn-press disabled:opacity-50">确认删除</button>
           </div>
         </div>
       </div>
@@ -53,13 +53,13 @@
           <template v-if="currentSleep">
             <div class="text-lg text-text-primary mb-2">😴 正在睡觉</div>
             <div class="text-4xl font-bold text-sleep font-num mb-4">{{ elapsedText }}</div>
-            <button @click="stopSleep" class="w-full py-3 bg-danger text-white rounded-xl font-medium shadow-card btn-press flex items-center justify-center gap-2">
+            <button @click="stopSleep" :disabled="submitting" class="w-full py-3 bg-danger text-white rounded-xl font-medium shadow-card btn-press flex items-center justify-center gap-2 disabled:opacity-50">
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
-              <span>结束</span>
+              <span>{{ submitting ? '处理中...' : '结束' }}</span>
             </button>
           </template>
           <template v-else>
-            <button @click="startSleep" class="w-full py-3 bg-sleep/10 text-sleep rounded-xl font-medium btn-press flex items-center justify-center gap-2">
+            <button @click="startSleep" :disabled="submitting" class="w-full py-3 bg-sleep/10 text-sleep rounded-xl font-medium btn-press flex items-center justify-center gap-2 disabled:opacity-50">
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
               开始
             </button>
@@ -70,6 +70,7 @@
         <div class="space-y-2">
           <h3 class="text-sm font-semibold text-text-secondary">今天睡眠记录</h3>
           <div v-if="todaySleeps.length === 0" class="bg-white rounded-2xl p-6 text-center shadow-card">
+            <div class="text-4xl mb-2">😴</div>
             <p class="text-text-secondary text-sm">今天还没有睡眠记录</p>
           </div>
           <div v-for="s in todaySleeps" :key="s.id" @click="editSleep(s)"
@@ -108,6 +109,7 @@ const allSleeps = ref<any[]>([])
 const tick = ref(0)
 let tickTimer: number | null = null
 const showDeleteConfirm = ref(false)
+const submitting = ref(false)
 
 const editForm = ref({ started_at: '', ended_at: '', note: '' })
 
@@ -126,11 +128,7 @@ const formattedDuration = computed(() => {
     const end = new Date(s.ended_at)
     return sum + Math.round((end.getTime() - start.getTime()) / 60000)
   }, 0)
-  if (mins <= 0) return '0'
-  if (mins < 60) return `${mins}min`
-  const h = Math.floor(mins / 60)
-  const m = mins % 60
-  return m > 0 ? `${h}h${m}min` : `${h}h`
+  return fmtDuration(mins)
 })
 
 const elapsedText = computed(() => {
@@ -138,10 +136,7 @@ const elapsedText = computed(() => {
   if (!currentSleep.value?.started_at) return ''
   const start = new Date(currentSleep.value.started_at)
   const mins = Math.round((Date.now() - start.getTime()) / 60000)
-  if (mins < 60) return `${mins}min`
-  const h = Math.floor(mins / 60)
-  const m = mins % 60
-  return m > 0 ? `${h}h${m}min` : `${h}h`
+  return fmtDuration(mins)
 })
 
 function formatSleepTime(s: any) {
@@ -189,7 +184,8 @@ async function loadData() {
 
 async function startSleep() {
   const baby = app.currentBaby
-  if (!baby) return
+  if (!baby || submitting.value) return
+  submitting.value = true
   try {
     const now = new Date().toISOString()
     const res = await recordAPI.createSleepStart(baby.id, { started_at: now })
@@ -199,12 +195,15 @@ async function startSleep() {
   } catch (e: any) {
     console.error('开始睡眠失败:', e?.response?.data?.error || e)
     app.showToast(e?.response?.data?.error || '开始睡眠失败', 'error')
+  } finally {
+    submitting.value = false
   }
 }
 
 async function stopSleep() {
   const baby = app.currentBaby
-  if (!baby || !currentSleep.value) return
+  if (!baby || !currentSleep.value || submitting.value) return
+  submitting.value = true
   try {
     const now = new Date().toISOString()
     await recordAPI.stopSleep(baby.id, currentSleep.value.id, { ended_at: now })
@@ -213,11 +212,14 @@ async function stopSleep() {
     app.showToast('✅ 睡眠已结束', 'success')
   } catch {
     app.showToast('结束睡眠失败', 'error')
+  } finally {
+    submitting.value = false
   }
 }
 
 async function saveEdit() {
-  if (!route.params.id) return
+  if (!route.params.id || submitting.value) return
+  submitting.value = true
   try {
     const startedAt = new Date(editForm.value.started_at).toISOString()
     const endedAt = editForm.value.ended_at ? new Date(editForm.value.ended_at).toISOString() : ''
@@ -231,6 +233,8 @@ async function saveEdit() {
     router.back()
   } catch {
     app.showToast('保存失败', 'error')
+  } finally {
+    submitting.value = false
   }
 }
 
@@ -240,7 +244,8 @@ function deleteRecord() {
 }
 
 async function confirmDelete() {
-  if (!route.params.id) return
+  if (!route.params.id || submitting.value) return
+  submitting.value = true
   try {
     await recordAPI.delete(Number(route.params.id), 'sleep')
     window.dispatchEvent(new CustomEvent('record-deleted', { detail: { id: Number(route.params.id), type: 'sleep' } }))
@@ -249,6 +254,8 @@ async function confirmDelete() {
     router.back()
   } catch {
     app.showToast('删除失败', 'error')
+  } finally {
+    submitting.value = false
   }
 }
 
