@@ -12,6 +12,14 @@ export function formatDuration(mins: number) {
   return m > 0 ? `${h}小时${m}分钟` : `${h}小时`
 }
 
+export function formatDurationCompact(mins: number) {
+  if (mins <= 0) return '0m'
+  if (mins < 60) return `${mins}m`
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return m > 0 ? `${h}h${m}m` : `${h}h`
+}
+
 export function durationParts(mins: number) {
   if (mins <= 0) return [{ val: '0', unit: '分钟' as string }]
   if (mins < 60) return [{ val: `${mins}`, unit: '分钟' }]

@@ -107,7 +107,7 @@
             <div class="text-xs text-text-secondary mb-1">今日睡眠</div>
             <div class="flex items-end justify-between">
               <div v-if="currentSleep" class="flex items-baseline gap-1 min-w-0">
-                <span class="text-base font-bold text-sleep-deep truncate">已睡 <template v-for="(part, pi) in elapsedSleepParts" :key="pi"><span>{{ part.val }}</span><span v-if="part.unit" class="text-sm text-text-secondary font-normal">{{ part.unit }}</span> </template></span>
+                <span class="text-base font-bold text-sleep-deep truncate">已睡 {{ elapsedSleepCompact }}</span>
               </div>
               <div v-else class="flex items-baseline gap-0.5">
                 <template v-for="(part, pi) in sleepDurationParts" :key="pi">
@@ -167,7 +167,7 @@
             <div class="text-xs text-text-secondary mb-1">今日户外活动</div>
             <div class="flex items-end justify-between">
               <div v-if="currentOutdoor" class="flex items-baseline gap-1 min-w-0">
-                <span class="text-base font-bold text-outdoor-deep truncate">已活动 <template v-for="(part, pi) in elapsedOutdoorParts" :key="pi"><span>{{ part.val }}</span><span v-if="part.unit" class="text-sm text-text-secondary font-normal">{{ part.unit }}</span> </template></span>
+                <span class="text-base font-bold text-outdoor-deep truncate">已活动 {{ elapsedOutdoorCompact }}</span>
               </div>
               <div v-else class="flex items-baseline gap-0.5">
                 <template v-for="(part, pi) in outdoorDurationParts" :key="pi">
@@ -240,7 +240,7 @@ import { useAppStore } from '@/stores/app'
 import { babyAPI, recordAPI } from '@/api'
 import type { BabyStats, SleepRecord, OutdoorRecord } from '@/api'
 import RecordCard from '@/components/RecordCard.vue'
-import { durationParts } from '@/utils'
+import { durationParts, formatDurationCompact } from '@/utils'
 
 const tick = ref(0)
 let tickTimer: number | null = null
@@ -382,22 +382,22 @@ const lastSleepAgo = computed(() => { tick.value; return getTimeAgo(stats.value.
 const lastTempAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_temperature) })
 const lastOutdoorAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_outdoor_end) })
 
-const elapsedSleepParts = computed(() => {
+const elapsedSleepCompact = computed(() => {
   tick.value
-  if (!currentSleep.value?.started_at) return []
+  if (!currentSleep.value?.started_at) return ''
   const start = new Date(currentSleep.value.started_at)
   const mins = Math.round((Date.now() - start.getTime()) / 60000)
-  return durationParts(mins)
+  return formatDurationCompact(mins)
 })
 
 const sleepDurationParts = computed(() => durationParts(stats.value.sleep_duration))
 
-const elapsedOutdoorParts = computed(() => {
+const elapsedOutdoorCompact = computed(() => {
   tick.value
-  if (!currentOutdoor.value?.started_at) return []
+  if (!currentOutdoor.value?.started_at) return ''
   const start = new Date(currentOutdoor.value.started_at)
   const mins = Math.round((Date.now() - start.getTime()) / 60000)
-  return durationParts(mins)
+  return formatDurationCompact(mins)
 })
 
 const outdoorDurationParts = computed(() => durationParts(stats.value.outdoor_duration))
