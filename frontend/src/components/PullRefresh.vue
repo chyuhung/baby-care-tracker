@@ -4,17 +4,20 @@
       <slot />
     </div>
 
-    <!-- 顶部固定指示胶囊（Teleport 到 body，避开页面位移） -->
+    <!-- iOS 风顶部活动指示器（Teleport 到 body，不随整页位移；无胶囊底、无文字） -->
     <Teleport to="body">
-      <div v-show="topPillVisible"
-        class="fixed inset-x-0 top-0 z-50 pointer-events-none transition-opacity duration-200 flex justify-center">
-        <div class="w-full max-w-[480px] mx-auto flex justify-center">
-          <span class="inline-flex items-center gap-1 bg-white/85 backdrop-blur border border-border-color rounded-full px-4 py-1.5 text-xs font-medium text-text-secondary shadow-card whitespace-nowrap mt-[calc(env(safe-area-inset-top)+10px)]">
-            <span v-if="refreshing" class="icon-spin inline-block">🔄</span>
-            <template v-else>{{ pulling >= REFRESH_VISUAL ? '🔄 释放刷新' : '⬇️ 下拉刷新' }}</template>
-            <span v-if="refreshing"> 刷新中...</span>
-          </span>
-        </div>
+      <div v-show="indicatorVisible"
+        class="fixed inset-x-0 top-0 z-50 pointer-events-none flex justify-center"
+        :style="{ paddingTop: 'calc(env(safe-area-inset-top) + 10px)' }">
+        <!-- 下拉过程：圆弧随手指旋转、随距离淡入 -->
+        <svg v-if="!refreshing" width="28" height="28" viewBox="0 0 24 24" fill="none"
+          class="text-text-secondary"
+          :style="{ opacity: pullOpacity, transform: `rotate(${pulling * 2.4}deg)` }">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"
+            stroke-dasharray="40 56.55" transform="rotate(-90 12 12)" />
+        </svg>
+        <!-- 刷新中：持续旋转的活动指示器 -->
+        <ActivityIndicator v-else :size="28" class="text-text-secondary" />
       </div>
     </Teleport>
   </div>
@@ -22,6 +25,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, useAttrs, onMounted, onUnmounted } from 'vue'
+import ActivityIndicator from './ActivityIndicator.vue'
 
 const props = withDefaults(defineProps<{
   refresh: () => Promise<unknown> | unknown
@@ -49,7 +53,11 @@ let performedGesture = false
 let touchMoveHandler: ((e: TouchEvent) => void) | null = null
 let lockedUp = false
 
-const topPillVisible = computed(() => refreshing.value || pulling.value > 0)
+const indicatorVisible = computed(() => refreshing.value || pulling.value > 0)
+const pullOpacity = computed(() => {
+  if (refreshing.value) return 1
+  return Math.min(pulling.value / REFRESH_VISUAL, 1)
+})
 
 // 整页滚动即文档滚动
 function atPageTop() {

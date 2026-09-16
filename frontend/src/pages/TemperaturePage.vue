@@ -4,84 +4,83 @@
       <button aria-label="返回" @click="router.back()" class="p-2 -ml-2 flex items-center justify-center min-w-[44px] min-h-[44px] btn-press">
         <svg class="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
       </button>
-      <h1 class="text-lg font-bold text-text-primary">{{ isEdit ? '编辑记录' : '🌡️ 记录体温' }}</h1>
+      <h1 class="text-lg font-bold text-text-primary">{{ isEdit ? '编辑体温' : '记录体温' }}</h1>
     </header>
 
-    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-6 space-y-5" :refresh="loadData">
-      <!-- 编辑模式 -->
-      <template v-if="isEdit">
-        <div>
-          <label class="text-sm text-text-secondary block mb-2">体温 (°C)</label>
-          <input v-model="editForm.temperature" type="number" step="0.1" min="35" max="42" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary focus:border-primary focus:outline-none transition-colors" />
-        </div>
-        <div>
-          <label class="text-sm text-text-secondary block mb-2">测量位置</label>
-          <div class="grid grid-cols-3 gap-3">
-            <button v-for="loc in locations" :key="loc" @click="editForm.location = loc"
-              :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press', editForm.location === loc ? 'bg-primary-deep text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
-          </div>
-        </div>
-        <div>
-          <label class="text-sm text-text-secondary block mb-2">时间</label>
-          <input v-model="editForm.occurred_at" type="datetime-local" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary focus:border-primary focus:outline-none transition-colors" />
-        </div>
-        <div>
-          <label class="text-sm text-text-secondary block mb-2">备注</label>
-          <textarea v-model="editForm.note" rows="2" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary resize-none focus:border-primary focus:outline-none transition-colors" />
-        </div>
-        <button @click="saveEdit" :disabled="loading" class="w-full py-3 bg-primary-deep text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">{{ loading ? '保存中...' : '更新记录' }}</button>
-        <button @click="deleteRecord" class="w-full py-3 bg-white text-danger font-medium rounded-xl border border-danger/25 btn-press">删除此记录</button>
-      </template>
-
-      <!-- 删除确认弹窗 -->
-      <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black/30 flex items-end z-50" @click.self="showDeleteConfirm = false">
-        <div class="bg-white w-full rounded-t-2xl p-6 space-y-4 pb-safe animate-slide-up">
-          <p class="text-text-secondary text-sm text-center">确定要删除这条记录吗？</p>
-          <div class="flex gap-3">
-            <button @click="showDeleteConfirm = false" class="flex-1 py-3 bg-muted text-text-primary rounded-xl font-medium btn-press">取消</button>
-            <button @click="confirmDelete" :disabled="loading" class="flex-1 py-3 bg-danger text-white rounded-xl font-medium btn-press disabled:opacity-50">确认删除</button>
-          </div>
-        </div>
+    <PullRefresh class="flex-1 min-h-0"
+      content-class="px-4 py-4 space-y-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
+      :refresh="refreshAll">
+      <!-- 时间 -->
+      <div>
+        <label class="text-sm text-text-secondary block mb-2">测量时间</label>
+        <input v-model="form.occurred_at" type="datetime-local"
+          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
       </div>
 
-      <!-- 非编辑模式 -->
-      <template v-else>
-        <div>
-          <label class="text-sm text-text-secondary block mb-2">发生时间</label>
-          <input v-model="form.occurred_at" type="datetime-local"
-            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary focus:border-primary focus:outline-none transition-colors" />
-        </div>
-        <div>
-          <label class="text-sm text-text-secondary block mb-2">体温</label>
-          <input v-model="form.temperature" type="number" step="0.1" min="35" max="42" placeholder="37.0"
-            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary font-num focus:border-primary focus:outline-none transition-colors" />
-        </div>
-        <div>
-          <label class="text-sm text-text-secondary block mb-3">测量位置</label>
-          <div class="grid grid-cols-3 gap-3">
-            <button v-for="loc in locations" :key="loc" @click="form.location = loc"
-              :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press', form.location === loc ? 'bg-primary-deep text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
-          </div>
-        </div>
-        <div>
-          <label class="text-sm text-text-secondary block mb-2">备注</label>
-          <textarea v-model="form.note" rows="2" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors resize-none"></textarea>
-        </div>
-        <button @click="submitTemperature" :disabled="!form.temperature || loading"
-          class="w-full py-3 bg-primary-deep text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">
-          {{ loading ? '保存中...' : '记录' }}
-        </button>
-      </template>
+      <!-- 体温 -->
+      <div>
+        <label class="text-sm text-text-secondary block mb-2">体温（°C）</label>
+        <input v-model.number="form.temperature" type="number" step="0.1" min="30" max="45" inputmode="decimal"
+          placeholder="36.5"
+          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-3xl text-center font-num font-bold focus:border-primary focus:outline-none transition-colors" />
+      </div>
+
+      <!-- 测量位置（iOS 分段控件，单行 5 段） -->
+      <div>
+        <label class="text-sm text-text-secondary block mb-2">测量位置</label>
+        <Segmented :model-value="form.location" :options="locationOptions" compact
+          @update:model-value="(v: string) => form.location = v" />
+      </div>
+
+      <!-- 备注 -->
+      <div>
+        <label class="text-sm text-text-secondary block mb-2">备注</label>
+        <textarea v-model="form.note" rows="3" placeholder="如：吃奶后、哭闹等"
+          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary resize-none focus:border-primary focus:outline-none transition-colors"></textarea>
+      </div>
+
+      <!-- 发烧提示 -->
+      <div v-if="form.temperature && form.temperature >= 37.5"
+        class="bg-danger-light text-danger text-sm px-4 py-3 rounded-xl flex items-center gap-2">
+        <span>🔥</span>
+        <span>体温偏高，请注意观察并考虑就医</span>
+      </div>
+
+      <div v-if="error" class="bg-danger-light text-danger text-sm px-4 py-2 rounded-xl text-center">
+        {{ error }}
+      </div>
+
+      <!-- 删除（编辑态，留在内容区） -->
+      <button v-if="isEdit" type="button" @click="showDelete = true"
+        class="btn-press w-full py-3 bg-white text-danger font-medium rounded-xl border border-danger/25 min-h-[44px]">
+        删除此记录
+      </button>
     </PullRefresh>
+
+    <!-- 固定底部操作栏 -->
+    <FormBar>
+      <button type="button" @click="save" :disabled="saving"
+        class="btn-press w-full py-3.5 bg-primary-deep text-white font-semibold rounded-xl shadow-card disabled:opacity-50 flex items-center justify-center gap-2">
+        <ActivityIndicator v-if="saving" :size="20" class="text-white" />
+        <span>{{ saving ? '保存中...' : (isEdit ? '更新记录' : '记录') }}</span>
+      </button>
+    </FormBar>
+
+    <ConfirmSheet :open="showDelete" :loading="deleting" message="确定要删除这条体温记录吗？删除后无法恢复。"
+      @confirm="doDelete" @cancel="showDelete = false" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { babyAPI, recordAPI } from '@/api'
-import { toLocalDatetime } from '@/utils'
+import { recordAPI } from '@/api'
+import { nowLocalDatetime } from '@/utils'
+import Segmented from '@/components/Segmented.vue'
+import FormBar from '@/components/FormBar.vue'
+import ConfirmSheet from '@/components/ConfirmSheet.vue'
+import ActivityIndicator from '@/components/ActivityIndicator.vue'
 import PullRefresh from '@/components/PullRefresh.vue'
 
 const router = useRouter()
@@ -89,117 +88,124 @@ const route = useRoute()
 const app = useAppStore()
 
 const isEdit = computed(() => !!route.params.id)
-const showDeleteConfirm = ref(false)
-const loading = ref(false)
+const saving = ref(false)
+const deleting = ref(false)
+const showDelete = ref(false)
+const error = ref('')
 
-const locations = ['腋下', '口腔', '耳温', '额温', '肛门']
+const locationOptions = [
+  { value: '腋下', label: '腋下' },
+  { value: '口腔', label: '口腔' },
+  { value: '耳温', label: '耳温' },
+  { value: '额温', label: '额温' },
+  { value: '肛门', label: '肛门' },
+]
 
-function nowDatetime() {
-  const d = new Date()
-  const y = d.getFullYear()
-  const M = String(d.getMonth() + 1).padStart(2, '0')
-  const D = String(d.getDate()).padStart(2, '0')
-  const h = String(d.getHours()).padStart(2, '0')
-  const m = String(d.getMinutes()).padStart(2, '0')
-  return `${y}-${M}-${D}T${h}:${m}`
-}
+const form = reactive({
+  occurred_at: nowLocalDatetime(),
+  temperature: null as number | null,
+  location: '腋下',
+  note: '',
+})
 
-const form = ref({ temperature: 0, location: localStorage.getItem('temp_last_location') || '', note: '', occurred_at: nowDatetime() })
-const editForm = ref({ temperature: 0, location: '腋下', occurred_at: '', note: '' })
-
-async function loadData() {
+async function loadLastTemperature() {
   const baby = app.currentBaby
   if (!baby) return
   try {
-    if (isEdit.value) {
-      const res = await recordAPI.list(baby.id)
-      const temps = (res.data as any[]).filter(r => r.record_type === 'temperature')
-      const record = temps.find((r: any) => r.id === Number(route.params.id))
-      if (record) {
-        const d = record.data
-        editForm.value = {
-          temperature: d.temperature,
-          location: d.location || '腋下',
-          occurred_at: toLocalDatetime(d.occurred_at),
-          note: d.note || '',
-        }
-      }
-    } else {
-      const res = await babyAPI.latestTemperature(baby.id)
-      if (res.data && res.data.temperature) {
-        form.value.temperature = res.data.temperature
-        form.value.location = res.data.location || '腋下'
-      }
+    const res = await recordAPI.list(baby.id, 'temperature', 30)
+    const records = res.data as any[]
+    if (records.length > 0) {
+      const latest = records[0]
+      form.location = latest.data.location || '腋下'
+      if (latest.data.note) form.note = latest.data.note
+    }
+  } catch {
+    // ignore
+  }
+}
+
+async function loadRecord() {
+  if (!isEdit.value) return
+  const baby = app.currentBaby
+  if (!baby) return
+  try {
+    const res = await recordAPI.list(baby.id, 'temperature', 90)
+    const record = (res.data as any[]).find(r => r.id === Number(route.params.id))
+    if (record) {
+      form.occurred_at = record.occurred_at.slice(0, 16)
+      form.temperature = record.data.temperature
+      form.location = record.data.location || '腋下'
+      form.note = record.data.note || ''
     }
   } catch {
     app.showToast('加载失败', 'error')
+    router.back()
   }
 }
 
-async function submitTemperature() {
+async function refreshAll() {
+  if (isEdit.value) await loadRecord()
+  else await loadLastTemperature()
+}
+
+async function save() {
+  error.value = ''
+  if (!form.temperature || form.temperature < 30 || form.temperature > 45) {
+    error.value = '请输入正确的体温（30-45°C）'
+    return
+  }
+  if (!form.occurred_at) { error.value = '请选择时间'; return }
   const baby = app.currentBaby
-  if (!baby || !form.value.temperature || loading.value) return
-  loading.value = true
-  try {
-    const occurredAt = new Date(form.value.occurred_at).toISOString()
-    const res = await recordAPI.createTemperature(baby.id, {
-      temperature: form.value.temperature,
-      location: form.value.location,
-      note: form.value.note,
-      occurred_at: occurredAt,
-    })
-    localStorage.setItem('temp_last_location', form.value.location)
-    window.dispatchEvent(new CustomEvent('record-created', { detail: res.data }))
-    app.showToast('✅ 体温已记录', 'success')
-    router.back()
-  } catch {
-    app.showToast('记录体温失败', 'error')
-  } finally {
-    loading.value = false
-  }
-}
+  if (!baby) { error.value = '请先添加宝宝'; return }
 
-async function saveEdit() {
-  if (!route.params.id || loading.value) return
-  loading.value = true
+  saving.value = true
   try {
-    const occurredAt = new Date(editForm.value.occurred_at).toISOString()
-    await recordAPI.update(Number(route.params.id), 'temperature', {
-      temperature: editForm.value.temperature,
-      location: editForm.value.location,
-      note: editForm.value.note,
-      occurred_at: occurredAt,
-    })
+    const occurredAt = new Date(form.occurred_at).toISOString()
+    const data = {
+      temperature: form.temperature,
+      location: form.location,
+      note: form.note,
+    }
+    if (isEdit.value) {
+      await recordAPI.update(Number(route.params.id), 'temperature', { occurred_at: occurredAt, data, note: form.note })
+    } else {
+      await recordAPI.createTemperature(baby.id, { occurred_at: occurredAt, data })
+      try { localStorage.setItem('temp_last_location', form.location) } catch { /* ignore */ }
+    }
     window.dispatchEvent(new CustomEvent('record-created', { detail: null }))
-    app.showToast('✅ 已保存', 'success')
+    app.showToast(isEdit.value ? '已保存' : '体温已记录', 'success')
     router.back()
-  } catch {
-    app.showToast('保存失败', 'error')
+  } catch (e: any) {
+    app.showToast(e.response?.data?.error || '保存失败', 'error')
   } finally {
-    loading.value = false
+    saving.value = false
   }
 }
 
-function deleteRecord() {
-  if (!route.params.id) return
-  showDeleteConfirm.value = true
-}
-
-async function confirmDelete() {
-  if (!route.params.id || loading.value) return
-  loading.value = true
+async function doDelete() {
+  if (!isEdit.value || deleting.value) return
+  deleting.value = true
   try {
     await recordAPI.delete(Number(route.params.id), 'temperature')
     window.dispatchEvent(new CustomEvent('record-deleted', { detail: { id: Number(route.params.id), type: 'temperature' } }))
-    app.showToast('✅ 已删除', 'success')
-    showDeleteConfirm.value = false
+    app.showToast('已删除', 'success')
     router.back()
-  } catch {
-    app.showToast('删除失败', 'error')
+  } catch (e: any) {
+    app.showToast(e.response?.data?.error || '删除失败', 'error')
+    showDelete.value = false
   } finally {
-    loading.value = false
+    deleting.value = false
   }
 }
 
-onMounted(() => { loadData() })
+onMounted(() => {
+  if (isEdit.value) loadRecord()
+  else {
+    try {
+      const savedLocation = localStorage.getItem('temp_last_location')
+      if (savedLocation) form.location = savedLocation
+    } catch { /* ignore */ }
+    loadLastTemperature()
+  }
+})
 </script>

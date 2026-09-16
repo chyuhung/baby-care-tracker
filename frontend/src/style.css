@@ -6,7 +6,7 @@
    主题变量（清透 iOS 风 · 明亮大留白）
    - 粉色系（默认 / 保密 / 女宝）：樱花粉，与贝壳图标同色系
    - 蓝色系（男宝）：晴空蓝
-   每个主题提供：主色(三通道RGB)、主色深档(按钮/彩字)、主色浅底、页面背景
+   每个主题提供：主色(三通道RGB)、主色深档(按钮/彩字)、页面背景
    ============================================================ */
 :root,
 [data-theme='neutral'],
@@ -14,7 +14,6 @@
   /* 樱花粉 */
   --primary: 242 92 140;         /* #F25C8C 樱花粉（图标/图表/浅底/边框） */
   --primary-deep: 237 79 134;    /* #ED4F86 加深粉（实心按钮/选中态/彩字，白字3.46） */
-  --primary-light: 255 232 241;  /* #FFE8F1 浅粉底 */
   --bg-main: 255 246 250;        /* #FFF6FA 极淡粉页面背景 */
 
   /* 功能色（清透 iOS 系统色，两主题通用） */
@@ -45,7 +44,6 @@
   /* 晴空蓝 */
   --primary: 52 142 237;         /* #348EED 晴空蓝 */
   --primary-deep: 35 128 230;    /* #2380E6 加深蓝（白字3.96） */
-  --primary-light: 231 242 255;  /* #E7F2FF 浅蓝底 */
   --bg-main: 244 249 255;        /* #F4F9FF 极淡蓝页面背景 */
 
   --chart-primary: #2380E6;
@@ -149,14 +147,27 @@ body {
   animation: slideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* 顶部区域：与页面同色，无渐变、无分隔线，保证背景连续统一 */
-.app-header {
-  background: transparent;
+/* iOS 底部操作表（ConfirmSheet）遮罩 / 面板过渡 */
+.sheet-mask-enter-active,
+.sheet-mask-leave-active {
+  transition: opacity 0.25s ease;
+}
+.sheet-mask-enter-from,
+.sheet-mask-leave-to {
+  opacity: 0;
+}
+.sheet-panel-enter-active,
+.sheet-panel-leave-active {
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sheet-panel-enter-from,
+.sheet-panel-leave-to {
+  transform: translateY(100%);
 }
 
-/* 毛玻璃表面（仅用于底部固定导航）：主题同色半透明，滚动时通透不割裂 */
+/* 毛玻璃表面（底部固定导航 / 表单底部操作栏）：主题同色半透明，滚动时通透不割裂 */
 .glass-surface {
-  background: rgb(var(--bg-main) / 0.78);
+  background: rgb(var(--bg-main) / 0.82);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
 }
@@ -171,6 +182,8 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .page-enter-active, .page-leave-active,
   .card-in, .animate-slide-up,
+  .sheet-mask-enter-active, .sheet-mask-leave-active,
+  .sheet-panel-enter-active, .sheet-panel-leave-active,
   .toast-enter-active, .toast-leave-active,
   .btn-press {
     transition: none !important;
@@ -201,11 +214,14 @@ input, select, textarea {
 .chart-title-label { fill: rgb(var(--text-secondary)); }
 .chart-value-label { fill: rgb(var(--text-secondary)); }
 
-/* 下拉刷新 / 加载更多 图标旋转 */
+/* 下拉刷新 / 加载 圆弧活动指示器旋转 */
 @keyframes icon-spin {
   to { transform: rotate(360deg); }
 }
 .icon-spin {
   display: inline-block;
-  animation: icon-spin 0.9s linear infinite;
+  animation: icon-spin 0.85s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .icon-spin { animation-duration: 1.8s; }
 }

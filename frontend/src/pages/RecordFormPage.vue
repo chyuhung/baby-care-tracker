@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-dvh bg-bg-main">
+  <div class="flex flex-col min-h-dvh bg-bg-main">
     <header class="pt-safe px-4 py-3 flex items-center gap-3">
       <button aria-label="返回" @click="router.back()" class="p-2 -ml-2 flex items-center justify-center min-w-[44px] min-h-[44px] btn-press">
         <svg class="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
@@ -7,132 +7,107 @@
       <h1 class="text-lg font-bold text-text-primary">{{ pageTitle }}</h1>
     </header>
 
-    <main class="px-4 py-6 space-y-5">
-      <!-- 喂奶表单 -->
+    <main class="flex-1 px-4 py-6 space-y-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
+      <!-- 时间 -->
+      <div>
+        <label class="text-sm text-text-secondary block mb-2">记录时间</label>
+        <input v-model="form.occurred_at" type="datetime-local"
+          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+      </div>
+
+      <!-- 喂奶 -->
       <template v-if="recordType === 'feeding'">
-        <!-- 类型选择 -->
         <div>
           <label class="text-sm text-text-secondary block mb-2">喂奶方式</label>
-          <div class="grid grid-cols-3 gap-2">
-            <button v-for="t in feedingTypes" :key="t.value"
-              @click="form.type = t.value"
-              :class="['py-3 rounded-xl text-sm font-medium transition-colors btn-press flex flex-col items-center gap-1',
-                form.type === t.value ? 'bg-primary-deep text-white' : 'bg-white border border-border-color text-text-secondary']">
-              <span>{{ t.emoji }}</span>
-              {{ t.label }}
-            </button>
+          <Segmented :model-value="feedingForm.type" :options="feedingOptions"
+            @update:model-value="(v: string) => feedingForm.type = v" />
+        </div>
+
+        <!-- 母乳亲喂：时长 + 侧 -->
+        <template v-if="feedingForm.type === 'breast'">
+          <div>
+            <label class="text-sm text-text-secondary block mb-2">时长（分钟）</label>
+            <input v-model.number="feedingForm.duration_minutes" type="number" min="0" inputmode="numeric" placeholder="如 15"
+              class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
           </div>
-        </div>
-
-        <!-- 时间 -->
-        <div>
-          <label class="text-sm text-text-secondary block mb-2">发生时间</label>
-          <input v-model="form.occurred_at" type="datetime-local"
-            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
-        </div>
-
-        <!-- 亲喂：时长 + 方向 -->
-        <template v-if="form.type === 'breast'">
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="text-sm text-text-secondary block mb-2">时长（分钟）</label>
-              <input v-model.number="form.duration_minutes" type="number" min="1" placeholder="15"
-                class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
-            </div>
-            <div>
-              <label class="text-sm text-text-secondary block mb-2">喂养侧</label>
-              <div class="flex gap-1">
-                <button v-for="s in sides" :key="s.value"
-                  @click="form.side = s.value"
-                  :class="['flex-1 py-3 rounded-xl text-xs font-medium transition-colors btn-press',
-                    form.side === s.value ? 'bg-primary-deep text-white' : 'bg-white border border-border-color text-text-secondary']">
-                  {{ s.label }}
-                </button>
-              </div>
-            </div>
+          <div>
+            <label class="text-sm text-text-secondary block mb-2">喂养侧</label>
+            <Segmented :model-value="feedingForm.side" :options="sideOptions"
+              @update:model-value="(v: string) => feedingForm.side = v" />
           </div>
         </template>
 
-        <!-- 瓶喂/配方奶：奶量 -->
+        <!-- 瓶喂：奶量 -->
         <template v-else>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="text-sm text-text-secondary block mb-2">奶量（ml）</label>
-              <input v-model.number="form.amount_ml" type="number" min="1" placeholder="120"
-                class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
-            </div>
-            <div>
-              <label class="text-sm text-text-secondary block mb-2">品牌（可选）</label>
-              <input v-model="form.brand" type="text" placeholder="如：爱他美"
-                class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
-            </div>
-          </div>
           <div>
-            <label class="text-sm text-text-secondary block mb-2">时长（分钟）</label>
-            <input v-model.number="form.duration_minutes" type="number" min="1" placeholder="15"
+            <label class="text-sm text-text-secondary block mb-2">奶量（ml）</label>
+            <input v-model.number="feedingForm.amount_ml" type="number" min="0" inputmode="numeric" placeholder="如 120"
+              class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+          </div>
+          <div v-if="feedingForm.type === 'formula'">
+            <label class="text-sm text-text-secondary block mb-2">品牌（可选）</label>
+            <input v-model="feedingForm.brand" type="text" placeholder="奶粉品牌"
               class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
           </div>
         </template>
-
-        <!-- 备注 -->
-        <div>
-          <label class="text-sm text-text-secondary block mb-2">备注</label>
-          <textarea v-model="form.note" rows="2" placeholder="可选"
-            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors resize-none"></textarea>
-        </div>
       </template>
 
-      <!-- 尿布表单 -->
-      <template v-else-if="recordType === 'diaper'">
+      <!-- 尿布：大卡片选择（保留彩色 emoji） -->
+      <template v-else>
         <div>
-          <label class="text-sm text-text-secondary block mb-2">发生时间</label>
-          <input v-model="form.occurred_at" type="datetime-local"
-            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
-        </div>
-
-        <div>
-          <label class="text-sm text-text-secondary block mb-3">尿布类型</label>
+          <label class="text-sm text-text-secondary block mb-2">尿布类型</label>
           <div class="grid grid-cols-3 gap-3">
-            <button v-for="t in diaperTypes" :key="t.value"
-              @click="form.type = t.value"
-              :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press flex flex-col items-center gap-2',
-                form.type === t.value ? 'bg-primary-deep text-white' : 'bg-white border border-border-color text-text-secondary']">
-              <span class="text-2xl">{{ t.emoji }}</span>
-              {{ t.label }}
+            <button type="button" @click="diaperForm.type = 'pee'"
+              :class="['flex flex-col items-center justify-center gap-1 py-4 rounded-xl border-2 transition-all btn-press min-h-[88px]',
+                diaperForm.type === 'pee' ? 'border-primary bg-primary/5' : 'border-border-color bg-white']">
+              <span class="text-2xl">💧</span>
+              <span class="text-sm font-medium" :class="diaperForm.type === 'pee' ? 'text-primary-deep' : 'text-text-secondary'">小便</span>
+            </button>
+            <button type="button" @click="diaperForm.type = 'poop'"
+              :class="['flex flex-col items-center justify-center gap-1 py-4 rounded-xl border-2 transition-all btn-press min-h-[88px]',
+                diaperForm.type === 'poop' ? 'border-primary bg-primary/5' : 'border-border-color bg-white']">
+              <span class="text-2xl">💩</span>
+              <span class="text-sm font-medium" :class="diaperForm.type === 'poop' ? 'text-primary-deep' : 'text-text-secondary'">大便</span>
+            </button>
+            <button type="button" @click="diaperForm.type = 'mixed'"
+              :class="['flex flex-col items-center justify-center gap-1 py-4 rounded-xl border-2 transition-all btn-press min-h-[88px]',
+                diaperForm.type === 'mixed' ? 'border-primary bg-primary/5' : 'border-border-color bg-white']">
+              <span class="text-2xl">🌪️</span>
+              <span class="text-sm font-medium" :class="diaperForm.type === 'mixed' ? 'text-primary-deep' : 'text-text-secondary'">混合</span>
             </button>
           </div>
         </div>
-
-        <div>
-          <label class="text-sm text-text-secondary block mb-2">备注</label>
-          <textarea v-model="form.note" rows="2" placeholder="可选，如颜色、形状等"
-            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors resize-none"></textarea>
-        </div>
       </template>
 
-      <div v-if="error" class="bg-danger-light text-danger text-sm px-4 py-2 rounded-xl text-center">{{ error }}</div>
+      <!-- 备注 -->
+      <div>
+        <label class="text-sm text-text-secondary block mb-2">备注</label>
+        <textarea v-model="form.note" rows="3" placeholder="可选"
+          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary resize-none focus:border-primary focus:outline-none transition-colors"></textarea>
+      </div>
 
-      <button @click="submit" :disabled="loading"
-        class="btn-press w-full py-3 bg-primary-deep text-white font-semibold rounded-xl shadow-card disabled:opacity-50">
-        {{ loading ? '保存中...' : (isEdit ? '更新记录' : '记录') }}
-      </button>
+      <div v-if="error" class="bg-danger-light text-danger text-sm px-4 py-2 rounded-xl text-center">
+        {{ error }}
+      </div>
 
-      <button v-if="isEdit" @click="confirmDelete"
-        class="btn-press w-full py-3 bg-white text-danger font-medium rounded-xl border border-danger/25">
+      <!-- 删除（编辑态，留在内容区） -->
+      <button v-if="isEdit" type="button" @click="showDelete = true"
+        class="btn-press w-full py-3 bg-white text-danger font-medium rounded-xl border border-danger/25 min-h-[44px]">
         删除此记录
       </button>
     </main>
 
-    <!-- 删除确认 -->
-    <div v-if="showDelete" class="fixed inset-0 bg-black/30 flex items-end z-50" @click.self="showDelete = false">
-      <div class="bg-white w-full rounded-t-2xl p-6 space-y-4 pb-safe animate-slide-up">
-        <p class="text-text-secondary text-sm text-center">确定要删除这条记录吗？</p>
-        <div class="flex gap-3">
-          <button @click="showDelete = false" class="flex-1 py-3 bg-muted text-text-primary rounded-xl font-medium btn-press">取消</button>
-          <button @click="doDelete" class="flex-1 py-3 bg-danger text-white rounded-xl font-medium btn-press">确认删除</button>
-        </div>
-      </div>
-    </div>
+    <!-- 固定底部操作栏 -->
+    <FormBar>
+      <button type="button" @click="save" :disabled="saving"
+        class="btn-press w-full py-3.5 bg-primary-deep text-white font-semibold rounded-xl shadow-card disabled:opacity-50 flex items-center justify-center gap-2">
+        <ActivityIndicator v-if="saving" :size="20" class="text-white" />
+        <span>{{ saving ? '保存中...' : (isEdit ? '更新记录' : '记录') }}</span>
+      </button>
+    </FormBar>
+
+    <ConfirmSheet :open="showDelete" :loading="deleting" message="确定要删除这条记录吗？删除后无法恢复。"
+      @confirm="doDelete" @cancel="showDelete = false" />
   </div>
 </template>
 
@@ -140,8 +115,12 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { babyAPI, recordAPI } from '@/api'
-import { toLocalDatetime } from '@/utils'
+import { recordAPI } from '@/api'
+import { nowLocalDatetime } from '@/utils'
+import Segmented from '@/components/Segmented.vue'
+import FormBar from '@/components/FormBar.vue'
+import ConfirmSheet from '@/components/ConfirmSheet.vue'
+import ActivityIndicator from '@/components/ActivityIndicator.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -149,169 +128,129 @@ const app = useAppStore()
 
 const recordType = computed(() => route.params.type as string)
 const isEdit = computed(() => !!route.params.id)
-const loading = ref(false)
-const error = ref('')
+const saving = ref(false)
+const deleting = ref(false)
 const showDelete = ref(false)
+const error = ref('')
 
-const pageTitle = computed(() => {
-  if (isEdit.value) return '编辑记录'
-  if (recordType.value === 'feeding') return '🍼 记录喂奶'
-  if (recordType.value === 'diaper') return '🩲 记录尿布'
-  return '记录'
-})
-
-const nowDatetime = () => {
-  const d = new Date()
-  const y = d.getFullYear()
-  const M = String(d.getMonth() + 1).padStart(2, '0')
-  const D = String(d.getDate()).padStart(2, '0')
-  const h = String(d.getHours()).padStart(2, '0')
-  const m = String(d.getMinutes()).padStart(2, '0')
-  return `${y}-${M}-${D}T${h}:${m}`
-}
-
-// 该函数已提取到 src/utils.ts → toLocalDatetime
-
-const feedingTypes = [
-  { value: 'breast', label: '亲喂', emoji: '🤱' },
+const feedingOptions = [
+  { value: 'breast', label: '母乳亲喂', emoji: '🤱' },
   { value: 'bottle', label: '母乳瓶喂', emoji: '🍼' },
-  { value: 'formula', label: '配方奶', emoji: '🍼' },
+  { value: 'formula', label: '配方奶', emoji: '🥛' },
 ]
-const sides = [
-  { value: 'left', label: '左' },
-  { value: 'right', label: '右' },
+const sideOptions = [
+  { value: 'left', label: '左侧' },
+  { value: 'right', label: '右侧' },
   { value: 'both', label: '双边' },
 ]
-const diaperTypes = [
-  { value: 'pee', label: '小便', emoji: '💧' },
-  { value: 'poop', label: '大便', emoji: '💩' },
-  { value: 'mixed', label: '混合', emoji: '🌪️' },
-]
 
-const form = reactive({
-  type: 'breast',
-  duration_minutes: 15,
-  amount_ml: 0,
-  side: 'left',
-  brand: '',
-  note: '',
-  occurred_at: nowDatetime(),
+const pageTitle = computed(() => {
+  const typeLabel = recordType.value === 'feeding' ? '喂奶' : '尿布'
+  return isEdit.value ? `编辑${typeLabel}` : `记录${typeLabel}`
 })
 
-function resetFormDefaults() {
-  if (recordType.value === 'diaper') {
-    form.type = 'pee'
-    form.duration_minutes = 0
-    form.amount_ml = 0
-    form.side = 'left'
-    form.brand = ''
-  } else {
-    form.type = 'breast'
-    form.duration_minutes = 15
-    form.amount_ml = 0
-    form.side = 'left'
-    form.brand = ''
-  }
-}
+const form = reactive({
+  occurred_at: nowLocalDatetime(),
+  note: '',
+})
 
-async function loadLatest() {
-  const baby = app.currentBaby
-  if (!baby) return
-  try {
-    const res = await babyAPI.latestFeeding(baby.id)
-    if (res.data) {
-      form.type = res.data.type || 'breast'
-      form.duration_minutes = res.data.duration_minutes || 15
-      form.amount_ml = res.data.amount_ml || 0
-      form.side = res.data.side || 'left'
-      form.brand = res.data.brand || ''
-      form.note = ''
-    }
-  } catch {
-    // latest data not available, use defaults
-  }
-}
+const feedingForm = reactive({
+  type: 'breast',
+  amount_ml: null as number | null,
+  duration_minutes: null as number | null,
+  side: 'both',
+  brand: '',
+})
+
+const diaperForm = reactive({
+  type: 'pee',
+})
 
 async function loadRecord() {
   if (!isEdit.value) return
-  const id = Number(route.params.id)
   const baby = app.currentBaby
   if (!baby) return
   try {
-    const res = await recordAPI.list(baby.id, recordType.value)
-    const records = res.data as any[]
-    const r = records.find((r: any) => r.id === id)
-    if (r) {
-      if (recordType.value === 'feeding') {
-        const d = r.data
-        form.type = d.type
-        form.duration_minutes = d.duration_minutes
-        form.amount_ml = d.amount_ml
-        form.side = d.side || 'left'
-        form.brand = d.brand || ''
-        form.note = d.note || ''
-        form.occurred_at = d.occurred_at ? toLocalDatetime(d.occurred_at) : nowDatetime()
+    const res = await recordAPI.list(baby.id)
+    const record = (res.data as any[]).find(r => r.id === Number(route.params.id))
+    if (record) {
+      form.occurred_at = record.occurred_at.slice(0, 16)
+      form.note = record.data.note || ''
+      if (record.record_type === 'feeding') {
+        feedingForm.type = record.data.type
+        feedingForm.amount_ml = record.data.amount_ml
+        feedingForm.duration_minutes = record.data.duration_minutes
+        feedingForm.side = record.data.side || 'both'
+        feedingForm.brand = record.data.brand || ''
       } else {
-        form.type = r.data.type
-        form.note = r.data.note || ''
-        form.occurred_at = r.occurred_at ? toLocalDatetime(r.occurred_at) : nowDatetime()
+        diaperForm.type = record.data.type
       }
     }
   } catch {
-    app.showToast('记录加载失败', 'error')
+    app.showToast('加载失败', 'error')
+    router.back()
   }
 }
 
-async function submit() {
+async function save() {
   error.value = ''
+  if (!form.occurred_at) { error.value = '请选择时间'; return }
   const baby = app.currentBaby
   if (!baby) { error.value = '请先添加宝宝'; return }
-  loading.value = true
+
+  saving.value = true
   try {
-    const payload = {
-      ...form,
-      occurred_at: new Date(form.occurred_at).toISOString(),
-    }
-    if (isEdit.value) {
-      await recordAPI.update(Number(route.params.id), recordType.value, payload)
-    } else if (recordType.value === 'feeding') {
-      await recordAPI.createFeeding(baby.id, payload)
+    const occurredAt = new Date(form.occurred_at).toISOString()
+    const note = form.note
+
+    if (recordType.value === 'feeding') {
+      const data: any = { type: feedingForm.type, note }
+      if (feedingForm.type === 'breast') {
+        data.duration_minutes = feedingForm.duration_minutes || 0
+        data.side = feedingForm.side
+      } else {
+        data.amount_ml = feedingForm.amount_ml || 0
+        if (feedingForm.type === 'formula') data.brand = feedingForm.brand
+      }
+      if (isEdit.value) {
+        await recordAPI.update(Number(route.params.id), 'feeding', { occurred_at: occurredAt, data, note })
+      } else {
+        await recordAPI.createFeeding(baby.id, { occurred_at: occurredAt, data })
+      }
     } else {
-      await recordAPI.createDiaper(baby.id, payload)
+      const data = { type: diaperForm.type, note }
+      if (isEdit.value) {
+        await recordAPI.update(Number(route.params.id), 'diaper', { occurred_at: occurredAt, data, note })
+      } else {
+        await recordAPI.createDiaper(baby.id, { occurred_at: occurredAt, data })
+      }
     }
-    app.showToast('记录成功 ✅', 'success')
+
+    window.dispatchEvent(new CustomEvent('record-created', { detail: null }))
+    app.showToast(isEdit.value ? '已保存' : '记录成功', 'success')
     router.back()
   } catch (e: any) {
-    error.value = e.response?.data?.error || '保存失败'
+    app.showToast(e.response?.data?.error || '保存失败', 'error')
   } finally {
-    loading.value = false
+    saving.value = false
   }
 }
-
-function confirmDelete() { showDelete.value = true }
 
 async function doDelete() {
+  if (!isEdit.value || deleting.value) return
+  deleting.value = true
   try {
-    const id = Number(route.params.id)
-    const typ = recordType.value
-    await recordAPI.delete(id, typ)
-    window.dispatchEvent(new CustomEvent('record-deleted', { detail: { id, type: typ } }))
-    app.showToast('✅ 已删除', 'success')
+    await recordAPI.delete(Number(route.params.id), recordType.value)
+    window.dispatchEvent(new CustomEvent('record-deleted', { detail: { id: Number(route.params.id), type: recordType.value } }))
+    app.showToast('已删除', 'success')
     router.back()
-  } catch {
-    app.showToast('删除失败', 'error')
+  } catch (e: any) {
+    app.showToast(e.response?.data?.error || '删除失败', 'error')
+    showDelete.value = false
+  } finally {
+    deleting.value = false
   }
 }
 
-onMounted(async () => {
-  resetFormDefaults()
-  if (!isEdit.value) {
-    form.occurred_at = nowDatetime()
-    if (recordType.value === 'feeding') {
-      await loadLatest()
-    }
-  } else {
-    await loadRecord()
-  }
-})
+onMounted(loadRecord)
 </script>

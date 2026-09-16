@@ -14,7 +14,6 @@
           <path :d="isActive(tab.to) ? tab.activeIcon : tab.icon" />
         </svg>
         <span class="text-xs mt-1 font-medium">{{ tab.label }}</span>
-        <span v-if="isActive(tab.to)" class="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-primary-deep rounded-full"></span>
       </router-link>
     </div>
   </nav>

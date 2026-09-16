@@ -24,13 +24,15 @@
 
     <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(5rem+env(safe-area-inset-bottom))] space-y-6"
       :refresh="() => loadTrend(true)">
-      <div v-if="loading" class="text-center py-16 text-text-secondary">加载中...</div>
+      <div v-if="loading" class="flex justify-center py-20">
+        <ActivityIndicator :size="28" class="text-text-secondary" />
+      </div>
       <div v-else-if="trendData.length === 0" class="text-center py-16">
-        <div class="text-5xl mb-4">📊</div>
+        <img src="/icon-192.png" alt="" class="w-16 h-16 mx-auto block mb-4" />
         <p class="text-text-secondary">暂无趋势数据</p>
       </div>
       <template v-else>
-        <div v-if="category === 'feeding'">
+        <div v-if="category === 'feeding'" class="bg-white rounded-2xl shadow-card p-4">
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
               <span class="flex items-center gap-2">
                 🍼 每日奶量
@@ -84,7 +86,7 @@
             </template>
           </svg>
         </div>
-        <div v-if="category === 'diaper'">
+        <div v-if="category === 'diaper'" class="bg-white rounded-2xl shadow-card p-4">
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
             <span class="flex items-center gap-2">
               🩲 每日尿布
@@ -119,7 +121,7 @@
             </template>
           </svg>
         </div>
-        <div v-if="category === 'sleep'">
+        <div v-if="category === 'sleep'" class="bg-white rounded-2xl shadow-card p-4">
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
             <span class="flex items-center gap-2">
               😴 每日睡眠
@@ -154,7 +156,7 @@
             </template>
           </svg>
         </div>
-        <div v-if="category === 'outdoor'">
+        <div v-if="category === 'outdoor'" class="bg-white rounded-2xl shadow-card p-4">
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
             <span class="flex items-center gap-2">
               🌳 每日户外活动
@@ -189,7 +191,7 @@
             </template>
           </svg>
         </div>
-        <div v-if="category === 'temperature'">
+        <div v-if="category === 'temperature'" class="bg-white rounded-2xl shadow-card p-4">
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
             <span class="flex items-center gap-2">
               🌡️ 每日最高体温
@@ -213,10 +215,10 @@
             </template>
           </svg>
         </div>
-        <div v-if="summary.cards.length" class="space-y-3">
+        <div v-if="summary.cards.length" class="bg-white rounded-2xl shadow-card p-4 space-y-3">
           <h4 class="text-sm font-semibold text-text-secondary">📊 期间概览</h4>
-          <div class="grid grid-cols-2 gap-3">
-            <div v-for="c in summary.cards" :key="c.label" class="bg-white rounded-2xl shadow-card p-4">
+          <div class="grid grid-cols-2 gap-2.5">
+            <div v-for="c in summary.cards" :key="c.label" class="bg-bg-main rounded-xl p-3">
               <div class="text-xs text-text-secondary">{{ c.label }}</div>
               <div class="text-xl font-bold font-num text-text-primary mt-1">{{ c.value }}</div>
               <div v-if="c.sub" class="text-xs text-text-secondary mt-0.5">{{ c.sub }}</div>
@@ -233,6 +235,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { babyAPI } from '@/api'
 import PullRefresh from '@/components/PullRefresh.vue'
+import ActivityIndicator from '@/components/ActivityIndicator.vue'
 
 const app = useAppStore()
 const trendData = ref<any[]>([])

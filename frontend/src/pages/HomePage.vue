@@ -36,7 +36,7 @@
       :refresh="loadData">
       <!-- 空状态：无宝宝 -->
       <div v-if="app.babies.length === 0" class="text-center py-16">
-        <div class="text-5xl mb-4">👶</div>
+        <img src="/icon-192.png" alt="" class="w-16 h-16 mx-auto block mb-4" />
         <p class="text-text-secondary mb-4">还没有添加宝宝</p>
         <router-link to="/baby/new"
           class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-deep text-white rounded-xl font-medium text-sm btn-press shadow-card">
@@ -50,7 +50,7 @@
         <!-- 统计卡片（可点击跳转） -->
         <div class="grid grid-cols-2 gap-3">
           <!-- 喂奶卡片 -->
-          <div @click="goToTimeline('feeding')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('feeding')" @click="goToTimeline('feeding')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
             <div class="text-xs text-text-secondary mb-1">今日喂奶</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-0.5">
@@ -67,17 +67,17 @@
             </div>
             <div v-if="feedingAvgInterval" class="mt-1 flex items-center justify-between">
               <span class="text-xs text-text-secondary">平均间隔</span>
-              <span class="text-xs font-medium text-text-secondary">{{ feedingAvgInterval }}</span>
+              <span class="text-xs font-medium text-text-secondary font-num">{{ feedingAvgInterval }}</span>
             </div>
             <!-- 新增喂奶入口 -->
             <button @click.stop="goToAddFeeding"
-              class="mt-3 w-full py-2 bg-primary/10 text-primary-deep text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+              class="mt-3 w-full min-h-[44px] py-2 bg-primary/10 text-primary-deep text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1">
               <span class="text-base">＋</span> 喂奶
             </button>
           </div>
 
           <!-- 尿布卡片 -->
-          <div @click="goToTimeline('diaper')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('diaper')" @click="goToTimeline('diaper')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
             <div class="text-xs text-text-secondary mb-1">今日尿布</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-1">
@@ -94,28 +94,27 @@
             </div>
             <div v-if="diaperAvgInterval" class="mt-1 flex items-center justify-between">
               <span class="text-xs text-text-secondary">平均间隔</span>
-              <span class="text-xs font-medium text-text-secondary">{{ diaperAvgInterval }}</span>
+              <span class="text-xs font-medium text-text-secondary font-num">{{ diaperAvgInterval }}</span>
             </div>
             <!-- 新增尿布入口 -->
             <button @click.stop="goToAddDiaper"
-              class="mt-3 w-full py-2 bg-diaper/10 text-diaper-deep text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+              class="mt-3 w-full min-h-[44px] py-2 bg-diaper/10 text-diaper-deep text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1">
               <span class="text-base">＋</span> 尿布
             </button>
           </div>
 
           <!-- 睡眠卡片 -->
-          <div @click="goToTimeline('sleep')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('sleep')" @click="goToTimeline('sleep')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
             <div class="text-xs text-text-secondary mb-1">今日睡眠</div>
             <div class="flex items-end justify-between">
-              <div v-if="currentSleep" class="flex items-baseline gap-1 min-w-0">
-                <span class="text-base font-bold text-sleep-deep truncate">已睡 {{ elapsedSleepCompact }}</span>
-              </div>
-              <div v-else class="flex items-baseline gap-0.5">
-                <template v-for="(part, pi) in sleepDurationParts" :key="pi">
-                  <span class="text-3xl font-bold font-num text-sleep">{{ part.val }}</span>
-                  <span v-if="part.unit" class="text-sm text-text-secondary">{{ part.unit }}</span>
-                </template>
-                
+              <div class="flex items-center gap-1 min-w-0">
+                <span v-if="currentSleep" class="w-1.5 h-1.5 rounded-full bg-sleep-deep animate-pulse shrink-0"></span>
+                <div class="flex items-baseline gap-px min-w-0">
+                  <template v-for="(part, pi) in sleepParts" :key="pi">
+                    <span class="text-3xl font-bold font-num text-sleep-deep leading-none">{{ part.val }}</span>
+                    <span class="text-[10px] font-semibold text-text-secondary">{{ part.unit }}</span>
+                  </template>
+                </div>
               </div>
               <div class="text-3xl">😴</div>
             </div>
@@ -125,26 +124,26 @@
             </div>
             <div v-if="sleepAvgDuration" class="mt-1 flex items-center justify-between">
               <span class="text-xs text-text-secondary">平均时长</span>
-              <span class="text-xs font-medium text-text-secondary">{{ sleepAvgDuration }}</span>
+              <span class="text-xs font-medium text-text-secondary font-num">{{ sleepAvgDuration }}</span>
             </div>
             <button v-if="currentSleep" @click.stop="stopSleep" :disabled="loadingAction === 'stop-sleep'"
-              class="mt-3 w-full py-2 bg-danger text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1 disabled:opacity-50">
+              class="mt-3 w-full min-h-[44px] py-2 bg-danger text-white text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1 disabled:opacity-50">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
               {{ loadingAction === 'stop-sleep' ? '处理中...' : '结束' }}
             </button>
             <button v-else @click.stop="startSleep" :disabled="loadingAction === 'start-sleep'"
-              class="mt-3 w-full py-2 bg-sleep/10 text-sleep-deep text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1 disabled:opacity-50">
+              class="mt-3 w-full min-h-[44px] py-2 bg-sleep/10 text-sleep-deep text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1 disabled:opacity-50">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
               {{ loadingAction === 'start-sleep' ? '处理中...' : '开始' }}
             </button>
           </div>
 
           <!-- 体温卡片 -->
-          <div @click="goToTimeline('temperature')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('temperature')" @click="goToTimeline('temperature')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
             <div class="text-xs text-text-secondary mb-1">今日体温</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-1">
-                <span v-if="stats.latest_temperature > 0" class="text-3xl font-bold font-num" :class="stats.latest_temperature >= 37.5 ? 'text-danger' : 'text-temperature'">{{ stats.latest_temperature }}</span>
+                <span v-if="stats.latest_temperature > 0" class="text-3xl font-bold font-num" :class="stats.latest_temperature >= 37.5 ? 'text-danger' : 'text-temperature-deep'">{{ stats.latest_temperature }}</span>
                 <span class="text-sm text-text-secondary">°C</span>
               </div>
               <div class="text-3xl">🌡️</div>
@@ -155,26 +154,26 @@
             </div>
             <div v-if="tempHighValue" class="mt-1 flex items-center justify-between">
               <span class="text-xs text-text-secondary">最高体温</span>
-              <span class="text-xs font-medium" :class="+tempHighValue >= 37.5 ? 'text-danger' : 'text-text-secondary'">{{ tempHighValue }}°C</span>
+              <span class="text-xs font-medium font-num" :class="+tempHighValue >= 37.5 ? 'text-danger' : 'text-text-secondary'">{{ tempHighValue }}°C</span>
             </div>
             <button @click.stop="goToAddTemperature"
-              class="mt-3 w-full py-2 bg-temperature/10 text-temperature-deep text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+              class="mt-3 w-full min-h-[44px] py-2 bg-temperature/10 text-temperature-deep text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1">
               <span class="text-base">＋</span> 测温
             </button>
           </div>
 
           <!-- 户外活动卡片 -->
-          <div @click="goToTimeline('outdoor')" class="col-span-2 bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('outdoor')" @click="goToTimeline('outdoor')" class="col-span-2 bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
             <div class="text-xs text-text-secondary mb-1">今日户外活动</div>
             <div class="flex items-end justify-between">
-              <div v-if="currentOutdoor" class="flex items-baseline gap-1 min-w-0">
-                <span class="text-base font-bold text-outdoor-deep truncate">已活动 {{ elapsedOutdoorCompact }}</span>
-              </div>
-              <div v-else class="flex items-baseline gap-0.5">
-                <template v-for="(part, pi) in outdoorDurationParts" :key="pi">
-                  <span class="text-3xl font-bold font-num text-outdoor-deep">{{ part.val }}</span>
-                  <span v-if="part.unit" class="text-sm text-text-secondary">{{ part.unit }}</span>
-                </template>
+              <div class="flex items-center gap-1 min-w-0">
+                <span v-if="currentOutdoor" class="w-1.5 h-1.5 rounded-full bg-outdoor-deep animate-pulse shrink-0"></span>
+                <div class="flex items-baseline gap-px min-w-0">
+                  <template v-for="(part, pi) in outdoorParts" :key="pi">
+                    <span class="text-3xl font-bold font-num text-outdoor-deep leading-none">{{ part.val }}</span>
+                    <span class="text-[10px] font-semibold text-text-secondary">{{ part.unit }}</span>
+                  </template>
+                </div>
               </div>
               <div class="text-3xl">🌳</div>
             </div>
@@ -184,15 +183,15 @@
             </div>
             <div v-if="avgOutdoorDuration > 0" class="mt-1 flex items-center justify-between">
               <span class="text-xs text-text-secondary">平均时长</span>
-              <span class="text-xs font-medium text-text-secondary">{{ formatAvgOutdoor }}</span>
+              <span class="text-xs font-medium text-text-secondary font-num">{{ formatAvgOutdoor }}</span>
             </div>
             <button v-if="currentOutdoor" @click.stop="stopOutdoor" :disabled="loadingAction === 'stop-outdoor'"
-              class="mt-3 w-full py-2 bg-danger text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1 disabled:opacity-50">
+              class="mt-3 w-full min-h-[44px] py-2 bg-danger text-white text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1 disabled:opacity-50">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
               {{ loadingAction === 'stop-outdoor' ? '处理中...' : '结束' }}
             </button>
             <button v-else @click.stop="startOutdoor" :disabled="loadingAction === 'start-outdoor'"
-              class="mt-3 w-full py-2 bg-outdoor/10 text-outdoor-deep text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1 disabled:opacity-50">
+              class="mt-3 w-full min-h-[44px] py-2 bg-outdoor/10 text-outdoor-deep text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1 disabled:opacity-50">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
               {{ loadingAction === 'start-outdoor' ? '处理中...' : '开始' }}
             </button>
@@ -201,7 +200,7 @@
 
         <!-- 最近记录 -->
         <div class="space-y-2">
-          <h2 class="text-sm font-semibold text-text-secondary uppercase tracking-wide">最近记录</h2>
+          <h2 class="text-sm font-semibold text-text-secondary">最近记录</h2>
           <div v-if="displayRecords.length === 0" class="bg-white rounded-2xl p-6 text-center shadow-card">
             <img src="/icon-192.png" alt="" class="w-12 h-12 mx-auto block mb-2" />
             <p class="text-text-secondary text-sm">还没有记录</p>
@@ -210,26 +209,20 @@
             :style="{ animationDelay: `${i * 60}ms` }" class="card-in"
             @edit="editRecord(r)" @delete="deleteRecord(r)" />
 
-          <!-- 加载更多 -->
+          <!-- 展开全部记录（iOS 朴素文字行） -->
           <button v-if="!showAllRecords && allRecords.length > displayRecords.length"
             @click="showAllRecords = true"
-            class="w-full py-3 bg-white text-primary-deep text-sm font-medium rounded-xl shadow-card btn-press mt-2">
-            加载更多 ({{ allRecords.length - displayRecords.length }})
+            class="w-full py-3 text-primary-deep text-sm font-medium btn-press mt-1">
+            展开全部记录（{{ allRecords.length - displayRecords.length }}）
           </button>
         </div>
       </template>
     </PullRefresh>
 
-    <!-- 删除确认弹窗 -->
-    <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black/30 flex items-end z-50" @click.self="showDeleteConfirm = false">
-      <div class="bg-white w-full rounded-t-2xl p-6 space-y-4 pb-safe animate-slide-up">
-        <p class="text-text-secondary text-sm text-center">确定要删除这条记录吗？</p>
-        <div class="flex gap-3">
-          <button @click="showDeleteConfirm = false" class="flex-1 py-3 bg-muted text-text-primary rounded-xl font-medium btn-press">取消</button>
-          <button @click="confirmDelete" :disabled="deleting" class="flex-1 py-3 bg-danger text-white rounded-xl font-medium btn-press disabled:opacity-50">确认删除</button>
-        </div>
-      </div>
-    </div>
+    <!-- 删除确认（iOS 底部操作表） -->
+    <ConfirmSheet :open="showDeleteConfirm" :loading="deleting"
+      message="确定要删除这条记录吗？删除后无法恢复。"
+      @confirm="confirmDelete" @cancel="showDeleteConfirm = false" />
   </div>
 </template>
 
@@ -242,7 +235,8 @@ import { babyAPI, recordAPI } from '@/api'
 import type { BabyStats, SleepRecord, OutdoorRecord } from '@/api'
 import RecordCard from '@/components/RecordCard.vue'
 import PullRefresh from '@/components/PullRefresh.vue'
-import { durationParts, formatDurationCompact } from '@/utils'
+import ConfirmSheet from '@/components/ConfirmSheet.vue'
+import { durationCompactParts, formatDurationCompact, WEEKDAY_SHORT } from '@/utils'
 
 const tick = ref(0)
 let tickTimer: number | null = null
@@ -302,10 +296,9 @@ const ageText = computed(() => {
   return `${days}天`
 })
 
-const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 const todayDateText = computed(() => {
   const d = new Date()
-  return `${d.getMonth() + 1}月${d.getDate()}日 ${weekDays[d.getDay()]}`
+  return `${d.getMonth() + 1}月${d.getDate()}日 ${WEEKDAY_SHORT[d.getDay()]}`
 })
 
 function getTimeAgo(isoString: string | null) {
@@ -319,7 +312,7 @@ function getTimeAgo(isoString: string | null) {
   const diffDays = Math.floor(diffHours / 24)
   let text = ''
   if (diffDays > 0) text = `${diffDays}天${diffHours % 24}小时前`
-  else if (diffHours > 0) text = `${diffHours}小时${diffMins % 60}分钟前`
+  else if (diffHours > 0) text = `${diffHours}小时${diffMins % 60}分前`
   else if (diffMins > 0) text = `${diffMins}分钟前`
   else text = '刚刚'
   return { text, isLong: diffHours >= 4, minutes: diffMins }
@@ -337,21 +330,14 @@ function avgIntervalMinutes(records: any[], type: string): number | null {
   return Math.round(sum / (times.length - 1))
 }
 
-function formatInterval(mins: number) {
-  if (mins < 60) return `${mins}分钟`
-  const h = Math.floor(mins / 60)
-  const m = mins % 60
-  return m > 0 ? `${h}小时${m}分` : `${h}小时`
-}
-
 const feedingAvgInterval = computed(() => {
   const m = avgIntervalMinutes(allRecords.value, 'feeding')
-  return m == null ? null : formatInterval(m)
+  return m == null ? null : formatDurationCompact(m)
 })
 
 const diaperAvgInterval = computed(() => {
   const m = avgIntervalMinutes(allRecords.value, 'diaper')
-  return m == null ? null : formatInterval(m)
+  return m == null ? null : formatDurationCompact(m)
 })
 
 const sleepAvgDuration = computed(() => {
@@ -365,7 +351,7 @@ const sleepAvgDuration = computed(() => {
     .sort((a, b) => b.occurred - a.occurred)
     .slice(0, 10)
   if (!recs.length) return null
-  return formatInterval(Math.round(recs.reduce((sum, x) => sum + x.t, 0) / recs.length))
+  return formatDurationCompact(Math.round(recs.reduce((sum, x) => sum + x.t, 0) / recs.length))
 })
 
 const tempHighValue = computed(() => {
@@ -384,34 +370,24 @@ const lastSleepAgo = computed(() => { tick.value; return getTimeAgo(stats.value.
 const lastTempAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_temperature) })
 const lastOutdoorAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_outdoor_end) })
 
-const elapsedSleepCompact = computed(() => {
+// 进行中已持续分钟数
+function elapsedMins(startedAt?: string) {
   tick.value
-  if (!currentSleep.value?.started_at) return ''
-  const start = new Date(currentSleep.value.started_at)
-  const mins = Math.round((Date.now() - start.getTime()) / 60000)
-  return formatDurationCompact(mins)
-})
+  if (!startedAt) return 0
+  return Math.round((Date.now() - new Date(startedAt).getTime()) / 60000)
+}
 
-const sleepDurationParts = computed(() => durationParts(stats.value.sleep_duration))
-
-const elapsedOutdoorCompact = computed(() => {
-  tick.value
-  if (!currentOutdoor.value?.started_at) return ''
-  const start = new Date(currentOutdoor.value.started_at)
-  const mins = Math.round((Date.now() - start.getTime()) / 60000)
-  return formatDurationCompact(mins)
-})
-
-const outdoorDurationParts = computed(() => durationParts(stats.value.outdoor_duration))
+// 睡眠 / 户外主数值：进行中取实时时长，否则取今日总计（统一紧凑 h/m 大数字）
+const sleepParts = computed(() =>
+  durationCompactParts(currentSleep.value ? elapsedMins(currentSleep.value.started_at) : stats.value.sleep_duration))
+const outdoorParts = computed(() =>
+  durationCompactParts(currentOutdoor.value ? elapsedMins(currentOutdoor.value.started_at) : stats.value.outdoor_duration))
 
 const avgOutdoorDuration = computed(() => stats.value.outdoor_count > 0
   ? Math.round(stats.value.outdoor_duration / stats.value.outdoor_count)
   : 0)
 
-const formatAvgOutdoor = computed(() => {
-  const parts = durationParts(avgOutdoorDuration.value)
-  return parts.map(p => p.val + (p.unit || '')).join(' ')
-})
+const formatAvgOutdoor = computed(() => formatDurationCompact(avgOutdoorDuration.value))
 
 async function loadData() {
   if (app.babies.length === 0) {
@@ -471,7 +447,7 @@ async function startSleep() {
     const res = await recordAPI.createSleepStart(baby.id, { started_at: now })
     currentSleep.value = res.data
     window.dispatchEvent(new CustomEvent('record-created', { detail: res.data }))
-    app.showToast('😴 开始睡觉', 'success')
+    app.showToast('开始睡觉', 'success')
   } catch (e: any) {
     console.error('开始睡眠失败:', e?.response?.data || e)
     app.showToast(e?.response?.data?.error || '开始睡眠失败', 'error')
@@ -489,7 +465,7 @@ async function stopSleep() {
     await recordAPI.stopSleep(baby.id, currentSleep.value.id, { ended_at: now })
     currentSleep.value = null
     await loadData()
-    app.showToast('✅ 睡眠已结束', 'success')
+    app.showToast('睡眠已结束', 'success')
   } catch (e: any) {
     console.error('结束睡眠失败:', e?.response?.data || e)
     app.showToast(e?.response?.data?.error || '结束睡眠失败', 'error')
@@ -507,7 +483,7 @@ async function startOutdoor() {
     const res = await recordAPI.createOutdoorStart(baby.id, { started_at: now })
     currentOutdoor.value = res.data
     window.dispatchEvent(new CustomEvent('record-created', { detail: res.data }))
-    app.showToast('🌳 开始户外活动', 'success')
+    app.showToast('开始户外活动', 'success')
   } catch (e: any) {
     console.error('开始户外活动失败:', e?.response?.data || e)
     app.showToast(e?.response?.data?.error || '开始户外活动失败', 'error')
@@ -525,7 +501,7 @@ async function stopOutdoor() {
     await recordAPI.stopOutdoor(baby.id, currentOutdoor.value.id, { ended_at: now })
     currentOutdoor.value = null
     await loadData()
-    app.showToast('✅ 户外活动已结束', 'success')
+    app.showToast('户外活动已结束', 'success')
   } catch (e: any) {
     console.error('结束户外活动失败:', e?.response?.data || e)
     app.showToast(e?.response?.data?.error || '结束户外活动失败', 'error')
@@ -558,7 +534,7 @@ async function confirmDelete() {
     const { id, record_type: typ } = recordToDelete.value
     await recordAPI.delete(id, typ)
     window.dispatchEvent(new CustomEvent('record-deleted', { detail: { id, type: typ } }))
-    app.showToast('✅ 已删除', 'success')
+    app.showToast('已删除', 'success')
     showDeleteConfirm.value = false
   } catch (e: any) {
     app.showToast(e.response?.data?.error || '删除失败', 'error')

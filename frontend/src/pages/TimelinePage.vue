@@ -15,14 +15,16 @@
 
     <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(5rem+env(safe-area-inset-bottom))]"
       :refresh="() => loadRecords(true, true)">
-      <div v-if="loading" class="text-center py-16 text-text-secondary">加载中...</div>
+      <div v-if="loading" class="flex justify-center py-20">
+        <ActivityIndicator :size="28" class="text-text-secondary" />
+      </div>
       <div v-else-if="groupedRecords.length === 0" class="text-center py-16">
         <img src="/icon-192.png" alt="" class="w-14 h-14 mx-auto block mb-4" />
         <p class="text-text-secondary">暂无记录</p>
       </div>
       <div v-else class="space-y-6">
         <div v-for="group in groupedRecords" :key="group.label">
-          <h3 class="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-3 sticky top-0 bg-bg-main py-1">
+          <h3 class="text-xs font-semibold text-text-secondary mb-3 sticky top-0 bg-bg-main py-1">
             {{ group.label }}
           </h3>
           <div class="space-y-2">
@@ -32,24 +34,17 @@
           </div>
         </div>
 
-        <!-- 加载更多 -->
-        <button v-if="hasMore" @click="loadMore"
-          class="w-full py-3 bg-white text-primary text-sm font-medium rounded-xl shadow-card btn-press">
-          {{ loadingMore ? '加载中...' : `加载更多 (近 ${days}天)` }}
-        </button>
+        <!-- 滚动到底自动加载 -->
+        <div ref="sentinelEl" class="h-16 flex items-center justify-center">
+          <ActivityIndicator v-if="loadingMore" :size="24" class="text-text-secondary" />
+          <span v-else-if="!hasMore" class="text-xs text-text-secondary">没有更多了</span>
+        </div>
       </div>
     </PullRefresh>
 
-    <!-- 删除确认弹窗 -->
-    <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black/30 flex items-end z-50" @click.self="showDeleteConfirm = false">
-      <div class="bg-white w-full rounded-t-2xl p-6 space-y-4 pb-safe animate-slide-up">
-        <p class="text-text-secondary text-sm text-center">确定要删除这条记录吗？</p>
-        <div class="flex gap-3">
-          <button @click="showDeleteConfirm = false" class="flex-1 py-3 bg-muted text-text-primary rounded-xl font-medium btn-press">取消</button>
-          <button @click="confirmDelete" class="flex-1 py-3 bg-danger text-white rounded-xl font-medium btn-press">确认删除</button>
-        </div>
-      </div>
-    </div>
+    <!-- 删除确认（iOS 底部操作表） -->
+    <ConfirmSheet :open="showDeleteConfirm" message="确定要删除这条记录吗？删除后无法恢复。"
+      @confirm="confirmDelete" @cancel="showDeleteConfirm = false" />
   </div>
 </template>
 
@@ -60,6 +55,9 @@ import { useAppStore } from '@/stores/app'
 import { recordAPI } from '@/api'
 import RecordCard from '@/components/RecordCard.vue'
 import PullRefresh from '@/components/PullRefresh.vue'
+import ConfirmSheet from '@/components/ConfirmSheet.vue'
+import ActivityIndicator from '@/components/ActivityIndicator.vue'
+import { WEEKDAY_LONG } from '@/utils'
 
 const app = useAppStore()
 const router = useRouter()
@@ -73,6 +71,8 @@ const recordToDelete = ref<any>(null)
 const days = ref(7)
 const totalCount = ref(0)
 const loadedCount = ref(0)
+const sentinelEl = ref<HTMLElement | null>(null)
+let io: IntersectionObserver | null = null
 
 const filters = [
   { label: '全部', value: '' },
@@ -89,8 +89,6 @@ watch(() => route.query.filter, (newFilter) => {
     activeFilter.value = newFilter as string
   }
 }, { immediate: true })
-
-const weekDays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
 
 const groupedRecords = computed(() => {
   const filtered = activeFilter.value ? records.value.filter(r => r.record_type === activeFilter.value) : records.value
@@ -112,7 +110,7 @@ const groupedRecords = computed(() => {
     else if (date === yesterday) label = '昨天'
     else {
       const d = new Date(date)
-      label = `${d.getMonth() + 1}月${d.getDate()}日 ${weekDays[d.getDay()]}`
+      label = `${d.getMonth() + 1}月${d.getDate()}日 ${WEEKDAY_LONG[d.getDay()]}`
     }
     groups.push({ label, records: recs })
   }
@@ -144,6 +142,7 @@ async function loadRecords(reset: boolean = true, silent: boolean = false) {
 }
 
 function loadMore() {
+  if (loadingMore.value || !hasMore.value || loading.value) return
   days.value += 7
   loadRecords(false)
 }
@@ -171,7 +170,7 @@ async function confirmDelete() {
     const { id, record_type: typ } = recordToDelete.value
     await recordAPI.delete(id, typ)
     window.dispatchEvent(new CustomEvent('record-deleted', { detail: { id, type: typ } }))
-    app.showToast('✅ 已删除', 'success')
+    app.showToast('已删除', 'success')
     showDeleteConfirm.value = false
   } catch {
     app.showToast('删除失败', 'error')
@@ -189,6 +188,19 @@ function onRecordDeleted(e: Event) {
   records.value = records.value.filter(r => !(r.id === id && r.record_type === (type || r.record_type)))
 }
 
-onMounted(() => { loadRecords(); window.addEventListener('record-created', onRecordCreated); window.addEventListener('record-deleted', onRecordDeleted) })
-onUnmounted(() => { window.removeEventListener('record-created', onRecordCreated); window.removeEventListener('record-deleted', onRecordDeleted) })
+onMounted(() => {
+  loadRecords()
+  window.addEventListener('record-created', onRecordCreated)
+  window.addEventListener('record-deleted', onRecordDeleted)
+  // 哨兵进入视口（提前 300px）即自动加载更多
+  io = new IntersectionObserver((entries) => {
+    if (entries[0]?.isIntersecting) loadMore()
+  }, { rootMargin: '300px' })
+  if (sentinelEl.value) io.observe(sentinelEl.value)
+})
+onUnmounted(() => {
+  window.removeEventListener('record-created', onRecordCreated)
+  window.removeEventListener('record-deleted', onRecordDeleted)
+  io?.disconnect()
+})
 </script>

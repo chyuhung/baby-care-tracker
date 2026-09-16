@@ -10,7 +10,6 @@ export default {
         // 主题色（由 CSS 变量驱动，按宝宝性别切换；清透 iOS 风）
         primary: 'rgb(var(--primary) / <alpha-value>)',
         'primary-deep': 'rgb(var(--primary-deep) / <alpha-value>)',
-        'primary-light': 'rgb(var(--primary-light) / <alpha-value>)',
         diaper: 'rgb(var(--diaper) / <alpha-value>)',
         'diaper-deep': 'rgb(var(--diaper-deep) / <alpha-value>)',
         temperature: 'rgb(var(--temperature) / <alpha-value>)',
@@ -33,17 +32,14 @@ export default {
       },
       fontFamily: {
         sans: ['-apple-system', 'BlinkMacSystemFont', '"PingFang SC"', '"Hiragino Sans GB"', '"Microsoft YaHei"', 'sans-serif'],
-        mono: ['"DIN Alternate"', '"Roboto Mono"', 'monospace'],
       },
       borderRadius: {
         'xl': '16px',
         '2xl': '20px',
-        '3xl': '28px',
       },
       boxShadow: {
         'card': '0 2px 12px rgba(24, 34, 58, 0.05)',
         'card-hover': '0 8px 22px rgba(24, 34, 58, 0.09)',
-        'float': '0 10px 30px rgba(24, 34, 58, 0.13)',
       },
     },
   },
