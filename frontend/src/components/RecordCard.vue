@@ -7,9 +7,9 @@
         <span class="text-xs text-text-secondary font-num">{{ timeAgo }}</span>
       </div>
       <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
-        <span v-if="f.type !== 'breast' && f.amount_ml > 0" class="bg-primary/10 text-primary px-2 py-0.5 rounded-full font-num">{{ f.amount_ml }}ml</span>
-        <span v-if="f.type === 'breast' && f.duration_minutes > 0" class="bg-primary/10 text-primary px-2 py-0.5 rounded-full">{{ f.duration_minutes }}分钟</span>
-        <span v-if="f.type === 'breast' && f.side" class="bg-primary/10 text-primary px-2 py-0.5 rounded-full">{{ sideLabel }}</span>
+        <span v-if="f.type !== 'breast' && f.amount_ml > 0" class="bg-primary/10 text-primary-deep px-2 py-0.5 rounded-full font-num">{{ f.amount_ml }}ml</span>
+        <span v-if="f.type === 'breast' && f.duration_minutes > 0" class="bg-primary/10 text-primary-deep px-2 py-0.5 rounded-full">{{ f.duration_minutes }}分钟</span>
+        <span v-if="f.type === 'breast' && f.side" class="bg-primary/10 text-primary-deep px-2 py-0.5 rounded-full">{{ sideLabel }}</span>
         <span v-if="f.brand" class="bg-muted text-text-secondary px-2 py-0.5 rounded-full">{{ f.brand }}</span>
       </div>
       <div v-if="f.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ f.note }}</div>
@@ -41,7 +41,7 @@
         <span class="text-xs text-text-secondary font-num">{{ sleepTimeLabel }}</span>
       </div>
       <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
-        <span class="bg-sleep/10 text-sleep px-2 py-0.5 rounded-full">{{ sleepDurationLabel }}</span>
+        <span class="bg-sleep/10 text-sleep-deep px-2 py-0.5 rounded-full">{{ sleepDurationLabel }}</span>
       </div>
       <div v-if="s.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ s.note }}</div>
     </div>
@@ -58,7 +58,7 @@
         <span class="text-xs text-text-secondary font-num">{{ timeAgo }}</span>
       </div>
       <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
-        <span v-if="t.temperature" class="bg-temperature/10 text-temperature px-2 py-0.5 rounded-full font-num">{{ t.temperature }}°C</span>
+        <span v-if="t.temperature" class="bg-temperature/10 text-temperature-deep px-2 py-0.5 rounded-full font-num">{{ t.temperature }}°C</span>
         <span v-if="t.location" class="bg-muted text-text-secondary px-2 py-0.5 rounded-full">{{ t.location }}</span>
         <span v-if="t.temperature >= 37.5" class="text-danger px-1">🔥</span>
       </div>
@@ -77,7 +77,7 @@
         <span class="text-xs text-text-secondary font-num">{{ outdoorTimeLabel }}</span>
       </div>
       <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
-        <span class="bg-outdoor/10 text-outdoor px-2 py-0.5 rounded-full">{{ outdoorDurationLabel }}</span>
+        <span class="bg-outdoor/10 text-outdoor-deep px-2 py-0.5 rounded-full">{{ outdoorDurationLabel }}</span>
       </div>
       <div v-if="o.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ o.note }}</div>
     </div>

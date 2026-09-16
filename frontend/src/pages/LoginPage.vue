@@ -26,12 +26,12 @@
       </div>
 
       <button @click="submit" :disabled="loading"
-        class="btn-press w-full py-3 bg-primary text-white font-semibold rounded-xl shadow-card hover:shadow-card-hover transition-all disabled:opacity-50">
+        class="btn-press w-full py-3 bg-primary-deep text-white font-semibold rounded-xl shadow-card hover:shadow-card-hover transition-all disabled:opacity-50">
         {{ loading ? '处理中...' : (isRegister ? '注册' : '登录') }}
       </button>
 
       <div class="text-center">
-        <button @click="isRegister = !isRegister; error = ''" class="text-primary text-sm hover:underline">
+        <button @click="isRegister = !isRegister; error = ''" class="text-primary-deep text-sm hover:underline">
           {{ isRegister ? '已有账号？登录' : '没有账号？注册' }}
         </button>
       </div>

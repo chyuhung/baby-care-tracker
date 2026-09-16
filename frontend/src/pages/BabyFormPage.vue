@@ -38,7 +38,7 @@
           <button v-for="g in genders" :key="g.value"
             @click="selectGender(g.value)"
             :class="['flex-1 py-3 rounded-xl font-medium text-sm transition-colors btn-press border',
-              form.gender === g.value ? 'bg-primary text-white border-primary shadow-card' : 'bg-white border-border-color text-text-secondary']">
+              form.gender === g.value ? 'bg-primary-deep text-white border-primary shadow-card' : 'bg-white border-border-color text-text-secondary']">
             {{ g.emoji }} {{ g.label }}
           </button>
         </div>
@@ -48,7 +48,7 @@
 
       <div class="space-y-3 pt-2">
         <button @click="submit" :disabled="loading"
-          class="btn-press w-full py-3 bg-primary text-white font-semibold rounded-xl shadow-card disabled:opacity-50">
+          class="btn-press w-full py-3 bg-primary-deep text-white font-semibold rounded-xl shadow-card disabled:opacity-50">
           {{ loading ? '保存中...' : '保存' }}
         </button>
         <button v-if="isEdit" @click="confirmDelete"

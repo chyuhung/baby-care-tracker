@@ -7,7 +7,7 @@
         <button v-for="f in filters" :key="f.value"
           @click="activeFilter = f.value"
           :class="['px-3 py-2 min-h-[44px] flex items-center justify-center rounded-full text-xs font-medium transition-colors btn-press whitespace-nowrap',
-            activeFilter === f.value ? 'bg-primary text-white' : 'bg-muted text-text-secondary']">
+            activeFilter === f.value ? 'bg-primary-deep text-white' : 'bg-muted text-text-secondary']">
           {{ f.label }}
         </button>
       </div>

@@ -17,7 +17,7 @@
             <button v-for="t in feedingTypes" :key="t.value"
               @click="form.type = t.value"
               :class="['py-3 rounded-xl text-sm font-medium transition-colors btn-press flex flex-col items-center gap-1',
-                form.type === t.value ? 'bg-primary text-white' : 'bg-white border border-border-color text-text-secondary']">
+                form.type === t.value ? 'bg-primary-deep text-white' : 'bg-white border border-border-color text-text-secondary']">
               <span>{{ t.emoji }}</span>
               {{ t.label }}
             </button>
@@ -45,7 +45,7 @@
                 <button v-for="s in sides" :key="s.value"
                   @click="form.side = s.value"
                   :class="['flex-1 py-3 rounded-xl text-xs font-medium transition-colors btn-press',
-                    form.side === s.value ? 'bg-primary text-white' : 'bg-white border border-border-color text-text-secondary']">
+                    form.side === s.value ? 'bg-primary-deep text-white' : 'bg-white border border-border-color text-text-secondary']">
                   {{ s.label }}
                 </button>
               </div>
@@ -96,7 +96,7 @@
             <button v-for="t in diaperTypes" :key="t.value"
               @click="form.type = t.value"
               :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press flex flex-col items-center gap-2',
-                form.type === t.value ? 'bg-primary text-white' : 'bg-white border border-border-color text-text-secondary']">
+                form.type === t.value ? 'bg-primary-deep text-white' : 'bg-white border border-border-color text-text-secondary']">
               <span class="text-2xl">{{ t.emoji }}</span>
               {{ t.label }}
             </button>
@@ -113,7 +113,7 @@
       <div v-if="error" class="bg-danger-light text-danger text-sm px-4 py-2 rounded-xl text-center">{{ error }}</div>
 
       <button @click="submit" :disabled="loading"
-        class="btn-press w-full py-3 bg-primary text-white font-semibold rounded-xl shadow-card disabled:opacity-50">
+        class="btn-press w-full py-3 bg-primary-deep text-white font-semibold rounded-xl shadow-card disabled:opacity-50">
         {{ loading ? '保存中...' : (isEdit ? '更新记录' : '记录') }}
       </button>
 

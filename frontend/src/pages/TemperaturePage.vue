@@ -18,7 +18,7 @@
           <label class="text-sm text-text-secondary block mb-2">测量位置</label>
           <div class="grid grid-cols-3 gap-3">
             <button v-for="loc in locations" :key="loc" @click="editForm.location = loc"
-              :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press', editForm.location === loc ? 'bg-primary text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
+              :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press', editForm.location === loc ? 'bg-primary-deep text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
           </div>
         </div>
         <div>
@@ -29,7 +29,7 @@
           <label class="text-sm text-text-secondary block mb-2">备注</label>
           <textarea v-model="editForm.note" rows="2" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary resize-none focus:border-primary focus:outline-none transition-colors" />
         </div>
-        <button @click="saveEdit" :disabled="loading" class="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">{{ loading ? '保存中...' : '更新记录' }}</button>
+        <button @click="saveEdit" :disabled="loading" class="w-full py-3 bg-primary-deep text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">{{ loading ? '保存中...' : '更新记录' }}</button>
         <button @click="deleteRecord" class="w-full py-3 bg-white text-danger font-medium rounded-xl border border-danger/25 btn-press">删除此记录</button>
       </template>
 
@@ -60,7 +60,7 @@
           <label class="text-sm text-text-secondary block mb-3">测量位置</label>
           <div class="grid grid-cols-3 gap-3">
             <button v-for="loc in locations" :key="loc" @click="form.location = loc"
-              :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press', form.location === loc ? 'bg-primary text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
+              :class="['py-4 rounded-xl text-sm font-medium transition-colors btn-press', form.location === loc ? 'bg-primary-deep text-white' : 'bg-white border border-border-color text-text-secondary']">{{ loc }}</button>
           </div>
         </div>
         <div>
@@ -68,7 +68,7 @@
           <textarea v-model="form.note" rows="2" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors resize-none"></textarea>
         </div>
         <button @click="submitTemperature" :disabled="!form.temperature || loading"
-          class="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">
+          class="w-full py-3 bg-primary-deep text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">
           {{ loading ? '保存中...' : '记录' }}
         </button>
       </template>

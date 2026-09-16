@@ -3,7 +3,7 @@
     <div class="flex items-center justify-around h-16">
       <router-link v-for="tab in tabs" :key="tab.to" :to="tab.to"
         :class="['flex flex-col items-center justify-center w-16 h-full transition-colors relative',
-          isActive(tab.to) ? 'text-primary' : 'text-text-secondary']">
+          isActive(tab.to) ? 'text-primary-deep' : 'text-text-secondary']">
         <svg class="w-6 h-6 transition-transform duration-[350ms] ease-[cubic-bezier(0.34,1.56,0.64,1)]"
              :class="isActive(tab.to) ? 'scale-110' : 'scale-100'"
              :fill="isActive(tab.to) ? 'currentColor' : 'none'"
@@ -14,7 +14,7 @@
           <path :d="isActive(tab.to) ? tab.activeIcon : tab.icon" />
         </svg>
         <span class="text-xs mt-1 font-medium">{{ tab.label }}</span>
-        <span v-if="isActive(tab.to)" class="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-primary rounded-full"></span>
+        <span v-if="isActive(tab.to)" class="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-primary-deep rounded-full"></span>
       </router-link>
     </div>
   </nav>

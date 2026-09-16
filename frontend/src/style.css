@@ -12,7 +12,17 @@
 :root,
 [data-theme='neutral'] {
   --primary: 214 126 116;        /* #D67E74 灰调珊瑚粉 */
+  --primary-deep: 184 90 72;      /* #B85A48 殷红珊瑚（白字4.56:1） */
   --primary-light: 247 230 226;    /* #F7E6E2 暖粉灰 */
+  /* 语义深档（白字 ≥4.5:1，三主题共用） */
+  --sleep-deep: 47 128 122;
+  --temperature-deep: 73 128 82;
+  --outdoor-deep: 84 128 40;
+  --diaper-deep: 201 78 51;
+  --success-deep: 53 130 95;
+  --warning-deep: 176 84 33;
+  --danger-deep: 200 68 56;
+  --text-secondary: 118 107 102;   /* #766B66 次要文字 */
   --diaper: 230 118 79;          /* #E6764F 暖珊瑚，三主题通用强调 */
   --temperature: 101 159 115;     /* #659F73 绿色，清爽感 */
   --sleep: 72 163 155;           /* #48A39B 青绿，睡眠休息感 */
@@ -28,6 +38,7 @@
 
 [data-theme='female'] {
   --primary: 208 124 148;        /* #D07C94 干枯玫瑰粉 */
+  --primary-deep: 178 85 116;    /* #B25574 深玫瑰（4.73:1） */
   --primary-light: 247 231 236;    /* #F7E7EC 玫瑰粉白 */
   --diaper: 230 118 79;          /* #E6764F */
   --temperature: 101 159 115;     /* #659F73 */
@@ -44,6 +55,7 @@
 
 [data-theme='male'] {
   --primary: 104 146 178;        /* #6892B2 静谧雾霾蓝 */
+  --primary-deep: 85 120 155;    /* #55789B 雾蓝加深（4.63:1） */
   --primary-light: 233 240 245;    /* #E9F0F5 灰蓝白 */
   --diaper: 230 118 79;          /* #E6764F */
   --temperature: 101 159 115;     /* #659F73 */
@@ -203,3 +215,8 @@ input, select, textarea {
 .chart-grid { stroke: #ECE4E0; stroke-width: 0.8; stroke-dasharray: 4,3; }
 .chart-guide { stroke: #DFD3CD; stroke-width: 0.8; stroke-dasharray: 3,3; }
 .chart-line-temperature { stroke: var(--chart-temperature); }
+
+/* 趋势图 SVG 文字颜色（变量驱动，替代硬编码 fill） */
+.chart-axis-label  { fill: rgb(var(--text-secondary)); }
+.chart-title-label { fill: rgb(var(--text-secondary)); }
+.chart-value-label { fill: rgb(var(--text-secondary)); }

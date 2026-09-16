@@ -9,17 +9,20 @@ export default {
       colors: {
         // 主题色（由 CSS 变量驱动，按宝宝性别切换）
         primary: 'rgb(var(--primary) / <alpha-value>)',
+        'primary-deep': 'rgb(var(--primary-deep) / <alpha-value>)',
         'primary-light': 'rgb(var(--primary-light) / <alpha-value>)',
         diaper: 'rgb(var(--diaper) / <alpha-value>)',
+        'diaper-deep': 'rgb(var(--diaper-deep) / <alpha-value>)',
         temperature: 'rgb(var(--temperature) / <alpha-value>)',
+        'temperature-deep': 'rgb(var(--temperature-deep) / <alpha-value>)',
         sleep: 'rgb(var(--sleep) / <alpha-value>)',
+        'sleep-deep': 'rgb(var(--sleep-deep) / <alpha-value>)',
         outdoor: 'rgb(var(--outdoor) / <alpha-value>)',
-        // 固定辅助色
-        secondary: '#E7B7C2',
-        success: '#43A585',
-        // 暖调语义色（与高级主题统一，保证对比度）
-        warning: '#D27836',
-        danger: '#D5574B',
+        'outdoor-deep': 'rgb(var(--outdoor-deep) / <alpha-value>)',
+        // 暖调语义色（深档由 CSS 变量驱动，白字 ≥4.5:1）
+        success: 'rgb(var(--success-deep) / <alpha-value>)',
+        warning: 'rgb(var(--warning-deep) / <alpha-value>)',
+        danger: 'rgb(var(--danger-deep) / <alpha-value>)',
         'danger-light': '#F9E9E6',
         muted: '#F1EDEB',
         'bg-main': '#FDF7F5',

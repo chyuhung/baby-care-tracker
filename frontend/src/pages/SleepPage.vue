@@ -22,7 +22,7 @@
           <label class="text-sm text-text-secondary block mb-2">备注</label>
           <textarea v-model="editForm.note" rows="3" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary resize-none focus:border-primary focus:outline-none transition-colors" />
         </div>
-        <button @click="saveEdit" :disabled="submitting" class="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">{{ submitting ? '保存中...' : '更新记录' }}</button>
+        <button @click="saveEdit" :disabled="submitting" class="w-full py-3 bg-primary-deep text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">{{ submitting ? '保存中...' : '更新记录' }}</button>
         <button @click="deleteRecord" class="w-full py-3 bg-white text-danger font-medium rounded-xl border border-danger/25 btn-press">删除此记录</button>
       </template>
 
@@ -59,7 +59,7 @@
             </button>
           </template>
           <template v-else>
-            <button @click="startSleep" :disabled="submitting" class="w-full py-3 bg-sleep/10 text-sleep rounded-xl font-medium btn-press flex items-center justify-center gap-2 disabled:opacity-50">
+            <button @click="startSleep" :disabled="submitting" class="w-full py-3 bg-sleep/10 text-sleep-deep rounded-xl font-medium btn-press flex items-center justify-center gap-2 disabled:opacity-50">
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
               开始
             </button>
@@ -81,7 +81,7 @@
                 <span class="text-sm font-semibold text-text-primary">😴 睡眠</span>
                 <span class="text-xs text-text-secondary font-num">{{ formatSleepTime(s) }}</span>
               </div>
-              <span class="text-xs bg-sleep/10 text-sleep px-2 py-0.5 rounded-full mt-1 inline-block">{{ formatDuration(s) }}</span>
+              <span class="text-xs bg-sleep/10 text-sleep-deep px-2 py-0.5 rounded-full mt-1 inline-block">{{ formatDuration(s) }}</span>
               <div v-if="s.note" class="text-xs text-text-secondary mt-1">{{ s.note }}</div>
             </div>
           </div>

@@ -22,7 +22,7 @@
           <label class="text-sm text-text-secondary block mb-2">备注</label>
           <textarea v-model="editForm.note" rows="3" placeholder="可选" class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-sm text-text-primary resize-none focus:border-primary focus:outline-none transition-colors" />
         </div>
-        <button @click="saveEdit" :disabled="submitting" class="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">{{ submitting ? '保存中...' : '更新记录' }}</button>
+        <button @click="saveEdit" :disabled="submitting" class="w-full py-3 bg-primary-deep text-white rounded-xl font-semibold shadow-card btn-press disabled:opacity-50">{{ submitting ? '保存中...' : '更新记录' }}</button>
         <button @click="deleteRecord" class="w-full py-3 bg-white text-danger font-medium rounded-xl border border-danger/25 btn-press">删除此记录</button>
       </template>
 
@@ -43,7 +43,7 @@
         <div class="bg-white rounded-2xl shadow-card p-5">
           <div class="text-xs text-text-secondary mb-1">今日户外活动总计</div>
           <div class="flex items-baseline gap-2">
-            <span class="text-3xl font-bold text-outdoor font-num">{{ formattedDuration }}</span>
+            <span class="text-3xl font-bold text-outdoor-deep font-num">{{ formattedDuration }}</span>
             <span class="text-sm text-text-secondary">· {{ todayOutdoors.length }}次</span>
           </div>
         </div>
@@ -52,14 +52,14 @@
         <div class="bg-white rounded-2xl shadow-card p-5 text-center">
           <template v-if="currentOutdoor">
             <div class="text-lg text-text-primary mb-2">🌳 正在户外活动</div>
-            <div class="text-4xl font-bold text-outdoor font-num mb-4">{{ elapsedText }}</div>
+            <div class="text-4xl font-bold text-outdoor-deep font-num mb-4">{{ elapsedText }}</div>
             <button @click="stopOutdoor" :disabled="submitting" class="w-full py-3 bg-danger text-white rounded-xl font-medium shadow-card btn-press flex items-center justify-center gap-2 disabled:opacity-50">
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
               <span>{{ submitting ? '处理中...' : '结束' }}</span>
             </button>
           </template>
           <template v-else>
-            <button @click="startOutdoor" :disabled="submitting" class="w-full py-3 bg-outdoor/10 text-outdoor rounded-xl font-medium btn-press flex items-center justify-center gap-2 disabled:opacity-50">
+            <button @click="startOutdoor" :disabled="submitting" class="w-full py-3 bg-outdoor/10 text-outdoor-deep rounded-xl font-medium btn-press flex items-center justify-center gap-2 disabled:opacity-50">
               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
               开始
             </button>
@@ -81,7 +81,7 @@
                 <span class="text-sm font-semibold text-text-primary">🌳 户外活动</span>
                 <span class="text-xs text-text-secondary font-num">{{ formatOutdoorTime(o) }}</span>
               </div>
-              <span class="text-xs bg-outdoor/10 text-outdoor px-2 py-0.5 rounded-full mt-1 inline-block">{{ formatDuration(o) }}</span>
+              <span class="text-xs bg-outdoor/10 text-outdoor-deep px-2 py-0.5 rounded-full mt-1 inline-block">{{ formatDuration(o) }}</span>
               <div v-if="o.note" class="text-xs text-text-secondary mt-1">{{ o.note }}</div>
             </div>
           </div>

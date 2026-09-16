@@ -38,7 +38,7 @@
         <div class="text-5xl mb-4">👶</div>
         <p class="text-text-secondary mb-4">还没有添加宝宝</p>
         <router-link to="/baby/new"
-          class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl font-medium text-sm btn-press shadow-card">
+          class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-deep text-white rounded-xl font-medium text-sm btn-press shadow-card">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
           添加宝宝
         </router-link>
@@ -53,7 +53,7 @@
             <div class="text-xs text-text-secondary mb-1">今日喂奶</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-0.5">
-                <span class="text-3xl font-bold text-primary font-num">{{ stats.total_ml_today }}<sup v-if="stats.feeding_count > 0" class="text-[0.55em] font-bold text-primary font-num leading-none">{{ stats.feeding_count }}</sup></span>
+                <span class="text-3xl font-bold text-primary-deep font-num">{{ stats.total_ml_today }}<sup v-if="stats.feeding_count > 0" class="text-[0.55em] font-bold text-primary-deep font-num leading-none">{{ stats.feeding_count }}</sup></span>
                 <span class="text-sm text-text-secondary">ml</span>
               </div>
               <div class="text-3xl">🍼</div>
@@ -70,7 +70,7 @@
             </div>
             <!-- 新增喂奶入口 -->
             <button @click.stop="goToAddFeeding"
-              class="mt-3 w-full py-2 bg-primary/10 text-primary text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+              class="mt-3 w-full py-2 bg-primary/10 text-primary-deep text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
               <span class="text-base">＋</span> 喂奶
             </button>
           </div>
@@ -80,7 +80,7 @@
             <div class="text-xs text-text-secondary mb-1">今日尿布</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-bold font-num text-diaper">{{ stats.diaper_count }}</span>
+                <span class="text-3xl font-bold font-num text-diaper-deep">{{ stats.diaper_count }}</span>
                 <span class="text-sm text-text-secondary">次</span>
               </div>
               <div class="text-3xl">🩲</div>
@@ -97,7 +97,7 @@
             </div>
             <!-- 新增尿布入口 -->
             <button @click.stop="goToAddDiaper"
-              class="mt-3 w-full py-2 bg-diaper/10 text-diaper text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+              class="mt-3 w-full py-2 bg-diaper/10 text-diaper-deep text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
               <span class="text-base">＋</span> 尿布
             </button>
           </div>
@@ -107,7 +107,7 @@
             <div class="text-xs text-text-secondary mb-1">今日睡眠</div>
             <div class="flex items-end justify-between">
               <div v-if="currentSleep" class="flex items-baseline gap-1 min-w-0">
-                <span class="text-base font-bold text-sleep truncate">已睡 <template v-for="(part, pi) in elapsedSleepParts" :key="pi"><span>{{ part.val }}</span><span v-if="part.unit" class="text-sm text-text-secondary font-normal">{{ part.unit }}</span> </template></span>
+                <span class="text-base font-bold text-sleep-deep truncate">已睡 <template v-for="(part, pi) in elapsedSleepParts" :key="pi"><span>{{ part.val }}</span><span v-if="part.unit" class="text-sm text-text-secondary font-normal">{{ part.unit }}</span> </template></span>
               </div>
               <div v-else class="flex items-baseline gap-0.5">
                 <template v-for="(part, pi) in sleepDurationParts" :key="pi">
@@ -132,7 +132,7 @@
               {{ loadingAction === 'stop-sleep' ? '处理中...' : '结束' }}
             </button>
             <button v-else @click.stop="startSleep" :disabled="loadingAction === 'start-sleep'"
-              class="mt-3 w-full py-2 bg-sleep/10 text-sleep text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1 disabled:opacity-50">
+              class="mt-3 w-full py-2 bg-sleep/10 text-sleep-deep text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1 disabled:opacity-50">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
               {{ loadingAction === 'start-sleep' ? '处理中...' : '开始' }}
             </button>
@@ -157,7 +157,7 @@
               <span class="text-xs font-medium" :class="+tempHighValue >= 37.5 ? 'text-danger' : 'text-text-secondary'">{{ tempHighValue }}°C</span>
             </div>
             <button @click.stop="goToAddTemperature"
-              class="mt-3 w-full py-2 bg-temperature/10 text-temperature text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
+              class="mt-3 w-full py-2 bg-temperature/10 text-temperature-deep text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
               <span class="text-base">＋</span> 测温
             </button>
           </div>
@@ -167,11 +167,11 @@
             <div class="text-xs text-text-secondary mb-1">今日户外活动</div>
             <div class="flex items-end justify-between">
               <div v-if="currentOutdoor" class="flex items-baseline gap-1 min-w-0">
-                <span class="text-base font-bold text-outdoor truncate">已活动 <template v-for="(part, pi) in elapsedOutdoorParts" :key="pi"><span>{{ part.val }}</span><span v-if="part.unit" class="text-sm text-text-secondary font-normal">{{ part.unit }}</span> </template></span>
+                <span class="text-base font-bold text-outdoor-deep truncate">已活动 <template v-for="(part, pi) in elapsedOutdoorParts" :key="pi"><span>{{ part.val }}</span><span v-if="part.unit" class="text-sm text-text-secondary font-normal">{{ part.unit }}</span> </template></span>
               </div>
               <div v-else class="flex items-baseline gap-0.5">
                 <template v-for="(part, pi) in outdoorDurationParts" :key="pi">
-                  <span class="text-3xl font-bold font-num text-outdoor">{{ part.val }}</span>
+                  <span class="text-3xl font-bold font-num text-outdoor-deep">{{ part.val }}</span>
                   <span v-if="part.unit" class="text-sm text-text-secondary">{{ part.unit }}</span>
                 </template>
               </div>
@@ -191,7 +191,7 @@
               {{ loadingAction === 'stop-outdoor' ? '处理中...' : '结束' }}
             </button>
             <button v-else @click.stop="startOutdoor" :disabled="loadingAction === 'start-outdoor'"
-              class="mt-3 w-full py-2 bg-outdoor/10 text-outdoor text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1 disabled:opacity-50">
+              class="mt-3 w-full py-2 bg-outdoor/10 text-outdoor-deep text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1 disabled:opacity-50">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
               {{ loadingAction === 'start-outdoor' ? '处理中...' : '开始' }}
             </button>
@@ -212,7 +212,7 @@
           <!-- 加载更多 -->
           <button v-if="!showAllRecords && allRecords.length > displayRecords.length"
             @click="showAllRecords = true"
-            class="w-full py-3 bg-white text-primary text-sm font-medium rounded-xl shadow-card btn-press mt-2">
+            class="w-full py-3 bg-white text-primary-deep text-sm font-medium rounded-xl shadow-card btn-press mt-2">
             加载更多 ({{ allRecords.length - displayRecords.length }})
           </button>
         </div>
