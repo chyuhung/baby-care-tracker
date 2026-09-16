@@ -22,7 +22,8 @@
       </div>
     </header>
 
-    <main class="flex-1 min-h-0 px-4 py-4 overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))] space-y-6">
+    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(5rem+env(safe-area-inset-bottom))] space-y-6"
+      :refresh="() => loadTrend(true)">
       <div v-if="loading" class="text-center py-16 text-text-secondary">加载中...</div>
       <div v-else-if="trendData.length === 0" class="text-center py-16">
         <div class="text-5xl mb-4">📊</div>
@@ -223,7 +224,7 @@
           </div>
         </div>
       </template>
-    </main>
+    </PullRefresh>
   </div>
 </template>
 
@@ -231,6 +232,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { babyAPI } from '@/api'
+import PullRefresh from '@/components/PullRefresh.vue'
 
 const app = useAppStore()
 const trendData = ref<any[]>([])
@@ -598,10 +600,10 @@ const feverLineY = computed(() => {
   return padT + chartH - (37.5 - sc.yMin) / sc.yRange * chartH
 })
 
-async function loadTrend() {
+async function loadTrend(silent: boolean = false) {
   const baby = app.currentBaby
   if (!baby) return
-  loading.value = true
+  if (!silent) loading.value = true
   try {
     const res = await babyAPI.trend(baby.id, days.value)
     trendData.value = res.data

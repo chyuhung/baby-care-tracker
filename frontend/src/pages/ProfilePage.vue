@@ -4,7 +4,8 @@
       <h1 class="text-lg font-bold text-text-primary">我的</h1>
     </header>
 
-    <main class="flex-1 px-4 py-4 space-y-4 overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))] min-h-0">
+    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-4 pb-[calc(5rem+env(safe-area-inset-bottom))]"
+      :refresh="refreshAll">
       <!-- 用户信息 -->
       <div class="bg-white rounded-2xl p-4 shadow-card flex items-center gap-4">
         <div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-2xl">👤</div>
@@ -92,7 +93,7 @@
       <button @click="logout" class="w-full py-3 bg-white text-danger font-medium rounded-xl shadow-card btn-press mt-8">
         退出登录
       </button>
-    </main>
+    </PullRefresh>
   </div>
 </template>
 
@@ -102,6 +103,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import { familyAPI } from '@/api'
+import PullRefresh from '@/components/PullRefresh.vue'
 
 interface FamilyMember {
   id: number
@@ -128,6 +130,10 @@ async function loadFamily() {
   } catch {
     // family not available
   }
+}
+
+async function refreshAll() {
+  await Promise.all([loadFamily(), app.loadBabies()])
 }
 
 async function joinFamily() {

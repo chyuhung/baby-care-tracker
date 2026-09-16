@@ -220,3 +220,12 @@ input, select, textarea {
 .chart-axis-label  { fill: rgb(var(--text-secondary)); }
 .chart-title-label { fill: rgb(var(--text-secondary)); }
 .chart-value-label { fill: rgb(var(--text-secondary)); }
+
+/* 下拉刷新 / 加载更多 图标旋转 */
+@keyframes icon-spin {
+  to { transform: rotate(360deg); }
+}
+.icon-spin {
+  display: inline-block;
+  animation: icon-spin 0.9s linear infinite;
+}

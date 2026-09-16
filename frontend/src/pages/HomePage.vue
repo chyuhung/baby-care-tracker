@@ -32,7 +32,8 @@
     </header>
 
     <!-- Content -->
-    <main class="flex-1 min-h-0 px-4 py-4 space-y-4 overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))]">
+    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-4 pb-[calc(5rem+env(safe-area-inset-bottom))]"
+      :refresh="loadData" :load-more="loadMoreFromPull">
       <!-- 空状态：无宝宝 -->
       <div v-if="app.babies.length === 0" class="text-center py-16">
         <div class="text-5xl mb-4">👶</div>
@@ -217,7 +218,7 @@
           </button>
         </div>
       </template>
-    </main>
+    </PullRefresh>
 
     <!-- 删除确认弹窗 -->
     <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black/30 flex items-end z-50" @click.self="showDeleteConfirm = false">
@@ -240,6 +241,7 @@ import { useAppStore } from '@/stores/app'
 import { babyAPI, recordAPI } from '@/api'
 import type { BabyStats, SleepRecord, OutdoorRecord } from '@/api'
 import RecordCard from '@/components/RecordCard.vue'
+import PullRefresh from '@/components/PullRefresh.vue'
 import { durationParts, formatDurationCompact } from '@/utils'
 
 const tick = ref(0)
@@ -434,6 +436,10 @@ async function loadData() {
   } catch {
     app.showToast('数据加载失败', 'error')
   }
+}
+
+function loadMoreFromPull() {
+  if (!showAllRecords.value) showAllRecords.value = true
 }
 
 function switchBaby() {

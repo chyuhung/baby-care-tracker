@@ -13,7 +13,8 @@
       </div>
     </header>
 
-    <main class="flex-1 min-h-0 px-4 py-4 overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))]">
+    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(5rem+env(safe-area-inset-bottom))]"
+      :refresh="() => loadRecords(true, true)" :load-more="loadMoreByGesture">
       <div v-if="loading" class="text-center py-16 text-text-secondary">加载中...</div>
       <div v-else-if="groupedRecords.length === 0" class="text-center py-16">
         <img src="/icon-192.png" alt="" class="w-14 h-14 mx-auto block mb-4" />
@@ -37,7 +38,7 @@
           {{ loadingMore ? '加载中...' : `加载更多 (近 ${days}天)` }}
         </button>
       </div>
-    </main>
+    </PullRefresh>
 
     <!-- 删除确认弹窗 -->
     <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black/30 flex items-end z-50" @click.self="showDeleteConfirm = false">
@@ -58,6 +59,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { recordAPI } from '@/api'
 import RecordCard from '@/components/RecordCard.vue'
+import PullRefresh from '@/components/PullRefresh.vue'
 
 const app = useAppStore()
 const router = useRouter()
@@ -120,10 +122,10 @@ const groupedRecords = computed(() => {
 
 const hasMore = computed(() => loadedCount.value < totalCount.value)
 
-async function loadRecords(reset: boolean = true) {
+async function loadRecords(reset: boolean = true, silent: boolean = false) {
   const baby = app.currentBaby
   if (!baby) return
-  if (reset) loading.value = true
+  if (reset) { if (!silent) loading.value = true }
   else loadingMore.value = true
   try {
     const [res, countRes] = await Promise.all([
@@ -144,6 +146,10 @@ async function loadRecords(reset: boolean = true) {
 function loadMore() {
   days.value += 7
   loadRecords(false)
+}
+
+function loadMoreByGesture() {
+  if (hasMore.value) return loadMore()
 }
 
 function editRecord(r: any) {

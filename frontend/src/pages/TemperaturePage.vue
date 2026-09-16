@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-dvh bg-bg-main">
+  <div class="flex flex-col min-h-dvh bg-bg-main">
     <header class="pt-safe glass-surface px-4 py-3 border-b border-border-color flex items-center gap-3">
       <button aria-label="返回" @click="router.back()" class="p-2 -ml-2 flex items-center justify-center min-w-[44px] min-h-[44px] btn-press">
         <svg class="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
@@ -7,7 +7,7 @@
       <h1 class="text-lg font-bold text-text-primary">{{ isEdit ? '编辑记录' : '🌡️ 记录体温' }}</h1>
     </header>
 
-    <main class="px-4 py-6 space-y-5">
+    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-6 space-y-5" :refresh="loadData">
       <!-- 编辑模式 -->
       <template v-if="isEdit">
         <div>
@@ -72,7 +72,7 @@
           {{ loading ? '保存中...' : '记录' }}
         </button>
       </template>
-    </main>
+    </PullRefresh>
   </div>
 </template>
 
@@ -82,6 +82,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { babyAPI, recordAPI } from '@/api'
 import { toLocalDatetime } from '@/utils'
+import PullRefresh from '@/components/PullRefresh.vue'
 
 const router = useRouter()
 const route = useRoute()
