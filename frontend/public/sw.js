@@ -1,4 +1,4 @@
-const CACHE = 'baby-care-v3'
+const CACHE = 'baby-care-v4'
 const API_PREFIX = '/api/'
 
 self.addEventListener('install', () => {
@@ -37,7 +37,7 @@ self.addEventListener('fetch', (event) => {
     caches.match(req).then((cached) => {
       if (cached) return cached
       return fetch(req).then((res) => {
-        if (res.ok && (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/icon') || url.pathname.startsWith('/app-icon'))) {
+        if (res.ok && (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/icon') || url.pathname.startsWith('/favicon') || url.pathname.startsWith('/apple-touch-icon'))) {
           const copy = res.clone()
           caches.open(CACHE).then((c) => c.put(req, copy))
         }
