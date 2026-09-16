@@ -1,5 +1,5 @@
 <template>
-  <div v-if="record.record_type === 'feeding'" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+  <div v-if="record.record_type === 'feeding'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
     <div class="w-1.5 h-12 rounded-full bg-primary flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -14,12 +14,12 @@
       </div>
       <div v-if="f.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ f.note }}</div>
     </div>
-    <button @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-red-400 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
+    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-red-400 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
     </button>
   </div>
 
-  <div v-else-if="record.record_type === 'diaper'" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+  <div v-else-if="record.record_type === 'diaper'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
     <div class="w-1.5 h-12 rounded-full bg-diaper flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -28,12 +28,12 @@
       </div>
       <div v-if="d.note" class="text-xs text-text-secondary mt-1 truncate">{{ d.note }}</div>
     </div>
-    <button @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-red-400 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
+    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-red-400 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
     </button>
   </div>
 
-  <div v-else-if="record.record_type === 'sleep'" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+  <div v-else-if="record.record_type === 'sleep'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
     <div class="w-1.5 h-12 rounded-full bg-sleep flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -45,12 +45,12 @@
       </div>
       <div v-if="s.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ s.note }}</div>
     </div>
-    <button @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-red-400 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
+    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-red-400 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
     </button>
   </div>
 
-  <div v-else-if="record.record_type === 'temperature'" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+  <div v-else-if="record.record_type === 'temperature'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
     <div class="w-1.5 h-12 rounded-full bg-temperature flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -64,12 +64,12 @@
       </div>
       <div v-if="t.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ t.note }}</div>
     </div>
-    <button @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-red-400 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
+    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-red-400 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
     </button>
   </div>
 
-  <div v-else class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+  <div v-else role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
     <div class="w-1.5 h-12 rounded-full bg-outdoor flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -81,7 +81,7 @@
       </div>
       <div v-if="o.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ o.note }}</div>
     </div>
-    <button @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-red-400 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
+    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-red-400 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
     </button>
   </div>

@@ -2,16 +2,16 @@
   <div class="flex flex-col min-h-dvh">
     <!-- Header -->
     <header class="app-header pt-safe px-4 pb-3 border-b border-border-color">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-lg font-bold text-text-primary">
+      <div class="flex items-center justify-between gap-2">
+        <div class="min-w-0">
+          <h1 class="text-lg font-bold text-text-primary truncate">
             {{ app.currentBaby?.name ? `${app.currentBaby?.name} 的记录` : '宝宝护理' }}
           </h1>
-          <p v-if="app.currentBaby?.birth_date" class="text-xs text-text-secondary mt-0.5">
+          <p v-if="app.currentBaby?.birth_date" class="text-xs text-text-secondary mt-0.5 truncate">
             {{ ageText }} · {{ todayDateText }}
           </p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-shrink-0">
           <span v-if="app.wsConnected" class="text-xs text-success flex items-center gap-1">
             <span class="w-2 h-2 bg-success rounded-full inline-block"></span>同步
           </span>
@@ -552,11 +552,19 @@ function onRecordCreated(e: Event) {
   const record = (e as CustomEvent).detail
   if (!record) { loadData(); return }
   if (record.baby_id === app.currentBaby?.id) {
-    if ((record.record_type === 'sleep' || record.record_type === 'outdoor') && !record.data?.ended_at) return
-    allRecords.value.unshift(record)
-    if ((record.record_type === 'sleep' || record.record_type === 'outdoor') && record.data?.ended_at) {
+    if (record.record_type === 'sleep' || record.record_type === 'outdoor') {
+      if (!record.data?.ended_at) {
+        if (record.record_type === 'sleep') currentSleep.value = record.data
+        else currentOutdoor.value = record.data
+        return
+      }
+      if (record.record_type === 'sleep' && currentSleep.value?.id === record.id) currentSleep.value = null
+      if (record.record_type === 'outdoor' && currentOutdoor.value?.id === record.id) currentOutdoor.value = null
+      allRecords.value.unshift(record)
       loadData()
+      return
     }
+    allRecords.value.unshift(record)
   }
 }
 

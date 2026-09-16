@@ -10,7 +10,7 @@
         <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" :d="tab.icon" />
         </svg>
-        <span class="text-[10px] mt-1 font-medium">{{ tab.label }}</span>
+        <span class="text-xs mt-1 font-medium">{{ tab.label }}</span>
         <span v-if="isActive(tab.to)" class="absolute -top-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-primary rounded-full"></span>
       </router-link>
     </div>
