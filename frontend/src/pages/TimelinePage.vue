@@ -6,14 +6,14 @@
       <div class="flex flex-wrap gap-2 mt-2">
         <button v-for="f in filters" :key="f.value"
           @click="activeFilter = f.value"
-          :class="['px-3 py-1 rounded-full text-xs font-medium transition-colors btn-press whitespace-nowrap',
+          :class="['px-3 py-2 min-h-[44px] flex items-center justify-center rounded-full text-xs font-medium transition-colors btn-press whitespace-nowrap',
             activeFilter === f.value ? 'bg-primary text-white' : 'bg-gray-100 text-text-secondary']">
           {{ f.label }}
         </button>
       </div>
     </header>
 
-    <main class="flex-1 min-h-0 px-4 py-4 overflow-y-auto pb-20">
+    <main class="flex-1 min-h-0 px-4 py-4 overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))]">
       <div v-if="loading" class="text-center py-16 text-text-secondary">加载中...</div>
       <div v-else-if="groupedRecords.length === 0" class="text-center py-16">
         <div class="text-5xl mb-4">🍼</div>

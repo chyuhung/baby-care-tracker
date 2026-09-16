@@ -6,7 +6,7 @@
       <div class="flex flex-wrap gap-2 mt-2">
         <button v-for="c in categoryOptions" :key="c.value"
           @click="category = c.value"
-          :class="['px-3 py-1 rounded-full text-xs font-medium transition-colors btn-press whitespace-nowrap',
+          :class="['px-3 py-2 min-h-[44px] flex items-center justify-center rounded-full text-xs font-medium transition-colors btn-press whitespace-nowrap',
             category === c.value ? 'bg-primary text-white' : 'bg-gray-100 text-text-secondary']">
           {{ c.label }}
         </button>
@@ -15,14 +15,14 @@
       <div class="flex gap-2 mt-2">
         <button v-for="d in dayOptions" :key="d.value"
           @click="days = d.value; loadTrend()"
-          :class="['px-3 py-1 rounded-full text-xs font-medium transition-colors btn-press',
+          :class="['px-3 py-2 min-h-[44px] flex items-center justify-center rounded-full text-xs font-medium transition-colors btn-press',
             days === d.value ? 'bg-primary text-white' : 'bg-gray-100 text-text-secondary']">
           {{ d.label }}
         </button>
       </div>
     </header>
 
-    <main class="flex-1 min-h-0 px-4 py-4 overflow-y-auto pb-20 space-y-6">
+    <main class="flex-1 min-h-0 px-4 py-4 overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))] space-y-6">
       <div v-if="loading" class="text-center py-16 text-text-secondary">加载中...</div>
       <div v-else-if="trendData.length === 0" class="text-center py-16">
         <div class="text-5xl mb-4">📊</div>

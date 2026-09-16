@@ -21,15 +21,18 @@
 
       <!-- 宝宝切换 -->
       <div v-if="app.currentBaby" class="mt-3 flex items-center gap-2">
-        <select v-model="selectedBabyId" @change="switchBaby"
-          class="flex-1 px-3 py-2 bg-white border border-border-color rounded-xl text-sm text-text-primary appearance-none cursor-pointer focus:border-primary focus:outline-none transition-colors">
-          <option v-for="b in app.babies" :key="b.id" :value="b.id">{{ b.name }}</option>
-        </select>
+        <div class="relative flex-1">
+          <select v-model="selectedBabyId" @change="switchBaby"
+            class="w-full px-3 py-2 bg-white border border-border-color rounded-xl text-sm text-text-primary appearance-none cursor-pointer focus:border-primary focus:outline-none transition-colors pr-8">
+            <option v-for="b in app.babies" :key="b.id" :value="b.id">{{ b.name }}</option>
+          </select>
+          <svg class="w-4 h-4 text-text-secondary pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        </div>
       </div>
     </header>
 
     <!-- Content -->
-    <main class="flex-1 min-h-0 px-4 py-4 space-y-4 overflow-y-auto pb-20">
+    <main class="flex-1 min-h-0 px-4 py-4 space-y-4 overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))]">
       <!-- 空状态：无宝宝 -->
       <div v-if="app.babies.length === 0" class="text-center py-16">
         <div class="text-5xl mb-4">👶</div>

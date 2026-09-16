@@ -4,7 +4,7 @@
       <h1 class="text-lg font-bold text-text-primary">我的</h1>
     </header>
 
-    <main class="flex-1 px-4 py-4 space-y-4 overflow-y-auto pb-20 min-h-0">
+    <main class="flex-1 px-4 py-4 space-y-4 overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))] min-h-0">
       <!-- 用户信息 -->
       <div class="bg-white rounded-2xl p-4 shadow-card flex items-center gap-4">
         <div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-2xl">👤</div>

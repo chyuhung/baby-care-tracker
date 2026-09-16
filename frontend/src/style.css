@@ -160,6 +160,17 @@ body {
   letter-spacing: -0.02em;
 }
 
+/* 用户系统开启"减弱动态效果"时，关闭页面/卡片/弹窗动画 */
+@media (prefers-reduced-motion: reduce) {
+  .page-enter-active, .page-leave-active,
+  .card-in, .animate-slide-up,
+  .toast-enter-active, .toast-leave-active,
+  .btn-press {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
 /* 安全区适配：刘海/灵动岛避开状态栏与 Home 指示条 */
 .pt-safe {
   padding-top: max(env(safe-area-inset-top), 0.75rem);

@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-[380px] space-y-2 pointer-events-none">
+  <div class="fixed top-[max(env(safe-area-inset-top),1rem)] left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-[380px] space-y-2 pointer-events-none">
     <transition-group name="toast">
       <div v-for="toast in app.toasts" :key="toast.id"
          :class="['px-4 py-3 rounded-xl shadow-lg text-white text-sm font-medium pointer-events-auto',
