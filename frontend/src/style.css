@@ -3,71 +3,53 @@
 @tailwind utilities;
 
 /* ============================================================
-   主题变量
-   - neutral  : 保密 / 默认（珊瑚粉，与贝壳图标同色系）
-   - female   : 女宝（干枯玫瑰粉）
-   - male     : 男宝（静谧雾霾蓝）
-   每个主题提供：主色(三通道RGB)、主色浅底、尿布强调色
+   主题变量（清透 iOS 风 · 明亮大留白）
+   - 粉色系（默认 / 保密 / 女宝）：樱花粉，与贝壳图标同色系
+   - 蓝色系（男宝）：晴空蓝
+   每个主题提供：主色(三通道RGB)、主色深档(按钮/彩字)、主色浅底、页面背景
    ============================================================ */
 :root,
-[data-theme='neutral'] {
-  --primary: 214 126 116;        /* #D67E74 灰调珊瑚粉 */
-  --primary-deep: 184 90 72;      /* #B85A48 殷红珊瑚（白字4.56:1） */
-  --primary-light: 247 230 226;    /* #F7E6E2 暖粉灰 */
-  /* 语义深档（白字 ≥4.5:1，三主题共用） */
-  --sleep-deep: 47 128 122;
-  --temperature-deep: 73 128 82;
-  --outdoor-deep: 84 128 40;
-  --diaper-deep: 201 78 51;
-  --success-deep: 53 130 95;
-  --warning-deep: 176 84 33;
-  --danger-deep: 200 68 56;
-  --text-secondary: 118 107 102;   /* #766B66 次要文字 */
-  --diaper: 230 118 79;          /* #E6764F 暖珊瑚，三主题通用强调 */
-  --temperature: 101 159 115;     /* #659F73 绿色，清爽感 */
-  --sleep: 72 163 155;           /* #48A39B 青绿，睡眠休息感 */
-  --outdoor: 127 172 69;         /* #7FAC45 草绿，户外活力 */
-  --header-grad: linear-gradient(135deg, rgb(214 126 116 / 0.16), rgb(214 126 116 / 0.04));
-  --chart-primary: #D67E74;
-  --chart-diaper: #E6764F;
-  --chart-temperature: #659F73;
-  --chart-sleep: #48A39B;
-  --chart-outdoor: #7FAC45;
-  --chart-primary-count: #D8953C;
-}
-
+[data-theme='neutral'],
 [data-theme='female'] {
-  --primary: 208 124 148;        /* #D07C94 干枯玫瑰粉 */
-  --primary-deep: 178 85 116;    /* #B25574 深玫瑰（4.73:1） */
-  --primary-light: 247 231 236;    /* #F7E7EC 玫瑰粉白 */
-  --diaper: 230 118 79;          /* #E6764F */
-  --temperature: 101 159 115;     /* #659F73 */
-  --sleep: 72 163 155;           /* #48A39B */
-  --outdoor: 127 172 69;         /* #7FAC45 */
-  --header-grad: linear-gradient(135deg, rgb(208 124 148 / 0.18), rgb(208 124 148 / 0.04));
-  --chart-primary: #D07C94;
-  --chart-diaper: #E6764F;
-  --chart-temperature: #659F73;
-  --chart-sleep: #48A39B;
-  --chart-outdoor: #7FAC45;
-  --chart-primary-count: #D8953C;
+  /* 樱花粉 */
+  --primary: 242 92 140;         /* #F25C8C 樱花粉（图标/图表/浅底/边框） */
+  --primary-deep: 237 79 134;    /* #ED4F86 加深粉（实心按钮/选中态/彩字，白字3.46） */
+  --primary-light: 255 232 241;  /* #FFE8F1 浅粉底 */
+  --bg-main: 255 246 250;        /* #FFF6FA 极淡粉页面背景 */
+
+  /* 功能色（清透 iOS 系统色，两主题通用） */
+  --diaper: 244 130 12;          /* #F4820C 尿布橙（装饰条/浅底） */
+  --diaper-deep: 224 114 5;      /* #E07205 加深橙（白卡彩字） */
+  --temperature: 45 168 77;      /* #2DA84D 体温绿 */
+  --temperature-deep: 34 145 66; /* #229142 加深绿 */
+  --sleep: 26 162 184;           /* #1AA2B8 睡眠青 */
+  --sleep-deep: 18 143 163;      /* #128FA3 加深青 */
+  --outdoor: 92 172 55;          /* #5CAC37 户外草绿 */
+  --outdoor-deep: 78 152 46;     /* #4E982E 加深绿 */
+  --success-deep: 37 150 68;     /* #259644 成功绿（Toast 白字3.8） */
+  --warning-deep: 232 118 10;    /* #E8760A 提醒橙 */
+  --danger-deep: 255 59 48;      /* #FF3B30 iOS 危险红（白字3.55） */
+
+  --text-secondary: 124 131 143; /* #7C838F 清透中性冷灰（次要文字） */
+
+  /* 图表（SVG 直接引用） */
+  --chart-primary: #ED4F86;
+  --chart-diaper: #F4820C;
+  --chart-temperature: #2DA84D;
+  --chart-sleep: #1AA2B8;
+  --chart-outdoor: #5CAC37;
+  --chart-primary-count: #AF52DE; /* 喂奶次数第二色：清透紫，与奶量粉区分 */
 }
 
 [data-theme='male'] {
-  --primary: 104 146 178;        /* #6892B2 静谧雾霾蓝 */
-  --primary-deep: 85 120 155;    /* #55789B 雾蓝加深（4.63:1） */
-  --primary-light: 233 240 245;    /* #E9F0F5 灰蓝白 */
-  --diaper: 230 118 79;          /* #E6764F */
-  --temperature: 101 159 115;     /* #659F73 */
-  --sleep: 72 163 155;           /* #48A39B */
-  --outdoor: 127 172 69;         /* #7FAC45 */
-  --header-grad: linear-gradient(135deg, rgb(104 146 178 / 0.18), rgb(104 146 178 / 0.04));
-  --chart-primary: #6892B2;
-  --chart-diaper: #E6764F;
-  --chart-temperature: #659F73;
-  --chart-sleep: #48A39B;
-  --chart-outdoor: #7FAC45;
-  --chart-primary-count: #D8953C;
+  /* 晴空蓝 */
+  --primary: 52 142 237;         /* #348EED 晴空蓝 */
+  --primary-deep: 35 128 230;    /* #2380E6 加深蓝（白字3.96） */
+  --primary-light: 231 242 255;  /* #E7F2FF 浅蓝底 */
+  --bg-main: 244 249 255;        /* #F4F9FF 极淡蓝页面背景 */
+
+  --chart-primary: #2380E6;
+  --chart-primary-count: #AF52DE;
 }
 
 * {
@@ -78,7 +60,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  background-color: #FDF7F5;
+  background-color: rgb(var(--bg-main));
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
@@ -92,7 +74,7 @@ body {
   min-height: 100dvh;
   max-width: 480px;
   margin: 0 auto;
-  background: #FDF7F5;
+  background: rgb(var(--bg-main));
   position: relative;
   overflow-x: hidden;
   transition: background-color 0.35s ease;
@@ -167,18 +149,16 @@ body {
   animation: slideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-/* 统一头部渐变（柔和，贴合母婴风） */
+/* 顶部区域：与页面同色，无渐变、无分隔线，保证背景连续统一 */
 .app-header {
-  background: var(--header-grad);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  background: transparent;
 }
 
-/* 毛玻璃表面（页头 / 底部导航，苹果风格） */
+/* 毛玻璃表面（仅用于底部固定导航）：主题同色半透明，滚动时通透不割裂 */
 .glass-surface {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: saturate(180%) blur(24px);
-  -webkit-backdrop-filter: saturate(180%) blur(24px);
+  background: rgb(var(--bg-main) / 0.78);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
 }
 
 /* 数字字体 */
@@ -211,9 +191,9 @@ input, select, textarea {
   font-size: 16px;
 }
 
-/* 趋势图 SVG 线条颜色（跟随主题） */
-.chart-grid { stroke: #ECE4E0; stroke-width: 0.8; stroke-dasharray: 4,3; }
-.chart-guide { stroke: #DFD3CD; stroke-width: 0.8; stroke-dasharray: 3,3; }
+/* 趋势图 SVG 线条颜色（清透冷净灰 + 跟随主题） */
+.chart-grid { stroke: #EDEFF4; stroke-width: 0.8; stroke-dasharray: 4,3; }
+.chart-guide { stroke: #E7EAF0; stroke-width: 0.8; stroke-dasharray: 3,3; }
 .chart-line-temperature { stroke: var(--chart-temperature); }
 
 /* 趋势图 SVG 文字颜色（变量驱动，替代硬编码 fill） */

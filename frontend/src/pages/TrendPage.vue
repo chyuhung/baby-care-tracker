@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col min-h-dvh">
-    <header class="app-header pt-safe px-4 py-3 border-b border-border-color">
+    <header class="pt-safe px-4 py-3">
       <h1 class="text-lg font-bold text-text-primary">趋势</h1>
       <!-- 类别筛选 -->
       <div class="flex flex-wrap gap-2 mt-2">
@@ -44,7 +44,7 @@
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <template v-if="days === 30">
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
               <g v-for="(t, ti) in feedingMlScatter.ticks" :key="'fl'+ti">
                 <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
                 <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" class="chart-value-label">{{ t.label }}</text>
@@ -73,10 +73,10 @@
                 <rect :x="feedingRects(i).countX" :y="b.y" :width="w2" :height="b.h" rx="2" fill="var(--chart-primary-count)" opacity="0.85"/>
                 <text v-if="b.h > 0" :x="feedingRects(i).countX + w2 / 2" :y="b.y - 3" text-anchor="middle" font-size="8" class="chart-value-label">{{ b.label }}</text>
               </g>
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
             </template>
-            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
-            <line :x1="axis.rightX" :x2="axis.rightX" :y1="axis.topY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+            <line :x1="axis.rightX" :x2="axis.rightX" :y1="axis.topY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">ml</text>
             <text :x="axis.rightX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">次</text>
             <template v-for="(d, i) in trendData" :key="'fx'+i">
@@ -92,7 +92,7 @@
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <template v-if="days === 30">
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
               <g v-for="(t, ti) in diaperScatter.ticks" :key="'dl'+ti">
                 <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
                 <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" class="chart-value-label">{{ t.label }}</text>
@@ -110,9 +110,9 @@
                 <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-diaper)" opacity="0.85"/>
                 <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" class="chart-value-label">{{ b.label }}</text>
               </g>
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
             </template>
-            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">次</text>
             <template v-for="(d, i) in trendData" :key="'dx'+i">
               <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
@@ -127,7 +127,7 @@
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <template v-if="days === 30">
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
               <g v-for="(t, ti) in sleepScatter.ticks" :key="'sl'+ti">
                 <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
                 <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" class="chart-value-label">{{ t.label }}</text>
@@ -145,9 +145,9 @@
                 <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-sleep)" opacity="0.85"/>
                 <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" class="chart-value-label">{{ b.label }}</text>
               </g>
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
             </template>
-            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">小时</text>
             <template v-for="(d, i) in trendData" :key="'sx'+i">
               <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
@@ -162,7 +162,7 @@
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <template v-if="days === 30">
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
               <g v-for="(t, ti) in outdoorScatter.ticks" :key="'ol'+ti">
                 <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
                 <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" class="chart-value-label">{{ t.label }}</text>
@@ -180,9 +180,9 @@
                 <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-outdoor)" opacity="0.85"/>
                 <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" class="chart-value-label">{{ b.label }}</text>
               </g>
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
             </template>
-            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">小时</text>
             <template v-for="(d, i) in trendData" :key="'ox'+i">
               <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
@@ -196,7 +196,7 @@
             </span>
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
-            <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+            <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
             <g v-for="(t, ti) in tempTicks" :key="'tl'+ti">
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
               <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" class="chart-value-label">{{ t.label }}</text>
@@ -204,9 +204,9 @@
             <g v-for="(pt, i) in tempPoints" :key="'tv'+i">
               <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
             </g>
-            <line :x1="axis.leftX" :x2="axis.rightX" :y1="feverLineY" :y2="feverLineY" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+            <line :x1="axis.leftX" :x2="axis.rightX" :y1="feverLineY" :y2="feverLineY" stroke="#FF3B30" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
             <path :d="tempPath" class="chart-line-temperature" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#DFD3CD" stroke-width="1"/>
+            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">°C</text>
             <template v-for="(d, i) in trendData" :key="'tx'+i">
               <text v-if="dateLabels[i]?.show" :x="tempPoints[i]?.x" y="158" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>

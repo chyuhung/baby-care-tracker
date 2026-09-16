@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col min-h-dvh">
-    <header class="app-header pt-safe px-4 py-3 border-b border-border-color">
+    <header class="pt-safe px-4 py-3">
       <h1 class="text-lg font-bold text-text-primary">时间线</h1>
       <!-- 筛选 -->
       <div class="flex flex-wrap gap-2 mt-2">

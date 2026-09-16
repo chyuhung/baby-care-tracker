@@ -52,7 +52,7 @@ func createTables() error {
 		name TEXT NOT NULL,
 		birth_date DATE NOT NULL,
 		gender TEXT DEFAULT '',
-		avatar_color TEXT DEFAULT '#6C63FF',
+		avatar_color TEXT DEFAULT '#F25C8C',
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 	);

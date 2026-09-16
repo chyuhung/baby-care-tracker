@@ -40,9 +40,9 @@ export const useAppStore = defineStore('app', () => {
   })
 
   function defaultAvatarColor(gender: string): string {
-    if (gender === 'female') return '#D07C94'
-    if (gender === 'male') return '#6892B2'
-    return '#D67E74'
+    if (gender === 'female') return '#F25C8C'
+    if (gender === 'male') return '#348EED'
+    return '#F25C8C'
   }
 
   async function loadBabies() {

@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-dvh bg-bg-main">
-    <header class="pt-safe glass-surface px-4 py-3 border-b border-border-color flex items-center gap-3">
+    <header class="pt-safe px-4 py-3 flex items-center gap-3">
       <button aria-label="返回" @click="router.back()" class="p-2 -ml-2 flex items-center justify-center min-w-[44px] min-h-[44px] btn-press">
         <svg class="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
       </button>
@@ -86,7 +86,7 @@ const loading = ref(false)
 const error = ref('')
 const showDelete = ref(false)
 
-const colors = ['#D07C94', '#6892B2', '#D67E74', '#6FA587', '#C79B45', '#DC875C', '#9283BC', '#C2829F']
+const colors = ['#F25C8C', '#348EED', '#2DB84F', '#F78A06', '#FFB300', '#FF6B53', '#AF52DE', '#2BAEDF']
 const genders = [
   { value: 'male', label: '男孩', emoji: '👦' },
   { value: 'female', label: '女孩', emoji: '👧' },
@@ -97,7 +97,7 @@ const form = reactive({
   name: '',
   birth_date: '',
   gender: '',
-  avatar_color: '#D67E74',
+  avatar_color: '#F25C8C',
 })
 
 // 选择性别时自动套用对应主题默认头像色
@@ -114,7 +114,7 @@ async function loadBaby() {
     form.name = baby.name
     form.birth_date = baby.birth_date ? baby.birth_date.replace('Z', '').slice(0, 16) : ''
     form.gender = baby.gender || ''
-    form.avatar_color = baby.avatar_color || '#D67E74'
+    form.avatar_color = baby.avatar_color || '#F25C8C'
   }
 }
 
