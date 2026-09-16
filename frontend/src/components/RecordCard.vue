@@ -14,7 +14,7 @@
       </div>
       <div v-if="f.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ f.note }}</div>
     </div>
-    <button @click.stop="$emit('delete')" class="p-1 text-text-secondary/50 hover:text-red-400 btn-press">
+    <button @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-red-400 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
     </button>
   </div>
@@ -28,7 +28,7 @@
       </div>
       <div v-if="d.note" class="text-xs text-text-secondary mt-1 truncate">{{ d.note }}</div>
     </div>
-    <button @click.stop="$emit('delete')" class="p-1 text-text-secondary/50 hover:text-red-400 btn-press">
+    <button @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-red-400 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
     </button>
   </div>
@@ -45,7 +45,7 @@
       </div>
       <div v-if="s.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ s.note }}</div>
     </div>
-    <button @click.stop="$emit('delete')" class="p-1 text-text-secondary/50 hover:text-red-400 btn-press">
+    <button @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-red-400 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
     </button>
   </div>
@@ -64,7 +64,7 @@
       </div>
       <div v-if="t.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ t.note }}</div>
     </div>
-    <button @click.stop="$emit('delete')" class="p-1 text-text-secondary/50 hover:text-red-400 btn-press">
+    <button @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-red-400 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
     </button>
   </div>
@@ -81,7 +81,7 @@
       </div>
       <div v-if="o.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ o.note }}</div>
     </div>
-    <button @click.stop="$emit('delete')" class="p-1 text-text-secondary/50 hover:text-red-400 btn-press">
+    <button @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-red-400 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
     </button>
   </div>

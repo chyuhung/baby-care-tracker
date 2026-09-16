@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-bg-main flex flex-col" :data-theme="app.theme">
+  <div class="min-h-dvh bg-bg-main flex flex-col" :data-theme="app.theme">
     <Toast />
     <router-view v-slot="{ Component }">
       <transition name="page" mode="out-in">

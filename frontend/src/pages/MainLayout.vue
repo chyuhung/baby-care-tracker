@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col min-h-screen bg-bg-main">
+  <div class="flex flex-col min-h-dvh bg-bg-main">
     <router-view v-slot="{ Component }">
       <transition name="page" mode="out-in">
         <component :is="Component" />

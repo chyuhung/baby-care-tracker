@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col min-h-screen">
+  <div class="flex flex-col min-h-dvh">
     <!-- Header -->
     <header class="app-header pt-safe px-4 pb-3 border-b border-border-color">
       <div class="flex items-center justify-between">
@@ -125,11 +125,13 @@
             </div>
             <button v-if="currentSleep" @click.stop="stopSleep"
               class="mt-3 w-full py-2 bg-red-500 text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
-              <span>■</span> 结束
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+              结束
             </button>
             <button v-else @click.stop="startSleep"
               class="mt-3 w-full py-2 bg-sleep/10 text-sleep text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
-              <span>●</span> 开始
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              开始
             </button>
           </div>
 
@@ -182,11 +184,13 @@
             </div>
             <button v-if="currentOutdoor" @click.stop="stopOutdoor"
               class="mt-3 w-full py-2 bg-red-500 text-white text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
-              <span>■</span> 结束
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+              结束
             </button>
             <button v-else @click.stop="startOutdoor"
               class="mt-3 w-full py-2 bg-outdoor/10 text-outdoor text-sm font-medium rounded-lg btn-press flex items-center justify-center gap-1">
-              <span>●</span> 开始
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              开始
             </button>
           </div>
         </div>

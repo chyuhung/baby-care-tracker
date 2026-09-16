@@ -16,14 +16,11 @@ export default {
         outdoor: 'rgb(var(--outdoor) / <alpha-value>)',
         // 固定辅助色
         secondary: '#FFB6C1',
-        accent: '#FFD93D',
         success: '#43C59E',
-        warning: '#FF9800',
         'bg-main': '#F7F8FC',
         'bg-secondary': '#F1F3F9',
-        'card-bg': '#FFFFFF',
         'text-primary': '#2D3436',
-        'text-secondary': '#8A94A6',
+        'text-secondary': '#667085',
         'border-color': '#EDEFF4',
       },
       fontFamily: {

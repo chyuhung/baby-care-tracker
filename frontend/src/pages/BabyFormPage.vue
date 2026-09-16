@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-bg-main">
+  <div class="min-h-dvh bg-bg-main">
     <header class="pt-safe bg-white px-4 py-3 border-b border-border-color flex items-center gap-3">
-      <button @click="router.back()" class="p-1 -ml-1 btn-press">
+      <button @click="router.back()" class="p-2 -ml-2 flex items-center justify-center min-w-[44px] min-h-[44px] btn-press">
         <svg class="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
       </button>
       <h1 class="text-lg font-bold text-text-primary">{{ isEdit ? '编辑宝宝' : '添加宝宝' }}</h1>

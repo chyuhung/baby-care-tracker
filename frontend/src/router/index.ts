@@ -46,12 +46,6 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: '/sleep',
-      name: 'sleep',
-      component: () => import('@/pages/SleepPage.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
       path: '/sleep/:id/edit',
       name: 'sleep-edit',
       component: () => import('@/pages/SleepPage.vue'),
@@ -67,12 +61,6 @@ const router = createRouter({
       path: '/temperature/:id/edit',
       name: 'temperature-edit',
       component: () => import('@/pages/TemperaturePage.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/outdoor',
-      name: 'outdoor',
-      component: () => import('@/pages/OutdoorPage.vue'),
       meta: { requiresAuth: true },
     },
     {

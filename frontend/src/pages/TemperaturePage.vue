@@ -1,7 +1,7 @@
 <template>
-  <div class="min-h-screen bg-bg-main">
+  <div class="min-h-dvh bg-bg-main">
     <header class="pt-safe bg-white px-4 py-3 border-b border-border-color flex items-center gap-3">
-      <button @click="router.back()" class="p-1 -ml-1 btn-press">
+      <button @click="router.back()" class="p-2 -ml-2 flex items-center justify-center min-w-[44px] min-h-[44px] btn-press">
         <svg class="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
       </button>
       <h1 class="text-lg font-bold text-text-primary">{{ isEdit ? '编辑记录' : '🌡️ 记录体温' }}</h1>
@@ -32,6 +32,17 @@
         <button @click="saveEdit" class="w-full py-3 bg-primary text-white rounded-xl font-semibold shadow-card btn-press">更新记录</button>
         <button @click="deleteRecord" class="w-full py-3 bg-white text-red-500 font-medium rounded-xl border border-red-200 btn-press">删除此记录</button>
       </template>
+
+      <!-- 删除确认弹窗 -->
+      <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black/30 flex items-end z-50" @click.self="showDeleteConfirm = false">
+        <div class="bg-white w-full rounded-t-2xl p-6 space-y-4 pb-safe animate-slide-up">
+          <p class="text-text-secondary text-sm text-center">确定要删除这条记录吗？</p>
+          <div class="flex gap-3">
+            <button @click="showDeleteConfirm = false" class="flex-1 py-3 bg-gray-100 text-text-primary rounded-xl font-medium btn-press">取消</button>
+            <button @click="confirmDelete" class="flex-1 py-3 bg-red-500 text-white rounded-xl font-medium btn-press">确认删除</button>
+          </div>
+        </div>
+      </div>
 
       <!-- 非编辑模式 -->
       <template v-else>
@@ -77,6 +88,7 @@ const route = useRoute()
 const app = useAppStore()
 
 const isEdit = computed(() => !!route.params.id)
+const showDeleteConfirm = ref(false)
 
 const locations = ['腋下', '口腔', '耳温', '额温', '肛门']
 
@@ -160,12 +172,18 @@ async function saveEdit() {
   }
 }
 
-async function deleteRecord() {
+function deleteRecord() {
+  if (!route.params.id) return
+  showDeleteConfirm.value = true
+}
+
+async function confirmDelete() {
   if (!route.params.id) return
   try {
     await recordAPI.delete(Number(route.params.id), 'temperature')
     window.dispatchEvent(new CustomEvent('record-deleted', { detail: { id: Number(route.params.id), type: 'temperature' } }))
     app.showToast('✅ 已删除', 'success')
+    showDeleteConfirm.value = false
     router.back()
   } catch {
     app.showToast('删除失败', 'error')
