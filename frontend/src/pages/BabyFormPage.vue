@@ -86,7 +86,7 @@ const loading = ref(false)
 const error = ref('')
 const showDelete = ref(false)
 
-const colors = ['#FF7EB3', '#4D9DFD', '#7C6CFF', '#43C59E', '#FFD93D', '#FF9F68', '#74B9FF', '#FDA7DF']
+const colors = ['#D07C94', '#6892B2', '#D67E74', '#43C59E', '#FFD93D', '#FF9F68', '#74B9FF', '#FDA7DF']
 const genders = [
   { value: 'male', label: '男孩', emoji: '👦' },
   { value: 'female', label: '女孩', emoji: '👧' },
@@ -97,7 +97,7 @@ const form = reactive({
   name: '',
   birth_date: '',
   gender: '',
-  avatar_color: '#7C6CFF',
+  avatar_color: '#D67E74',
 })
 
 // 选择性别时自动套用对应主题默认头像色
@@ -114,7 +114,7 @@ async function loadBaby() {
     form.name = baby.name
     form.birth_date = baby.birth_date ? baby.birth_date.replace('Z', '').slice(0, 16) : ''
     form.gender = baby.gender || ''
-    form.avatar_color = baby.avatar_color || '#7C6CFF'
+    form.avatar_color = baby.avatar_color || '#D67E74'
   }
 }
 

@@ -17,11 +17,11 @@ export default {
         // 固定辅助色
         secondary: '#FFB6C1',
         success: '#43C59E',
-        'bg-main': '#F7F8FC',
-        'bg-secondary': '#F1F3F9',
+        'bg-main': '#FDF7F5',
+        'bg-secondary': '#F9EFEB',
         'text-primary': '#2D3436',
         'text-secondary': '#667085',
-        'border-color': '#EDEFF4',
+        'border-color': '#F3E7E3',
       },
       fontFamily: {
         sans: ['"PingFang SC"', '"Hiragino Sans GB"', '"Microsoft YaHei"', 'sans-serif'],

@@ -71,7 +71,7 @@ func CreateBaby(c *gin.Context) {
 	}
 
 	if req.AvatarColor == "" {
-		req.AvatarColor = "#7C6CFF"
+		req.AvatarColor = "#D67E74"
 	}
 
 	result, err := database.DB.Exec(

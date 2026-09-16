@@ -202,7 +202,7 @@
         <div class="space-y-2">
           <h2 class="text-sm font-semibold text-text-secondary uppercase tracking-wide">最近记录</h2>
           <div v-if="displayRecords.length === 0" class="bg-white rounded-2xl p-6 text-center shadow-card">
-            <div class="text-4xl mb-2">🍼</div>
+            <img src="/icon-192.png" alt="" class="w-12 h-12 mx-auto mb-2" />
             <p class="text-text-secondary text-sm">还没有记录</p>
           </div>
           <RecordCard v-for="(r, i) in displayRecords" :key="r.record_type + '-' + r.id" :record="r"

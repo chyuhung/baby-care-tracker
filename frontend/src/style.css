@@ -4,21 +4,21 @@
 
 /* ============================================================
    主题变量
-   - neutral  : 保密 / 默认（柔和紫）
-   - female   : 女宝（柔和粉）
-   - male     : 男宝（柔和蓝）
+   - neutral  : 保密 / 默认（珊瑚粉，与贝壳图标同色系）
+   - female   : 女宝（干枯玫瑰粉）
+   - male     : 男宝（静谧雾霾蓝）
    每个主题提供：主色(三通道RGB)、主色浅底、尿布强调色
    ============================================================ */
 :root,
 [data-theme='neutral'] {
-  --primary: 124 108 255;        /* #7C6CFF */
-  --primary-light: 240 238 255;    /* #F0EEFF */
+  --primary: 214 126 116;        /* #D67E74 灰调珊瑚粉 */
+  --primary-light: 247 230 226;    /* #F7E6E2 暖粉灰 */
   --diaper: 255 122 89;          /* #FF7A59 暖珊瑚，三主题通用强调 */
   --temperature: 102 187 106;     /* #66BB6A 绿色，清爽感 */
   --sleep: 78 205 196;           /* #4ECDC4 青绿，睡眠休息感 */
   --outdoor: 132 204 22;         /* #84CC16 草绿，户外活力 */
-  --header-grad: linear-gradient(135deg, rgb(124 108 255 / 0.16), rgb(124 108 255 / 0.04));
-  --chart-primary: #7C6CFF;
+  --header-grad: linear-gradient(135deg, rgb(214 126 116 / 0.16), rgb(214 126 116 / 0.04));
+  --chart-primary: #D67E74;
   --chart-diaper: #FF7A59;
   --chart-temperature: #66BB6A;
   --chart-sleep: #4ECDC4;
@@ -27,14 +27,14 @@
 }
 
 [data-theme='female'] {
-  --primary: 255 126 179;        /* #FF7EB3 */
-  --primary-light: 255 230 240;    /* #FFE6F0 */
+  --primary: 208 124 148;        /* #D07C94 干枯玫瑰粉 */
+  --primary-light: 247 231 236;    /* #F7E7EC 玫瑰粉白 */
   --diaper: 255 122 89;          /* #FF7A59 */
   --temperature: 102 187 106;     /* #66BB6A */
   --sleep: 78 205 196;           /* #4ECDC4 */
   --outdoor: 132 204 22;         /* #84CC16 */
-  --header-grad: linear-gradient(135deg, rgb(255 126 179 / 0.18), rgb(255 126 179 / 0.04));
-  --chart-primary: #FF7EB3;
+  --header-grad: linear-gradient(135deg, rgb(208 124 148 / 0.18), rgb(208 124 148 / 0.04));
+  --chart-primary: #D07C94;
   --chart-diaper: #FF7A59;
   --chart-temperature: #66BB6A;
   --chart-sleep: #4ECDC4;
@@ -43,14 +43,14 @@
 }
 
 [data-theme='male'] {
-  --primary: 77 157 253;         /* #4D9DFD */
-  --primary-light: 230 241 254;    /* #E6F1FE */
+  --primary: 104 146 178;        /* #6892B2 静谧雾霾蓝 */
+  --primary-light: 233 240 245;    /* #E9F0F5 灰蓝白 */
   --diaper: 255 122 89;          /* #FF7A59 */
   --temperature: 102 187 106;     /* #66BB6A */
   --sleep: 78 205 196;           /* #4ECDC4 */
   --outdoor: 132 204 22;         /* #84CC16 */
-  --header-grad: linear-gradient(135deg, rgb(77 157 253 / 0.18), rgb(77 157 253 / 0.04));
-  --chart-primary: #4D9DFD;
+  --header-grad: linear-gradient(135deg, rgb(104 146 178 / 0.18), rgb(104 146 178 / 0.04));
+  --chart-primary: #6892B2;
   --chart-diaper: #FF7A59;
   --chart-temperature: #66BB6A;
   --chart-sleep: #4ECDC4;
@@ -66,7 +66,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  background-color: #F7F8FC;
+  background-color: #FDF7F5;
   font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
@@ -80,7 +80,7 @@ body {
   min-height: 100dvh;
   max-width: 480px;
   margin: 0 auto;
-  background: #F7F8FC;
+  background: #FDF7F5;
   position: relative;
   overflow-x: hidden;
   transition: background-color 0.35s ease;

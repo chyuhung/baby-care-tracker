@@ -7,8 +7,8 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#F7F8FC",
-  "theme_color": "#7C6CFF",
+  "background_color": "#FDF7F5",
+  "theme_color": "#D67E74",
   "lang": "zh-CN",
   "categories": ["family", "health", "lifestyle"],
   "icons": [

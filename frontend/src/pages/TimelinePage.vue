@@ -16,7 +16,7 @@
     <main class="flex-1 min-h-0 px-4 py-4 overflow-y-auto pb-[calc(5rem+env(safe-area-inset-bottom))]">
       <div v-if="loading" class="text-center py-16 text-text-secondary">加载中...</div>
       <div v-else-if="groupedRecords.length === 0" class="text-center py-16">
-        <div class="text-5xl mb-4">🍼</div>
+        <img src="/icon-192.png" alt="" class="w-14 h-14 mx-auto mb-4" />
         <p class="text-text-secondary">暂无记录</p>
       </div>
       <div v-else class="space-y-6">

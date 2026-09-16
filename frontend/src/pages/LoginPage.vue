@@ -2,7 +2,7 @@
   <div class="min-h-dvh bg-bg-main flex flex-col items-center justify-center px-6">
     <!-- Logo -->
     <div class="mb-10 text-center">
-      <div class="text-6xl mb-4">🍼</div>
+      <img src="/icon-192.png" alt="宝宝护理记录" class="w-20 h-20 mb-4 drop-shadow-sm" />
       <h1 class="text-2xl font-bold text-text-primary">宝宝护理记录</h1>
       <p class="text-text-secondary text-sm mt-1">记录宝宝成长，每一刻都珍贵</p>
     </div>
