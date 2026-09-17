@@ -195,6 +195,7 @@ export const authAPI = {
 
 export const babyAPI = {
   list: () => api.get<Baby[]>('/babies'),
+  get: (id: number) => api.get<Baby>(`/babies/${id}`),
   create: (data: CreateBabyData) => api.post<Baby>('/babies', data),
   update: (id: number, data: Partial<CreateBabyData>) => api.put<Baby>(`/babies/${id}`, data),
   delete: (id: number) => api.delete(`/babies/${id}`),

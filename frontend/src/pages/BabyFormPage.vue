@@ -72,7 +72,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { babyAPI } from '@/api'
-import { nowLocalDatetime } from '@/utils'
+import { nowLocalDatetime, toLocalDatetime } from '@/utils'
 import Segmented from '@/components/Segmented.vue'
 import FormBar from '@/components/FormBar.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
@@ -115,7 +115,7 @@ async function loadBaby() {
     const res = await babyAPI.get(Number(route.params.id))
     const baby = res.data
     form.name = baby.name
-    form.birth_date = baby.birth_date ? baby.birth_date.slice(0, 16) : ''
+    form.birth_date = baby.birth_date ? toLocalDatetime(baby.birth_date) : ''
     form.gender = baby.gender || ''
     form.avatar_color = baby.avatar_color || '#F25C8C'
   } catch {

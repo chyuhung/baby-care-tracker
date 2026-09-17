@@ -121,6 +121,7 @@ func main() {
 			protected.GET("/me", handlers.GetCurrentUser)
 
 			protected.GET("/babies", handlers.GetBabies)
+			protected.GET("/babies/:id", handlers.GetBaby)
 			protected.POST("/babies", handlers.CreateBaby)
 			protected.PUT("/babies/:id", handlers.UpdateBaby)
 			protected.DELETE("/babies/:id", handlers.DeleteBaby)

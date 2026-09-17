@@ -60,6 +60,33 @@ func GetBabies(c *gin.Context) {
 	c.JSON(http.StatusOK, babies)
 }
 
+// GetBaby 获取单个宝宝
+func GetBaby(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	babyID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil || babyID <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return
+	}
+
+	if !checkBabyFamily(babyID, userID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
+		return
+	}
+
+	var baby models.Baby
+	err = database.DB.QueryRow(
+		"SELECT id, user_id, name, birth_date, gender, avatar_color, created_at FROM babies WHERE id = ?",
+		babyID,
+	).Scan(&baby.ID, &baby.UserID, &baby.Name, &baby.BirthDate, &baby.Gender, &baby.AvatarColor, &baby.CreatedAt)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "宝宝不存在"})
+		return
+	}
+
+	c.JSON(http.StatusOK, baby)
+}
+
 // CreateBaby 创建宝宝
 func CreateBaby(c *gin.Context) {
 	userID := c.GetInt64("user_id")
