@@ -55,7 +55,7 @@
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-0.5">
                 <span class="text-3xl font-bold text-primary-deep font-num">{{ stats.total_ml_today }}<sup v-if="stats.feeding_count > 0" class="text-[0.55em] font-bold text-primary-deep font-num leading-none">{{ stats.feeding_count }}</sup></span>
-                <span class="text-sm text-text-secondary">ml</span>
+                <span :class="UNIT_CLASS">ml</span>
               </div>
               <div class="text-3xl">🍼</div>
             </div>
@@ -67,7 +67,7 @@
             </div>
             <div v-if="feedingAvgInterval" class="mt-1 flex items-center justify-between">
               <span class="text-xs text-text-secondary">平均间隔</span>
-              <span class="text-xs font-medium text-text-secondary font-num">{{ feedingAvgInterval }}</span>
+              <span class="text-xs font-medium text-text-secondary">{{ feedingAvgInterval }}</span>
             </div>
             <!-- 新增喂奶入口 -->
             <button @click.stop="goToAddFeeding"
@@ -94,7 +94,7 @@
             </div>
             <div v-if="diaperAvgInterval" class="mt-1 flex items-center justify-between">
               <span class="text-xs text-text-secondary">平均间隔</span>
-              <span class="text-xs font-medium text-text-secondary font-num">{{ diaperAvgInterval }}</span>
+              <span class="text-xs font-medium text-text-secondary">{{ diaperAvgInterval }}</span>
             </div>
             <!-- 新增尿布入口 -->
             <button @click.stop="goToAddDiaper"
@@ -112,7 +112,7 @@
                 <div class="flex items-baseline gap-px min-w-0">
                   <template v-for="(part, pi) in sleepParts" :key="pi">
                     <span class="text-3xl font-bold font-num text-sleep-deep leading-none">{{ part.val }}</span>
-                    <span class="text-[10px] font-semibold text-text-secondary">{{ part.unit }}</span>
+                    <span :class="UNIT_CLASS">{{ part.unit }}</span>
                   </template>
                 </div>
               </div>
@@ -124,7 +124,7 @@
             </div>
             <div v-if="sleepAvgDuration" class="mt-1 flex items-center justify-between">
               <span class="text-xs text-text-secondary">平均时长</span>
-              <span class="text-xs font-medium text-text-secondary font-num">{{ sleepAvgDuration }}</span>
+              <span class="text-xs font-medium text-text-secondary">{{ sleepAvgDuration }}</span>
             </div>
             <button v-if="currentSleep" @click.stop="stopSleep" :disabled="loadingAction === 'stop-sleep'"
               class="mt-3 w-full min-h-[44px] py-2 bg-danger text-white text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1 disabled:opacity-50">
@@ -171,7 +171,7 @@
                 <div class="flex items-baseline gap-px min-w-0">
                   <template v-for="(part, pi) in outdoorParts" :key="pi">
                     <span class="text-3xl font-bold font-num text-outdoor-deep leading-none">{{ part.val }}</span>
-                    <span class="text-[10px] font-semibold text-text-secondary">{{ part.unit }}</span>
+                    <span :class="UNIT_CLASS">{{ part.unit }}</span>
                   </template>
                 </div>
               </div>
@@ -183,7 +183,7 @@
             </div>
             <div v-if="avgOutdoorDuration > 0" class="mt-1 flex items-center justify-between">
               <span class="text-xs text-text-secondary">平均时长</span>
-              <span class="text-xs font-medium text-text-secondary font-num">{{ formatAvgOutdoor }}</span>
+              <span class="text-xs font-medium text-text-secondary">{{ formatAvgOutdoor }}</span>
             </div>
             <button v-if="currentOutdoor" @click.stop="stopOutdoor" :disabled="loadingAction === 'stop-outdoor'"
               class="mt-3 w-full min-h-[44px] py-2 bg-danger text-white text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1 disabled:opacity-50">
@@ -236,12 +236,13 @@ import type { BabyStats, SleepRecord, OutdoorRecord } from '@/api'
 import RecordCard from '@/components/RecordCard.vue'
 import PullRefresh from '@/components/PullRefresh.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
-import { durationCompactParts, formatDurationCompact, WEEKDAY_SHORT } from '@/utils'
+import { durationCompactParts, formatDurationCN, WEEKDAY_SHORT } from '@/utils'
 
 const tick = ref(0)
 let tickTimer: number | null = null
 const router = useRouter()
 const app = useAppStore()
+const UNIT_CLASS = 'text-sm text-text-secondary'
 const stats = ref<BabyStats>({ feeding_count: 0, diaper_count: 0, total_ml_today: 0, last_feeding: '', last_diaper: '', sleep_count: 0, sleep_duration: 0, last_sleep_end: '', temperature_count: 0, latest_temperature: 0, last_temperature: '', outdoor_count: 0, outdoor_duration: 0, last_outdoor_end: '' })
 const allRecords = ref<any[]>([])
 const showAllRecords = ref(false)
@@ -332,12 +333,12 @@ function avgIntervalMinutes(records: any[], type: string): number | null {
 
 const feedingAvgInterval = computed(() => {
   const m = avgIntervalMinutes(allRecords.value, 'feeding')
-  return m == null ? null : formatDurationCompact(m)
+  return m == null ? null : formatDurationCN(m)
 })
 
 const diaperAvgInterval = computed(() => {
   const m = avgIntervalMinutes(allRecords.value, 'diaper')
-  return m == null ? null : formatDurationCompact(m)
+  return m == null ? null : formatDurationCN(m)
 })
 
 const sleepAvgDuration = computed(() => {
@@ -351,7 +352,7 @@ const sleepAvgDuration = computed(() => {
     .sort((a, b) => b.occurred - a.occurred)
     .slice(0, 10)
   if (!recs.length) return null
-  return formatDurationCompact(Math.round(recs.reduce((sum, x) => sum + x.t, 0) / recs.length))
+  return formatDurationCN(Math.round(recs.reduce((sum, x) => sum + x.t, 0) / recs.length))
 })
 
 const tempHighValue = computed(() => {
@@ -387,7 +388,7 @@ const avgOutdoorDuration = computed(() => stats.value.outdoor_count > 0
   ? Math.round(stats.value.outdoor_duration / stats.value.outdoor_count)
   : 0)
 
-const formatAvgOutdoor = computed(() => formatDurationCompact(avgOutdoorDuration.value))
+const formatAvgOutdoor = computed(() => formatDurationCN(avgOutdoorDuration.value))
 
 async function loadData() {
   if (app.babies.length === 0) {

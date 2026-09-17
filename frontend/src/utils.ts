@@ -67,3 +67,12 @@ export function durationCompactParts(mins: number): DurationPart[] {
 export function formatDurationCompact(mins: number) {
   return durationCompactParts(mins).map(p => p.val + p.unit).join('')
 }
+
+/** 中文时长：2小时30分钟 / 2小时 / 15分钟 / 0分钟 */
+export function formatDurationCN(mins: number) {
+  if (!mins || mins <= 0) return '0分钟'
+  if (mins < 60) return `${mins}分钟`
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return m > 0 ? `${h}小时${m}分钟` : `${h}小时`
+}
