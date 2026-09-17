@@ -313,7 +313,7 @@ function getTimeAgo(isoString: string | null) {
   const diffDays = Math.floor(diffHours / 24)
   let text = ''
   if (diffDays > 0) text = `${diffDays}天${diffHours % 24}小时前`
-  else if (diffHours > 0) text = `${diffHours}小时${diffMins % 60}分前`
+  else if (diffHours > 0) text = diffMins % 60 > 0 ? `${diffHours}小时${diffMins % 60}分钟前` : `${diffHours}小时前`
   else if (diffMins > 0) text = `${diffMins}分钟前`
   else text = '刚刚'
   return { text, isLong: diffHours >= 4, minutes: diffMins }
