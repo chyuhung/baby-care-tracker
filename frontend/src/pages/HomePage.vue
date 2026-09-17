@@ -270,11 +270,11 @@ const displayRecords = computed(() => {
 const ageText = computed(() => {
   const baby = app.currentBaby
   if (!baby?.birth_date) return ''
-  const m = baby.birth_date.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/)
-  if (!m) return ''
-  const birthYear = +m[1]
-  const birthMonth = +m[2] - 1
-  const birthDay = +m[3]
+  const bd = new Date(baby.birth_date)
+  if (isNaN(bd.getTime())) return ''
+  const birthYear = bd.getFullYear()
+  const birthMonth = bd.getMonth()
+  const birthDay = bd.getDate()
   const now = new Date()
   if (now.getFullYear() < birthYear ||
       (now.getFullYear() === birthYear && (now.getMonth() < birthMonth ||
@@ -445,7 +445,7 @@ async function startSleep() {
   try {
     const now = new Date().toISOString()
     const res = await recordAPI.createSleepStart(baby.id, { started_at: now })
-    currentSleep.value = res.data
+    currentSleep.value = (res.data as any).data ?? res.data
     window.dispatchEvent(new CustomEvent('record-created', { detail: res.data }))
     app.showToast('开始睡觉', 'success')
   } catch (e: any) {
@@ -481,7 +481,7 @@ async function startOutdoor() {
   try {
     const now = new Date().toISOString()
     const res = await recordAPI.createOutdoorStart(baby.id, { started_at: now })
-    currentOutdoor.value = res.data
+    currentOutdoor.value = (res.data as any).data ?? res.data
     window.dispatchEvent(new CustomEvent('record-created', { detail: res.data }))
     app.showToast('开始户外活动', 'success')
   } catch (e: any) {

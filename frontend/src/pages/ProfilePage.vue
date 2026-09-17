@@ -239,14 +239,14 @@ function copyCode() {
 
 function formatBirthDate(bd: string) {
   if (!bd) return ''
-  // 手动解析，避免 new Date() 在缺少时区/秒数时的跨浏览器歧义
-  const m = bd.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/)
-  if (m) {
-    const [, y, mo, d, h, mi] = m
-    if (h) return `${y}-${mo}-${d} ${h}:${mi}`
-    return `${y}-${mo}-${d}`
-  }
-  return bd
+  const d = new Date(bd)
+  if (isNaN(d.getTime())) return bd
+  const p2 = (n: number) => String(n).padStart(2, '0')
+  const base = `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`
+  const h = d.getHours()
+  const mi = d.getMinutes()
+  if (h || mi) return `${base} ${p2(h)}:${p2(mi)}`
+  return base
 }
 
 onMounted(() => {

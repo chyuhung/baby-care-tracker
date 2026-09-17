@@ -172,7 +172,7 @@ async function loadRecord() {
   if (!baby) return
   try {
     const res = await recordAPI.list(baby.id)
-    const record = (res.data as any[]).find(r => r.id === Number(route.params.id))
+    const record = (res.data as any[]).find(r => r.id === Number(route.params.id) && r.record_type === recordType.value)
     if (record) {
       form.occurred_at = toLocalDatetime(record.occurred_at)
       form.note = record.data.note || ''

@@ -108,7 +108,7 @@ func StopOutdoor(c *gin.Context) {
 	}
 
 	_, err = database.DB.Exec(
-		"UPDATE outdoor_records SET ended_at = ?, note = ? WHERE id = ? AND ended_at IS NULL",
+		"UPDATE outdoor_records SET ended_at = ?, note = COALESCE(NULLIF(?, ''), note) WHERE id = ? AND ended_at IS NULL",
 		req.EndedAt, req.Note, outdoorID,
 	)
 	if err != nil {

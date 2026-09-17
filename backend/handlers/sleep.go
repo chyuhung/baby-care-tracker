@@ -108,7 +108,7 @@ func StopSleep(c *gin.Context) {
 	}
 
 	_, err = database.DB.Exec(
-		"UPDATE sleep_records SET ended_at = ?, note = ? WHERE id = ? AND ended_at IS NULL",
+		"UPDATE sleep_records SET ended_at = ?, note = COALESCE(NULLIF(?, ''), note) WHERE id = ? AND ended_at IS NULL",
 		req.EndedAt, req.Note, sleepID,
 	)
 	if err != nil {

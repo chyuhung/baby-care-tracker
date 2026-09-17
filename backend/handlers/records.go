@@ -478,8 +478,8 @@ func UpdateRecord(c *gin.Context) {
 		}
 	case "sleep":
 		_, err := database.DB.Exec(
-			"UPDATE sleep_records SET started_at = ?, ended_at = ?, note = ? WHERE id = ?",
-			req.StartedAt, req.EndedAt, req.Note, recordID,
+			"UPDATE sleep_records SET started_at = ?, ended_at = CASE WHEN ? = '' THEN NULL ELSE ? END, note = ? WHERE id = ?",
+			req.StartedAt, req.EndedAt, req.EndedAt, req.Note, recordID,
 		)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "更新失败"})
@@ -496,8 +496,8 @@ func UpdateRecord(c *gin.Context) {
 		}
 	case "outdoor":
 		_, err := database.DB.Exec(
-			"UPDATE outdoor_records SET started_at = ?, ended_at = ?, note = ? WHERE id = ?",
-			req.StartedAt, req.EndedAt, req.Note, recordID,
+			"UPDATE outdoor_records SET started_at = ?, ended_at = CASE WHEN ? = '' THEN NULL ELSE ? END, note = ? WHERE id = ?",
+			req.StartedAt, req.EndedAt, req.EndedAt, req.Note, recordID,
 		)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "更新失败"})
