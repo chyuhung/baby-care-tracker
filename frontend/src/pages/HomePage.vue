@@ -196,6 +196,30 @@
               {{ loadingAction === 'start-outdoor' ? '处理中...' : '开始' }}
             </button>
           </div>
+
+          <!-- 补剂卡片 -->
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('supplement')" @click="goToTimeline('supplement')" class="col-span-2 bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+            <div class="text-xs text-text-secondary mb-1">今日补剂</div>
+            <div class="flex items-end justify-between">
+              <div class="flex items-baseline gap-1">
+                <span class="text-3xl font-bold font-num text-supplement-deep">{{ stats.supplement_count }}</span>
+                <span class="text-sm text-text-secondary">次</span>
+              </div>
+              <div class="text-3xl">💊</div>
+            </div>
+            <div v-if="lastSupplementAgo" class="mt-2 flex items-center justify-between">
+              <span class="text-xs text-text-secondary">距上次</span>
+              <span class="text-xs font-medium" :class="lastSupplementAgo.isLong ? 'text-warning' : 'text-text-secondary'">{{ lastSupplementAgo.text }}</span>
+            </div>
+            <div v-if="supplementAvgInterval" class="mt-1 flex items-center justify-between">
+              <span class="text-xs text-text-secondary">平均间隔</span>
+              <span class="text-xs font-medium text-text-secondary">{{ supplementAvgInterval }}</span>
+            </div>
+            <button @click.stop="goToAddSupplement"
+              class="mt-3 w-full min-h-[44px] py-2 bg-supplement/10 text-supplement-deep text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1">
+              <span class="text-base">＋</span> 补剂
+            </button>
+          </div>
         </div>
 
         <!-- 最近记录 -->
@@ -243,7 +267,7 @@ let tickTimer: number | null = null
 const router = useRouter()
 const app = useAppStore()
 const UNIT_CLASS = 'text-sm text-text-secondary'
-const stats = ref<BabyStats>({ feeding_count: 0, diaper_count: 0, total_ml_today: 0, last_feeding: '', last_diaper: '', sleep_count: 0, sleep_duration: 0, last_sleep_end: '', temperature_count: 0, latest_temperature: 0, last_temperature: '', outdoor_count: 0, outdoor_duration: 0, last_outdoor_end: '' })
+const stats = ref<BabyStats>({ feeding_count: 0, diaper_count: 0, total_ml_today: 0, last_feeding: '', last_diaper: '', sleep_count: 0, sleep_duration: 0, last_sleep_end: '', temperature_count: 0, latest_temperature: 0, last_temperature: '', outdoor_count: 0, outdoor_duration: 0, last_outdoor_end: '', supplement_count: 0, last_supplement: '' })
 const allRecords = ref<any[]>([])
 const showAllRecords = ref(false)
 const showDeleteConfirm = ref(false)
@@ -341,6 +365,11 @@ const diaperAvgInterval = computed(() => {
   return m == null ? null : formatDurationCN(m)
 })
 
+const supplementAvgInterval = computed(() => {
+  const m = avgIntervalMinutes(allRecords.value, 'supplement')
+  return m == null ? null : formatDurationCN(m)
+})
+
 const sleepAvgDuration = computed(() => {
   const recs = allRecords.value
     .filter(r => r.record_type === 'sleep' && r.data?.started_at && r.data?.ended_at)
@@ -370,6 +399,7 @@ const lastDiaperAgo = computed(() => { tick.value; return getTimeAgo(stats.value
 const lastSleepAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_sleep_end) })
 const lastTempAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_temperature) })
 const lastOutdoorAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_outdoor_end) })
+const lastSupplementAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_supplement) })
 
 // 进行中已持续分钟数
 function elapsedMins(startedAt?: string) {
@@ -437,6 +467,10 @@ function goToAddDiaper() {
 
 function goToAddTemperature() {
   router.push('/temperature')
+}
+
+function goToAddSupplement() {
+  router.push('/supplement')
 }
 
 async function startSleep() {
@@ -518,6 +552,8 @@ function editRecord(r: any) {
     router.push(`/temperature/${r.id}/edit`)
   } else if (r.record_type === 'outdoor') {
     router.push(`/outdoor/${r.id}/edit`)
+  } else if (r.record_type === 'supplement') {
+    router.push(`/supplement/${r.id}/edit`)
   } else {
     router.push(`/record/${r.record_type}/${r.id}/edit`)
   }

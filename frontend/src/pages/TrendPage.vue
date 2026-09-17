@@ -191,6 +191,41 @@
             </template>
           </svg>
         </div>
+        <div v-if="category === 'supplement'" class="bg-white rounded-2xl shadow-card p-4">
+          <h4 class="text-sm font-semibold text-text-secondary mb-2">
+            <span class="flex items-center gap-2">
+              💊 每日补剂
+            </span>
+          </h4>
+          <svg viewBox="0 0 340 170" class="w-full block">
+            <template v-if="days === 30">
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+              <g v-for="(t, ti) in supplementScatter.ticks" :key="'sul'+ti">
+                <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
+                <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" class="chart-value-label">{{ t.label }}</text>
+              </g>
+              <g v-for="(pt, i) in supplementScatter.points" :key="'suv'+i">
+                <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
+              </g>
+              <line v-if="supplementScatter.trend" :x1="supplementScatter.trend.x1" :y1="supplementScatter.trend.y1" :x2="supplementScatter.trend.x2" :y2="supplementScatter.trend.y2" stroke="var(--chart-supplement)" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.85"/>
+              <g v-for="(pt, i) in supplementScatter.points" :key="'sup'+i">
+                <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="var(--chart-supplement)"/>
+              </g>
+            </template>
+            <template v-else>
+              <g v-for="(b, i) in supplement.items" :key="'sub'+i">
+                <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-supplement)" opacity="0.85"/>
+                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" class="chart-value-label">{{ b.label }}</text>
+              </g>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+            </template>
+            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+            <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">次</text>
+            <template v-for="(d, i) in trendData" :key="'sux'+i">
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
+            </template>
+          </svg>
+        </div>
         <div v-if="category === 'temperature'" class="bg-white rounded-2xl shadow-card p-4">
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
             <span class="flex items-center gap-2">
@@ -249,6 +284,7 @@ const categoryOptions = [
   { label: '😴 睡眠', value: 'sleep' },
   { label: '🌡️ 体温', value: 'temperature' },
   { label: '🌳 户外', value: 'outdoor' },
+  { label: '💊 补剂', value: 'supplement' },
 ]
 
 const dateLabels = computed(() => {
@@ -330,7 +366,18 @@ const summary = computed(() => {
     )
   }
 
-  const builders: Record<string, () => void> = { feeding, diaper, sleep, outdoor, temperature }
+  const supplement = () => {
+    const days = data.filter(d => (d.supplement_count || 0) > 0)
+    if (!days.length) return
+    cards.push(
+      { label: '日均次数', value: avgOf(days, d => d.supplement_count || 0).toFixed(1), sub: `共 ${days.length} 天` },
+      { label: '期间总次数', value: String(sumOf(days, d => d.supplement_count || 0)) },
+      { label: '单日最多', value: `${maxOf(days, d => d.supplement_count || 0)} 次` },
+      { label: '有记录天数', value: `${days.length} 天` },
+    )
+  }
+
+  const builders: Record<string, () => void> = { feeding, diaper, sleep, outdoor, temperature, supplement }
   builders[category.value]?.()
   return { cards }
 })
@@ -583,12 +630,14 @@ const feedingCount = computed(() => buildBars(d => d.feeding_count || 0))
 const diaper = computed(() => buildBars(d => d.diaper_count || 0))
 const sleep = computed(() => buildBars(d => (d.sleep_duration_minutes || 0) / 60, { decimals: 1 }))
 const outdoor = computed(() => buildBars(d => (d.outdoor_duration_minutes || 0) / 60, { decimals: 1 }))
+const supplement = computed(() => buildBars(d => d.supplement_count || 0))
 
 const feedingMlScatter = computed(() => buildLineChart(d => d.total_ml || 0, { integerTicks: true }))
 const feedingCountScatter = computed(() => buildLineChart(d => d.feeding_count || 0, { integerTicks: true, forceZero: true }))
 const diaperScatter = computed(() => buildLineChart(d => d.diaper_count || 0, { integerTicks: true }))
 const sleepScatter = computed(() => buildLineChart(d => (d.sleep_duration_minutes || 0) / 60, { integerTicks: true }))
 const outdoorScatter = computed(() => buildLineChart(d => (d.outdoor_duration_minutes || 0) / 60, { integerTicks: true }))
+const supplementScatter = computed(() => buildLineChart(d => d.supplement_count || 0, { integerTicks: true }))
 
 const tempChart = computed(() => buildLineChart(d => d.temperature_high || 0, { withPath: true }))
 const tempTicks = computed(() => tempChart.value.ticks)

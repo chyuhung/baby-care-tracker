@@ -97,6 +97,20 @@ type TemperatureRecord struct {
 	RecordType  string  `json:"record_type"` // temperature
 }
 
+// SupplementRecord 补剂记录
+type SupplementRecord struct {
+	ID          int64   `json:"id"`
+	BabyID      int64   `json:"baby_id"`
+	UserID      int64   `json:"user_id"`
+	Name        string  `json:"name"`
+	DosageValue float64 `json:"dosage_value"`
+	DosageUnit  string  `json:"dosage_unit"`
+	Note        string  `json:"note"`
+	OccurredAt  string  `json:"occurred_at"`
+	CreatedAt   string  `json:"created_at"`
+	RecordType  string  `json:"record_type"` // supplement
+}
+
 // OutdoorRecord 户外活动记录
 type OutdoorRecord struct {
 	ID         int64   `json:"id"`
@@ -114,7 +128,7 @@ type Record struct {
 	ID         int64  `json:"id"`
 	BabyID     int64  `json:"baby_id"`
 	UserID     int64  `json:"user_id"`
-	RecordType string `json:"record_type"` // feeding, diaper, sleep, temperature, outdoor
+	RecordType string `json:"record_type"` // feeding, diaper, sleep, temperature, supplement, outdoor
 	Data       any    `json:"data"`
 	OccurredAt string `json:"occurred_at"`
 	CreatedAt  string `json:"created_at"`
@@ -179,6 +193,9 @@ type UpdateRecordRequest struct {
 	EndedAt         string  `json:"ended_at"`
 	Temperature     float64 `json:"temperature"`
 	Location        string  `json:"location"`
+	Name            string  `json:"name"`
+	DosageValue     float64 `json:"dosage_value"`
+	DosageUnit      string  `json:"dosage_unit"`
 }
 
 type CreateSleepRequest struct {
@@ -201,6 +218,14 @@ type CreateTemperatureRequest struct {
 type CreateOutdoorRequest struct {
 	StartedAt string `json:"started_at" binding:"required"`
 	Note      string `json:"note"`
+}
+
+type CreateSupplementRequest struct {
+	Name        string  `json:"name" binding:"required"`
+	DosageValue float64 `json:"dosage_value"`
+	DosageUnit  string  `json:"dosage_unit"`
+	Note        string  `json:"note"`
+	OccurredAt  string  `json:"occurred_at" binding:"required"`
 }
 
 type StopOutdoorRequest struct {

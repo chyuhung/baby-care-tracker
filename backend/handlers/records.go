@@ -36,6 +36,8 @@ func lookupBabyID(recordID int64, recordType string) int64 {
 		database.DB.QueryRow("SELECT baby_id FROM temperature_records WHERE id = ?", recordID).Scan(&babyID)
 	case "outdoor":
 		database.DB.QueryRow("SELECT baby_id FROM outdoor_records WHERE id = ?", recordID).Scan(&babyID)
+	case "supplement":
+		database.DB.QueryRow("SELECT baby_id FROM supplement_records WHERE id = ?", recordID).Scan(&babyID)
 	default:
 		database.DB.QueryRow("SELECT baby_id FROM feeding_records WHERE id = ?", recordID).Scan(&babyID)
 	}
@@ -50,8 +52,8 @@ func GetRecords(c *gin.Context) {
 		return
 	}
 	recordType := c.Query("type")
-	if recordType != "" && recordType != "feeding" && recordType != "diaper" && recordType != "sleep" && recordType != "temperature" && recordType != "outdoor" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "type 必须为 feeding, diaper, sleep, temperature 或 outdoor"})
+	if recordType != "" && recordType != "feeding" && recordType != "diaper" && recordType != "sleep" && recordType != "temperature" && recordType != "outdoor" && recordType != "supplement" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "type 必须为 feeding, diaper, sleep, temperature, outdoor 或 supplement"})
 		return
 	}
 	daysStr := c.Query("days")
@@ -76,7 +78,7 @@ func GetRecords(c *gin.Context) {
 		}
 	}
 
-	var feedingCount, diaperCount, sleepCount, temperatureCount, outdoorCount int
+	var feedingCount, diaperCount, sleepCount, temperatureCount, outdoorCount, supplementCount int
 	if recordType == "" || recordType == "feeding" {
 		fArgs := append([]interface{}{}, args...)
 		database.DB.QueryRow("SELECT COUNT(*) FROM feeding_records WHERE baby_id = ?"+daysFilter, fArgs...).Scan(&feedingCount)
@@ -97,7 +99,11 @@ func GetRecords(c *gin.Context) {
 		oArgs := append([]interface{}{}, args...)
 		database.DB.QueryRow("SELECT COUNT(*) FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL"+outdoorDaysFilter, oArgs...).Scan(&outdoorCount)
 	}
-	c.Header("X-Total-Count", strconv.Itoa(feedingCount+diaperCount+sleepCount+temperatureCount+outdoorCount))
+	if recordType == "" || recordType == "supplement" {
+		sArgs := append([]interface{}{}, args...)
+		database.DB.QueryRow("SELECT COUNT(*) FROM supplement_records WHERE baby_id = ?"+daysFilter, sArgs...).Scan(&supplementCount)
+	}
+	c.Header("X-Total-Count", strconv.Itoa(feedingCount+diaperCount+sleepCount+temperatureCount+outdoorCount+supplementCount))
 
 	var records []models.Record
 
@@ -267,6 +273,40 @@ func GetRecords(c *gin.Context) {
 		}
 	}
 
+	if recordType == "" || recordType == "supplement" {
+		sArgs := append([]interface{}{}, args...)
+		rows, err := database.DB.Query(
+			`SELECT id, baby_id, user_id, name, dosage_value, dosage_unit, note, occurred_at, created_at
+			FROM supplement_records WHERE baby_id = ?`+daysFilter+` ORDER BY occurred_at DESC LIMIT 500`,
+			sArgs...,
+		)
+		if err == nil {
+			defer rows.Close()
+			for rows.Next() {
+				var r models.SupplementRecord
+				var note, name, dosageUnit string
+				var dosageValue float64
+				if err := rows.Scan(&r.ID, &r.BabyID, &r.UserID, &name, &dosageValue, &dosageUnit, &note, &r.OccurredAt, &r.CreatedAt); err != nil {
+					continue
+				}
+				r.Name = name
+				r.DosageValue = dosageValue
+				r.DosageUnit = dosageUnit
+				r.Note = note
+				r.RecordType = "supplement"
+				records = append(records, models.Record{
+					ID:         r.ID,
+					BabyID:     r.BabyID,
+					UserID:     r.UserID,
+					RecordType: "supplement",
+					Data:       r,
+					OccurredAt: r.OccurredAt,
+					CreatedAt:  r.CreatedAt,
+				})
+			}
+		}
+	}
+
 	if records == nil {
 		records = []models.Record{}
 	} else {
@@ -293,12 +333,13 @@ func GetRecordsCount(c *gin.Context) {
 		return
 	}
 
-	var feedingCount, diaperCount, sleepCount, temperatureCount, outdoorCount int
+	var feedingCount, diaperCount, sleepCount, temperatureCount, outdoorCount, supplementCount int
 	database.DB.QueryRow("SELECT COUNT(*) FROM feeding_records WHERE baby_id = ?", babyID).Scan(&feedingCount)
 	database.DB.QueryRow("SELECT COUNT(*) FROM diaper_records WHERE baby_id = ?", babyID).Scan(&diaperCount)
 	database.DB.QueryRow("SELECT COUNT(*) FROM sleep_records WHERE baby_id = ? AND ended_at IS NOT NULL", babyID).Scan(&sleepCount)
 	database.DB.QueryRow("SELECT COUNT(*) FROM temperature_records WHERE baby_id = ?", babyID).Scan(&temperatureCount)
 	database.DB.QueryRow("SELECT COUNT(*) FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL", babyID).Scan(&outdoorCount)
+	database.DB.QueryRow("SELECT COUNT(*) FROM supplement_records WHERE baby_id = ?", babyID).Scan(&supplementCount)
 
 	c.JSON(http.StatusOK, gin.H{
 		"feeding_count":     feedingCount,
@@ -306,7 +347,8 @@ func GetRecordsCount(c *gin.Context) {
 		"sleep_count":       sleepCount,
 		"temperature_count": temperatureCount,
 		"outdoor_count":     outdoorCount,
-		"total":             feedingCount + diaperCount + sleepCount + temperatureCount + outdoorCount,
+		"supplement_count":  supplementCount,
+		"total":             feedingCount + diaperCount + sleepCount + temperatureCount + outdoorCount + supplementCount,
 	})
 }
 
@@ -503,6 +545,15 @@ func UpdateRecord(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "更新失败"})
 			return
 		}
+	case "supplement":
+		_, err := database.DB.Exec(
+			"UPDATE supplement_records SET name = ?, dosage_value = ?, dosage_unit = ?, note = ?, occurred_at = ? WHERE id = ?",
+			req.Name, req.DosageValue, req.DosageUnit, req.Note, req.OccurredAt, recordID,
+		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "更新失败"})
+			return
+		}
 	default:
 		_, err := database.DB.Exec(
 			"UPDATE feeding_records SET type = ?, duration_minutes = ?, amount_ml = ?, side = ?, brand = ?, note = ?, occurred_at = ? WHERE id = ?",
@@ -542,6 +593,8 @@ func DeleteRecord(c *gin.Context) {
 		_, err = database.DB.Exec("DELETE FROM temperature_records WHERE id = ?", recordID)
 	case "outdoor":
 		_, err = database.DB.Exec("DELETE FROM outdoor_records WHERE id = ?", recordID)
+	case "supplement":
+		_, err = database.DB.Exec("DELETE FROM supplement_records WHERE id = ?", recordID)
 	default:
 		_, err = database.DB.Exec("DELETE FROM feeding_records WHERE id = ?", recordID)
 	}

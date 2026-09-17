@@ -301,6 +301,18 @@ func GetStats(c *gin.Context) {
 		babyID,
 	).Scan(&lastOutdoorEnd)
 
+	var supplementCount int
+	database.DB.QueryRow(
+		"SELECT COUNT(*) FROM supplement_records WHERE baby_id = ? AND occurred_at >= ? AND occurred_at < ?",
+		babyID, todayStart, todayEnd,
+	).Scan(&supplementCount)
+
+	var lastSupplement string
+	database.DB.QueryRow(
+		"SELECT occurred_at FROM supplement_records WHERE baby_id = ? ORDER BY occurred_at DESC LIMIT 1",
+		babyID,
+	).Scan(&lastSupplement)
+
 	c.JSON(http.StatusOK, gin.H{
 		"feeding_count":      feedingCount,
 		"diaper_count":       diaperCount,
@@ -316,6 +328,8 @@ func GetStats(c *gin.Context) {
 		"outdoor_count":      outdoorCount,
 		"outdoor_duration":   outdoorDuration,
 		"last_outdoor_end":   lastOutdoorEnd,
+		"supplement_count":   supplementCount,
+		"last_supplement":    lastSupplement,
 	})
 }
 
@@ -329,6 +343,7 @@ type DailyStats struct {
 	TemperatureAvg  float64 `json:"temperature_avg"`
 	TemperatureHigh float64 `json:"temperature_high"`
 	OutdoorMinutes  int     `json:"outdoor_duration_minutes"`
+	SupplementCount int     `json:"supplement_count"`
 }
 
 // GetTrendStats 获取宝宝趋势统计（最近7天）
@@ -497,6 +512,27 @@ func GetTrendStats(c *gin.Context) {
 		}
 	}
 
+	supplementRows, err := database.DB.Query(`
+		SELECT occurred_at FROM supplement_records
+		WHERE baby_id = ? AND occurred_at >= ?
+	`, babyID, startDate)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
+		return
+	}
+	defer supplementRows.Close()
+
+	supplementMap := make(map[string]int)
+	for supplementRows.Next() {
+		var occurredAt string
+		if supplementRows.Scan(&occurredAt) != nil {
+			continue
+		}
+		t := parseTime(occurredAt).In(loc)
+		date := fmt.Sprintf("%d-%02d-%02d", t.Year(), t.Month(), t.Day())
+		supplementMap[date]++
+	}
+
 	var trends []DailyStats
 	for _, date := range dates {
 		f := feedingMap[date]
@@ -520,6 +556,7 @@ func GetTrendStats(c *gin.Context) {
 			TemperatureAvg:  tempAvg,
 			TemperatureHigh: tempHigh,
 			OutdoorMinutes:  outdoorMap[date],
+			SupplementCount: supplementMap[date],
 		})
 	}
 

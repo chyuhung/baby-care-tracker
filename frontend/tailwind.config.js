@@ -18,6 +18,8 @@ export default {
         'sleep-deep': 'rgb(var(--sleep-deep) / <alpha-value>)',
         outdoor: 'rgb(var(--outdoor) / <alpha-value>)',
         'outdoor-deep': 'rgb(var(--outdoor-deep) / <alpha-value>)',
+        supplement: 'rgb(var(--supplement) / <alpha-value>)',
+        'supplement-deep': 'rgb(var(--supplement-deep) / <alpha-value>)',
         // 语义色（深档由 CSS 变量驱动，白字清晰）
         success: 'rgb(var(--success-deep) / <alpha-value>)',
         warning: 'rgb(var(--warning-deep) / <alpha-value>)',

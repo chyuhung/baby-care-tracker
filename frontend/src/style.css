@@ -25,6 +25,8 @@
   --sleep-deep: 18 143 163;      /* #128FA3 加深青 */
   --outdoor: 92 172 55;          /* #5CAC37 户外草绿 */
   --outdoor-deep: 78 152 46;     /* #4E982E 加深绿 */
+  --supplement: 139 92 246;      /* #8B5CF6 补剂紫 */
+  --supplement-deep: 124 58 237; /* #7C3AED 加深紫 */
   --success-deep: 37 150 68;     /* #259644 成功绿（Toast 白字3.8） */
   --warning-deep: 232 118 10;    /* #E8760A 提醒橙 */
   --danger-deep: 255 59 48;      /* #FF3B30 iOS 危险红（白字3.55） */
@@ -37,6 +39,7 @@
   --chart-temperature: #2DA84D;
   --chart-sleep: #1AA2B8;
   --chart-outdoor: #5CAC37;
+  --chart-supplement: #8B5CF6;
   --chart-primary-count: #AF52DE; /* 喂奶次数第二色：清透紫，与奶量粉区分 */
 }
 

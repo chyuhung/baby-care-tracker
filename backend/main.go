@@ -129,6 +129,7 @@ func main() {
 			protected.GET("/babies/:id/trend", handlers.GetTrendStats)
 			protected.GET("/babies/:id/latest-feeding", handlers.GetLatestFeeding)
 			protected.GET("/babies/:id/latest-temperature", handlers.GetLatestTemperature)
+			protected.GET("/babies/:id/latest-supplement", handlers.GetLatestSupplement)
 
 			protected.GET("/babies/:id/records", handlers.GetRecords)
 			protected.GET("/babies/:id/records/count", handlers.GetRecordsCount)
@@ -138,6 +139,7 @@ func main() {
 			protected.PUT("/babies/:id/sleep/:sid/stop", handlers.StopSleep)
 			protected.GET("/babies/:id/sleep/current", handlers.GetCurrentSleep)
 			protected.POST("/babies/:id/temperature", handlers.CreateTemperature)
+			protected.POST("/babies/:id/supplement", handlers.CreateSupplement)
 			protected.POST("/babies/:id/outdoor/start", handlers.StartOutdoor)
 			protected.PUT("/babies/:id/outdoor/:oid/stop", handlers.StopOutdoor)
 			protected.GET("/babies/:id/outdoor/current", handlers.GetCurrentOutdoor)

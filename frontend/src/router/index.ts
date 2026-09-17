@@ -64,6 +64,18 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
+      path: '/supplement',
+      name: 'supplement',
+      component: () => import('@/pages/SupplementPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/supplement/:id/edit',
+      name: 'supplement-edit',
+      component: () => import('@/pages/SupplementPage.vue'),
+      meta: { requiresAuth: true },
+    },
+    {
       path: '/outdoor/:id/edit',
       name: 'outdoor-edit',
       component: () => import('@/pages/OutdoorPage.vue'),

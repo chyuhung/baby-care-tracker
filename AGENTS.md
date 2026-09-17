@@ -16,6 +16,7 @@ Family group sharing, timezone fix, record performance optimization
 - Dedicated pages: SleepPage (timer, today summary, edit started_at/ended_at), TemperaturePage (quick record, latest reading, location selector), TrendPage (4-chart aggregation)
 - HomePage 4-card grid: 2×2 layout with feeding/diaper/sleep/temperature cards; inline sleep start/stop; temperature fever color display
 - Naming conventions aligned: `记录睡眠` / `记录体温` page titles, `记录` submit button, `更新记录` edit button, icons-only card entry buttons
+- Supplement feature: `supplement_records` table (name, dosage_value, dosage_unit, note); full record lifecycle (create/update/delete/timeline filter/RecordCard); HomePage full-width card (今日次数/距上次/平均间隔 + add); TrendPage `supplement` category (count bar/scatter + summary cards); theme color `--supplement` violet; PWA cache bumped to v10
 
 ### Known Issues
 - `vue-tsc` typecheck fails on Node.js v24 — not a code issue

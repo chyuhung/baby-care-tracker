@@ -69,6 +69,23 @@
     </button>
   </div>
 
+  <div v-else-if="record.record_type === 'supplement'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+    <div class="w-1.5 h-12 rounded-full bg-supplement flex-shrink-0"></div>
+    <div class="flex-1 min-w-0">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-sm font-semibold text-text-primary">💊 {{ rd.name }}</span>
+        <span class="text-xs text-text-secondary font-num">{{ timeAgo }}</span>
+      </div>
+      <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
+        <span v-if="rd.dosage_value > 0" class="bg-supplement/10 text-supplement-deep px-2 py-0.5 rounded-full font-num">{{ rd.dosage_value }}{{ rd.dosage_unit }}</span>
+      </div>
+      <div v-if="rd.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ rd.note }}</div>
+    </div>
+    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-danger/70 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
+
   <div v-else role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
     <div class="w-1.5 h-12 rounded-full bg-outdoor flex-shrink-0"></div>
     <div class="flex-1 min-w-0">

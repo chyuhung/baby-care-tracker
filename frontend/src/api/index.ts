@@ -66,12 +66,24 @@ export interface OutdoorRecord {
   created_at: string
 }
 
+export interface SupplementRecord {
+  id: number
+  baby_id: number
+  user_id: number
+  name: string
+  dosage_value: number
+  dosage_unit: string
+  note: string
+  occurred_at: string
+  created_at: string
+}
+
 export interface Record {
   id: number
   baby_id: number
   user_id: number
   record_type: string
-  data: FeedingRecord | DiaperRecord | SleepRecord | TemperatureRecord | OutdoorRecord
+  data: FeedingRecord | DiaperRecord | SleepRecord | TemperatureRecord | OutdoorRecord | SupplementRecord
   occurred_at: string
   created_at: string
 }
@@ -91,6 +103,8 @@ export interface BabyStats {
   outdoor_count: number
   outdoor_duration: number
   last_outdoor_end: string
+  supplement_count: number
+  last_supplement: string
 }
 
 export interface DailyStats {
@@ -102,6 +116,7 @@ export interface DailyStats {
   temperature_avg: number
   temperature_high: number
   outdoor_duration_minutes: number
+  supplement_count: number
 }
 
 export interface CreateBabyData {
@@ -139,6 +154,9 @@ export interface UpdateRecordData {
   ended_at?: string
   temperature?: number
   location?: string
+  name?: string
+  dosage_value?: number
+  dosage_unit?: string
 }
 
 export interface CreateSleepData {
@@ -156,6 +174,14 @@ export interface CreateTemperatureData {
 export interface CreateOutdoorData {
   started_at: string
   note?: string
+}
+
+export interface CreateSupplementData {
+  name: string
+  dosage_value?: number
+  dosage_unit?: string
+  note?: string
+  occurred_at: string
 }
 
 const api = axios.create({
@@ -206,6 +232,7 @@ export const babyAPI = {
   },
   latestFeeding: (id: number) => api.get<FeedingRecord>(`/babies/${id}/latest-feeding`),
   latestTemperature: (id: number) => api.get<{ temperature: number; location: string; note: string }>(`/babies/${id}/latest-temperature`),
+  latestSupplement: (id: number) => api.get<{ name: string; dosage_value: number; dosage_unit: string; note: string }>(`/babies/${id}/latest-supplement`),
 }
 
 export const recordAPI = {
@@ -216,7 +243,7 @@ export const recordAPI = {
     return api.get<Record[]>(`/babies/${babyId}/records`, { params })
   },
   count: (babyId: number) =>
-    api.get<{ feeding_count: number; diaper_count: number; sleep_count: number; temperature_count: number; outdoor_count: number; total: number }>(`/babies/${babyId}/records/count`),
+    api.get<{ feeding_count: number; diaper_count: number; sleep_count: number; temperature_count: number; outdoor_count: number; supplement_count: number; total: number }>(`/babies/${babyId}/records/count`),
   createFeeding: (babyId: number, data: CreateFeedingData) =>
     api.post<Record>(`/babies/${babyId}/feeding`, data),
   createDiaper: (babyId: number, data: CreateDiaperData) =>
@@ -229,6 +256,8 @@ export const recordAPI = {
     api.get<SleepRecord | Record<string, never>>(`/babies/${babyId}/sleep/current`),
   createTemperature: (babyId: number, data: CreateTemperatureData) =>
     api.post<Record>(`/babies/${babyId}/temperature`, data),
+  createSupplement: (babyId: number, data: CreateSupplementData) =>
+    api.post<Record>(`/babies/${babyId}/supplement`, data),
   createOutdoorStart: (babyId: number, data: CreateOutdoorData) =>
     api.post<Record>(`/babies/${babyId}/outdoor/start`, data),
   stopOutdoor: (babyId: number, outdoorId: number, data: { ended_at: string; note?: string }) =>
