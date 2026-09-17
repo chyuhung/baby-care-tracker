@@ -163,7 +163,7 @@
           </div>
 
           <!-- 户外活动卡片 -->
-          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('outdoor')" @click="goToTimeline('outdoor')" class="col-span-2 bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('outdoor')" @click="goToTimeline('outdoor')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
             <div class="text-xs text-text-secondary mb-1">今日户外活动</div>
             <div class="flex items-end justify-between">
               <div class="flex items-center gap-1 min-w-0">
@@ -198,7 +198,7 @@
           </div>
 
           <!-- 补剂卡片 -->
-          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('supplement')" @click="goToTimeline('supplement')" class="col-span-2 bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('supplement')" @click="goToTimeline('supplement')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
             <div class="text-xs text-text-secondary mb-1">今日补剂</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-1">

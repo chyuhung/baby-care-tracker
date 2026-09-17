@@ -29,15 +29,16 @@
       <!-- 剂量 -->
       <div>
         <label class="text-sm text-text-secondary block mb-2">剂量</label>
-        <div class="flex gap-2">
-          <input v-model.number="form.dosage_value" type="number" step="0.1" min="0" inputmode="decimal"
-            placeholder="如 1 或 2.5"
-            class="flex-1 px-4 py-3 bg-white border border-border-color rounded-xl text-xl text-center font-num font-bold focus:border-primary focus:outline-none transition-colors" />
-          <div class="flex-1 min-w-0">
-            <Segmented :model-value="form.dosage_unit" :options="unitOptions" compact
-              @update:model-value="(v: string) => form.dosage_unit = v" />
-          </div>
-        </div>
+        <input v-model.number="form.dosage_value" type="number" step="0.1" min="0" inputmode="decimal"
+          placeholder="如 1 或 2.5"
+          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-xl text-center font-num font-bold focus:border-primary focus:outline-none transition-colors" />
+      </div>
+
+      <!-- 剂量单位（iOS 分段控件） -->
+      <div>
+        <label class="text-sm text-text-secondary block mb-2">剂量单位</label>
+        <Segmented :model-value="form.dosage_unit" :options="unitOptions" compact
+          @update:model-value="(v: string) => form.dosage_unit = v" />
       </div>
 
       <!-- 时间 -->
@@ -101,7 +102,7 @@ const deleting = ref(false)
 const showDelete = ref(false)
 const error = ref('')
 
-const nameOptions = ['维生素D3', '钙', '铁', '锌', '益生菌', '鱼油', '其他']
+const nameOptions = ['维生素D3', '维生素AD', '钙', '铁', '锌', '益生菌', '鱼油', '其他']
 
 const unitOptions = [
   { value: '滴', label: '滴' },
