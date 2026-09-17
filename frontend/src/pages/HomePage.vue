@@ -399,7 +399,13 @@ const lastDiaperAgo = computed(() => { tick.value; return getTimeAgo(stats.value
 const lastSleepAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_sleep_end) })
 const lastTempAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_temperature) })
 const lastOutdoorAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_outdoor_end) })
-const lastSupplementAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_supplement) })
+const lastSupplementAgo = computed(() => {
+  tick.value
+  const t = stats.value.last_supplement
+  if (t) return getTimeAgo(t)
+  const recs = allRecords.value.filter(r => r.record_type === 'supplement').map(r => r.occurred_at).sort()
+  return getTimeAgo(recs.length ? recs[recs.length - 1] : null)
+})
 
 // 进行中已持续分钟数
 function elapsedMins(startedAt?: string) {
