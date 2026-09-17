@@ -54,7 +54,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { recordAPI } from '@/api'
+import { recordAPI, UpdateRecordData } from '@/api'
 import { toLocalDatetime } from '@/utils'
 import FormBar from './FormBar.vue'
 import ConfirmSheet from './ConfirmSheet.vue'
@@ -108,11 +108,12 @@ async function save() {
   }
   submitting.value = true
   try {
-    await recordAPI.update(Number(route.params.id), props.type, {
+    const payload: UpdateRecordData = {
       started_at: new Date(form.value.started_at).toISOString(),
-      ended_at: form.value.ended_at ? new Date(form.value.ended_at).toISOString() : '',
       note: form.value.note,
-    })
+    }
+    if (form.value.ended_at) payload.ended_at = new Date(form.value.ended_at).toISOString()
+    await recordAPI.update(Number(route.params.id), props.type, payload)
     window.dispatchEvent(new CustomEvent('record-created', { detail: null }))
     app.showToast('已保存', 'success')
     router.back()

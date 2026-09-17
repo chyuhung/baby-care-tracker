@@ -76,7 +76,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { recordAPI } from '@/api'
-import { nowLocalDatetime } from '@/utils'
+import { nowLocalDatetime, toLocalDatetime } from '@/utils'
 import Segmented from '@/components/Segmented.vue'
 import FormBar from '@/components/FormBar.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
@@ -132,7 +132,7 @@ async function loadRecord() {
     const res = await recordAPI.list(baby.id, 'temperature', 90)
     const record = (res.data as any[]).find(r => r.id === Number(route.params.id))
     if (record) {
-      form.occurred_at = record.occurred_at.slice(0, 16)
+      form.occurred_at = toLocalDatetime(record.occurred_at)
       form.temperature = record.data.temperature
       form.location = record.data.location || '腋下'
       form.note = record.data.note || ''
@@ -161,15 +161,16 @@ async function save() {
   saving.value = true
   try {
     const occurredAt = new Date(form.occurred_at).toISOString()
-    const data = {
-      temperature: form.temperature,
+    const payload = {
+      temperature: form.temperature!,
       location: form.location,
       note: form.note,
+      occurred_at: occurredAt,
     }
     if (isEdit.value) {
-      await recordAPI.update(Number(route.params.id), 'temperature', { occurred_at: occurredAt, data, note: form.note })
+      await recordAPI.update(Number(route.params.id), 'temperature', payload)
     } else {
-      await recordAPI.createTemperature(baby.id, { occurred_at: occurredAt, data })
+      await recordAPI.createTemperature(baby.id, payload)
       try { localStorage.setItem('temp_last_location', form.location) } catch { /* ignore */ }
     }
     window.dispatchEvent(new CustomEvent('record-created', { detail: null }))

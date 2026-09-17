@@ -115,8 +115,8 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { recordAPI } from '@/api'
-import { nowLocalDatetime } from '@/utils'
+import { recordAPI, babyAPI } from '@/api'
+import { nowLocalDatetime, toLocalDatetime } from '@/utils'
 import Segmented from '@/components/Segmented.vue'
 import FormBar from '@/components/FormBar.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
@@ -174,7 +174,7 @@ async function loadRecord() {
     const res = await recordAPI.list(baby.id)
     const record = (res.data as any[]).find(r => r.id === Number(route.params.id))
     if (record) {
-      form.occurred_at = record.occurred_at.slice(0, 16)
+      form.occurred_at = toLocalDatetime(record.occurred_at)
       form.note = record.data.note || ''
       if (record.record_type === 'feeding') {
         feedingForm.type = record.data.type
@@ -192,6 +192,26 @@ async function loadRecord() {
   }
 }
 
+async function loadLatest() {
+  if (isEdit.value || recordType.value !== 'feeding') return
+  const baby = app.currentBaby
+  if (!baby) return
+  try {
+    const res = await babyAPI.latestFeeding(baby.id)
+    const last = res.data as any
+    if (last?.type) {
+      feedingForm.type = last.type
+      feedingForm.duration_minutes = last.duration_minutes || 0
+      feedingForm.amount_ml = last.amount_ml || 0
+      feedingForm.side = last.side || 'both'
+      feedingForm.brand = last.brand || ''
+      if (last.note) form.note = last.note
+    }
+  } catch {
+    // ignore
+  }
+}
+
 async function save() {
   error.value = ''
   if (!form.occurred_at) { error.value = '请选择时间'; return }
@@ -204,25 +224,25 @@ async function save() {
     const note = form.note
 
     if (recordType.value === 'feeding') {
-      const data: any = { type: feedingForm.type, note }
+      const payload: any = { type: feedingForm.type, note, occurred_at: occurredAt }
       if (feedingForm.type === 'breast') {
-        data.duration_minutes = feedingForm.duration_minutes || 0
-        data.side = feedingForm.side
+        payload.duration_minutes = feedingForm.duration_minutes || 0
+        payload.side = feedingForm.side
       } else {
-        data.amount_ml = feedingForm.amount_ml || 0
-        if (feedingForm.type === 'formula') data.brand = feedingForm.brand
+        payload.amount_ml = feedingForm.amount_ml || 0
+        if (feedingForm.type === 'formula') payload.brand = feedingForm.brand
       }
       if (isEdit.value) {
-        await recordAPI.update(Number(route.params.id), 'feeding', { occurred_at: occurredAt, data, note })
+        await recordAPI.update(Number(route.params.id), 'feeding', payload)
       } else {
-        await recordAPI.createFeeding(baby.id, { occurred_at: occurredAt, data })
+        await recordAPI.createFeeding(baby.id, payload)
       }
     } else {
-      const data = { type: diaperForm.type, note }
+      const payload = { type: diaperForm.type, note, occurred_at: occurredAt }
       if (isEdit.value) {
-        await recordAPI.update(Number(route.params.id), 'diaper', { occurred_at: occurredAt, data, note })
+        await recordAPI.update(Number(route.params.id), 'diaper', payload)
       } else {
-        await recordAPI.createDiaper(baby.id, { occurred_at: occurredAt, data })
+        await recordAPI.createDiaper(baby.id, payload)
       }
     }
 
@@ -252,5 +272,8 @@ async function doDelete() {
   }
 }
 
-onMounted(loadRecord)
+onMounted(() => {
+  loadRecord()
+  loadLatest()
+})
 </script>
