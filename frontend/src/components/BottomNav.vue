@@ -1,5 +1,5 @@
 <template>
-  <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] glass-surface pb-safe z-40">
+  <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] glass-surface hairline-top pb-safe z-40">
     <div class="flex items-center justify-around h-16">
       <router-link v-for="tab in tabs" :key="tab.to" :to="tab.to"
         :class="['flex flex-col items-center justify-center w-16 h-full transition-colors relative',

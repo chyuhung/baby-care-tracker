@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col min-h-dvh">
-    <header class="pt-safe px-4 py-3">
+    <header class="sticky top-0 z-30 glass-surface hairline-bottom pt-safe px-4 py-3">
       <h1 class="text-lg font-bold text-text-primary">我的</h1>
     </header>
 

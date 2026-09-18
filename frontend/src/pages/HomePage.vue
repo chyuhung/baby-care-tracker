@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col min-h-dvh">
     <!-- Header -->
-    <header class="pt-safe px-4 pb-3">
+    <header class="sticky top-0 z-30 glass-surface hairline-bottom pt-safe px-4 pb-3">
       <div class="flex items-center justify-between gap-2">
         <div class="min-w-0">
           <h1 class="text-lg font-bold text-text-primary truncate">

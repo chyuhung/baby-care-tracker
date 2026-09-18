@@ -168,11 +168,19 @@ body {
   transform: translateY(100%);
 }
 
-/* 毛玻璃表面（底部固定导航 / 表单底部操作栏）：主题同色半透明，滚动时通透不割裂 */
+/* 毛玻璃表面（底部固定导航 / 表单底部操作栏 / 悬浮标题栏）：主题同色半透明，滚动时通透不割裂 */
 .glass-surface {
   background: rgb(var(--bg-main) / 0.82);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+/* iOS 0.5px hairline 细线：三段式 chrome（顶部标题栏 / 底部 Tab）与内容区的分割 */
+.hairline-top {
+  border-top: 0.5px solid rgba(0, 0, 0, 0.08);
+}
+.hairline-bottom {
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
 }
 
 /* 数字字体 */
