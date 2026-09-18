@@ -36,6 +36,7 @@ const attrs = useAttrs()
 const rootClass = computed(() => `relative ${(attrs.class as string) || ''}`)
 
 const REFRESH_VISUAL = 30
+const TAP_SLOP = 10
 
 const rootRef = ref<HTMLElement | null>(null)
 let pageEl: HTMLElement | null = null
@@ -97,6 +98,12 @@ function moveDrag(y: number, prevent: () => void) {
   if (!active.value || refreshing.value) return
   const dy = y - startY
   if (dy < 0) lockedUp = true
+  // 点击死区：手指微抖（<10px）不接管手势，避免 preventDefault 吞掉正常点击
+  if (Math.abs(dy) < TAP_SLOP) {
+    armed.value = false
+    pulling.value = 0
+    return
+  }
   // 仅「页面整体」在顶部起始的下拉才触发刷新；中部产生的下拉只用于滚动
   if (!startAtTop.value || lockedUp) {
     armed.value = false

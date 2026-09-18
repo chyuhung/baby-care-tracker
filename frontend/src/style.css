@@ -102,18 +102,16 @@ body {
   outline-offset: 2px;
 }
 
-/* 页面切换动画 */
+/* 页面切换动画（纯淡入淡出：transform 层会吸附首点，去掉 scale/位移防丢点击） */
 .page-enter-active,
 .page-leave-active {
-  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.2s ease;
 }
 .page-enter-from {
   opacity: 0;
-  transform: translateY(8px) scale(0.98);
 }
 .page-leave-to {
   opacity: 0;
-  transform: translateY(-8px) scale(0.98);
 }
 
 /* 卡片入场动画 */
