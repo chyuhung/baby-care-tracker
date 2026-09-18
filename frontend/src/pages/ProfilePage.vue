@@ -1,11 +1,13 @@
 <template>
-  <div class="flex flex-col min-h-dvh">
+  <div class="flex flex-col h-dvh">
+    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-4 pb-[calc(5rem+env(safe-area-inset-bottom))]"
+      :refresh="refreshAll">
+    <template #header>
     <header class="sticky top-0 z-30 glass-surface hairline-bottom pt-safe px-4 py-3">
       <h1 class="text-lg font-bold text-text-primary">我的</h1>
     </header>
+    </template>
 
-    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-4 pb-[calc(5rem+env(safe-area-inset-bottom))]"
-      :refresh="refreshAll">
       <!-- 用户信息 -->
       <div class="bg-white rounded-2xl p-4 shadow-card flex items-center gap-4">
         <div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-2xl">👤</div>

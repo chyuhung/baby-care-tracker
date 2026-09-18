@@ -1,10 +1,14 @@
 <template>
-  <div ref="rootRef" :class="rootClass">
+  <div ref="rootRef" :class="rootClass"
+    @pointerdown="onPointerDown" @pointermove="onPointerMove"
+    @pointerup="onPointerUp" @pointercancel="onPointerCancel">
+    <!-- 顶部悬浮区（标题栏），渲染在内容上、不套内容边距 -->
+    <slot name="header" />
     <div :class="contentClass">
       <slot />
     </div>
 
-    <!-- iOS 风顶部活动指示器（Teleport 到 body，不随整页位移；无胶囊底、无文字） -->
+    <!-- iOS 风顶部活动指示器（Teleport 到 body，内容原地不动；无胶囊底、无文字） -->
     <Teleport to="body">
       <div v-show="indicatorVisible"
         class="fixed inset-x-0 top-0 z-50 pointer-events-none flex justify-center"
@@ -24,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, useAttrs, onMounted, onUnmounted } from 'vue'
+import { ref, computed, useAttrs, onUnmounted } from 'vue'
 import ActivityIndicator from './ActivityIndicator.vue'
 
 const props = withDefaults(defineProps<{
@@ -33,206 +37,125 @@ const props = withDefaults(defineProps<{
 }>(), { contentClass: '' })
 
 const attrs = useAttrs()
-const rootClass = computed(() => `relative ${(attrs.class as string) || ''}`)
+const rootClass = computed(() =>
+  `relative flex-1 min-h-0 overflow-y-auto overscroll-contain touch-pan-y ${(attrs.class as string) || ''}`
+)
 
-const REFRESH_VISUAL = 30
-const TAP_SLOP = 10
+/* 手势阈值 */
+const SLOP = 10        // 点击死区：位移小于它不算手势，点击零干扰
+const THRESHOLD = 60   // 越过该距离松手即触发刷新
+const MAX_PULL = 110   // 指示器最大行程
+const RESIST = 0.45    // 阻尼系数
 
-const rootRef = ref<HTMLElement | null>(null)
-let pageEl: HTMLElement | null = null
-
+/* 状态 */
 const pulling = ref(0)
 const refreshing = ref(false)
-const animating = ref(false)
-const active = ref(false)
 const armed = ref(false)
-const startAtTop = ref(false)
 
+let active = false
+let pointerId: number | null = null
 let startY = 0
-let mouseDown = false
-let performedGesture = false
-let touchMoveHandler: ((e: TouchEvent) => void) | null = null
-let lockedUp = false
+let performed = false
 
 const indicatorVisible = computed(() => refreshing.value || pulling.value > 0)
 const pullOpacity = computed(() => {
   if (refreshing.value) return 1
-  return Math.min(pulling.value / REFRESH_VISUAL, 1)
+  return Math.min(pulling.value / THRESHOLD, 1)
 })
 
-// 整页滚动即文档滚动
-function atPageTop() {
-  return window.scrollY <= 0
+function container() {
+  return rootRef.value
 }
 
-// 位移整个页面（含头部），实现「整页下拉」
-function applyTransform() {
-  if (!pageEl) return
-  const hold = refreshing.value ? REFRESH_VISUAL : pulling.value
-  if (hold > 0.5) {
-    pageEl.style.transform = `translateY(${hold}px)`
-    pageEl.style.transition = animating.value && !active.value
-      ? 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
-      : 'none'
-  } else {
-    pageEl.style.transform = ''
-    pageEl.style.transition = ''
-  }
+/* 顶部判定：实时读取滚动容器自身 scrollTop，不依赖 window 快照 */
+function atTop() {
+  const el = container()
+  return el ? el.scrollTop <= 0 : true
 }
 
-watch([pulling, refreshing, animating, active], applyTransform)
+/* ========== 经典下拉状态机（等价 iOS UIRefreshControl） ========== */
 
-function beginDrag(y: number) {
+function onPointerDown(e: PointerEvent) {
   if (refreshing.value) return
-  startY = y
-  active.value = true
-  animating.value = false
-  armed.value = false
-  performedGesture = false
+  if (active) return // 第二只手指落下：忽略
+  active = true
+  pointerId = e.pointerId
+  startY = e.clientY
   pulling.value = 0
-  lockedUp = false
-  startAtTop.value = atPageTop()
+  armed.value = false
+  performed = false
+  try {
+    container()?.setPointerCapture(e.pointerId)
+  } catch {
+    /* 旧浏览器无捕获也不影响 */
+  }
 }
 
-function moveDrag(y: number, prevent: () => void) {
-  if (!active.value || refreshing.value) return
-  const dy = y - startY
-  if (dy < 0) lockedUp = true
-  // 点击死区：手指微抖（<10px）不接管手势，避免 preventDefault 吞掉正常点击
-  if (Math.abs(dy) < TAP_SLOP) {
-    armed.value = false
+function onPointerMove(e: PointerEvent) {
+  if (!active || e.pointerId !== pointerId || refreshing.value) return
+  const dy = e.clientY - startY
+
+  // 死区：位移太小视为点击，不接管、不 preventDefault
+  if (Math.abs(dy) < SLOP) return
+
+  // 方向向上、或当前不在顶部 → 复位，交给原生滚动（pan-y）
+  if (dy < 0 || !atTop()) {
     pulling.value = 0
+    armed.value = false
     return
   }
-  // 仅「页面整体」在顶部起始的下拉才触发刷新；中部产生的下拉只用于滚动
-  if (!startAtTop.value || lockedUp) {
-    armed.value = false
-    pulling.value = 0
-    return
-  }
-  prevent()
-  pulling.value = Math.min(dy * 0.45, 110)
-  if (pulling.value >= REFRESH_VISUAL) performedGesture = true
-  armed.value = pulling.value >= REFRESH_VISUAL
+
+  // 真正进入下拉：触屏接管，防止浏览器处理；鼠标拉下时禁用文本选择
+  if (e.pointerType === 'touch' && e.cancelable) e.preventDefault()
+  if (e.pointerType === 'mouse') document.body.classList.add('select-none')
+
+  pulling.value = Math.min(dy * RESIST, MAX_PULL)
+  armed.value = pulling.value >= THRESHOLD
+  if (armed.value) performed = true
 }
 
-function endDrag() {
-  if (!active.value) return
-  active.value = false
-  animating.value = true
-  if (armed.value) {
+function onPointerUp() {
+  finish()
+}
+
+function onPointerCancel() {
+  // 浏览器接管滚动（pan-y）等场景：直接复位，无残留
+  finish(false)
+}
+
+function finish(trigger: boolean = true) {
+  if (!active) return
+  active = false
+  pointerId = null
+  document.body.classList.remove('select-none')
+  const shouldRefresh = trigger && armed.value
+  if (shouldRefresh) {
     refreshing.value = true
-    startAtTop.value = false
+    pulling.value = 0
+    armed.value = false
     Promise.resolve()
       .then(() => props.refresh())
       .catch(() => {})
       .finally(() => {
         refreshing.value = false
-        pulling.value = 0
-        armed.value = false
-        animating.value = true
       })
   } else {
     pulling.value = 0
     armed.value = false
   }
-  restoreSelect()
-  scheduleClickSuppress()
+  if (performed) suppressNextClick()
 }
 
-function cancelDrag() {
-  if (!active.value) return
-  active.value = false
-  animating.value = true
-  pulling.value = 0
-  armed.value = false
-  restoreSelect()
-  scheduleClickSuppress()
+/* 下拉手势结束后，吞掉紧随的合成 click（防幽灵点击） */
+function suppressNextClick() {
+  performed = false
+  document.addEventListener('click', (e) => {
+    e.stopPropagation()
+    e.preventDefault()
+  }, { capture: true, once: true })
 }
-
-/* ---------- 触屏（window 级，覆盖整页含头部） ---------- */
-function onTouchStart(e: TouchEvent) {
-  if (e.touches.length !== 1) return
-  beginDrag(e.touches[0].clientY)
-}
-
-function onTouchMove(e: TouchEvent) {
-  const prevent = () => { if (e.cancelable) e.preventDefault() }
-  moveDrag(e.touches[0].clientY, prevent)
-}
-
-function onTouchEnd() { endDrag() }
-function onTouchCancel() { cancelDrag() }
-
-/* ---------- 鼠标拖拽（window 级） ---------- */
-function onMouseDown(e: MouseEvent) {
-  if (e.button !== 0 || mouseDown) return
-  const target = e.target as HTMLElement | null
-  if (target?.closest('input, select, textarea, a, [contenteditable="true"]')) return
-  beginDrag(e.clientY)
-  if (!active.value) return
-  mouseDown = true
-  window.addEventListener('mousemove', onMouseMove)
-  window.addEventListener('mouseup', onMouseUp)
-  document.body.style.userSelect = 'none'
-  document.body.style.webkitUserSelect = 'none'
-}
-
-function onMouseMove(e: MouseEvent) {
-  if (!mouseDown) return
-  moveDrag(e.clientY, () => {})
-}
-
-function onMouseUp() {
-  if (!mouseDown) return
-  mouseDown = false
-  window.removeEventListener('mousemove', onMouseMove)
-  window.removeEventListener('mouseup', onMouseUp)
-  endDrag()
-}
-
-function restoreSelect() {
-  if (mouseDown) {
-    mouseDown = false
-    window.removeEventListener('mousemove', onMouseMove)
-    window.removeEventListener('mouseup', onMouseUp)
-  }
-  document.body.style.userSelect = ''
-  document.body.style.webkitUserSelect = ''
-}
-
-function suppressClick(e: Event) {
-  e.stopPropagation()
-  e.preventDefault()
-}
-
-function scheduleClickSuppress() {
-  if (performedGesture) {
-    window.addEventListener('click', suppressClick, { capture: true, once: true })
-    performedGesture = false
-  }
-}
-
-onMounted(() => {
-  pageEl = rootRef.value?.parentElement ?? null
-  window.addEventListener('touchstart', onTouchStart, { passive: true })
-  touchMoveHandler = onTouchMove
-  window.addEventListener('touchmove', touchMoveHandler, { passive: false })
-  window.addEventListener('touchend', onTouchEnd, { passive: true })
-  window.addEventListener('touchcancel', onTouchCancel, { passive: true })
-  window.addEventListener('mousedown', onMouseDown)
-})
 
 onUnmounted(() => {
-  window.removeEventListener('touchstart', onTouchStart)
-  if (touchMoveHandler) window.removeEventListener('touchmove', touchMoveHandler)
-  window.removeEventListener('touchend', onTouchEnd)
-  window.removeEventListener('touchcancel', onTouchCancel)
-  window.removeEventListener('mousedown', onMouseDown)
-  if (pageEl) {
-    pageEl.style.transform = ''
-    pageEl.style.transition = ''
-  }
-  restoreSelect()
+  document.body.classList.remove('select-none')
 })
 </script>

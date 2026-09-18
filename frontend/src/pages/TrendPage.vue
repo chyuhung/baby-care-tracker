@@ -1,5 +1,8 @@
 <template>
-  <div class="flex flex-col min-h-dvh">
+  <div class="flex flex-col h-dvh">
+    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(5rem+env(safe-area-inset-bottom))] space-y-6"
+      :refresh="() => loadTrend(true)">
+    <template #header>
     <header class="sticky top-0 z-30 glass-surface hairline-bottom pt-safe px-4 py-3">
       <h1 class="text-lg font-bold text-text-primary">趋势</h1>
       <!-- 类别筛选 -->
@@ -21,9 +24,8 @@
         </button>
       </div>
     </header>
+    </template>
 
-    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(5rem+env(safe-area-inset-bottom))] space-y-6"
-      :refresh="() => loadTrend(true)">
       <div v-if="loading" class="flex justify-center py-20">
         <ActivityIndicator :size="28" class="text-text-secondary" />
       </div>

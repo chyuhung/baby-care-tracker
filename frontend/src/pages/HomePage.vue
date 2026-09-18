@@ -1,7 +1,10 @@
 <template>
-  <div class="flex flex-col min-h-dvh">
-    <!-- Header -->
-    <header class="sticky top-0 z-30 glass-surface hairline-bottom pt-safe px-4 pb-3">
+  <div class="flex flex-col h-dvh">
+    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-4 pb-[calc(5rem+env(safe-area-inset-bottom))]"
+      :refresh="loadData">
+      <!-- Header -->
+      <template #header>
+      <header class="sticky top-0 z-30 glass-surface hairline-bottom pt-safe px-4 pb-3">
       <div class="flex items-center justify-between gap-2">
         <div class="min-w-0">
           <h1 class="text-lg font-bold text-text-primary truncate">
@@ -30,10 +33,8 @@
         </div>
       </div>
     </header>
+    </template>
 
-    <!-- Content -->
-    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-4 pb-[calc(5rem+env(safe-area-inset-bottom))]"
-      :refresh="loadData">
       <!-- 空状态：无宝宝 -->
       <div v-if="app.babies.length === 0" class="text-center py-16">
         <img src="/icon-192.png" alt="" class="w-16 h-16 mx-auto block mb-4" />

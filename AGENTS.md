@@ -17,6 +17,9 @@ Family group sharing, timezone fix, record performance optimization
 - HomePage 4-card grid: 2×2 layout with feeding/diaper/sleep/temperature cards; inline sleep start/stop; temperature fever color display
 - Naming conventions aligned: `记录睡眠` / `记录体温` page titles, `记录` submit button, `更新记录` edit button, icons-only card entry buttons
 - Supplement feature: `supplement_records` table (name, dosage_value, dosage_unit, note); full record lifecycle (create/update/delete/timeline filter/RecordCard); HomePage full-width card (今日次数/距上次/平均间隔 + add); TrendPage `supplement` category (count bar/scatter + summary cards); theme color `--supplement` violet; PWA cache bumped to v10
+- iOS three-zone chrome: sticky frosted-glass headers + 0.5px hairline on tab bar/FormBar (`hairline-top`/`hairline-bottom`); page transition simplified to opacity-fade-only (transform layer eats first tap)
+- iOS tap/gesture fixes: removed `user-scalable=no`/`maximum-scale` from viewport (PWA standalone keyboard focus) and global `overscroll-behavior: none` (double-tap needed); then replaced PullRefresh with Pointer Events state machine (UIRefreshControl-equivalent): single pointerId + capture, live `container.scrollTop` check (no snapshot/`lockedUp` lock), 10px tap slop, `overflow-y-auto + overscroll-contain + touch-pan-y` on container, iOS-style indicator (content stays put, no whole-page transform)
+- Single scroll container architecture: 6 PullRefresh pages (Home/Timeline/Trend/Profile/Supplement/Temperature) now `h-dvh` flex col with PullRefresh as the inner scroller; page headers moved into PullRefresh `#header` slot (sticky inside scroller, glass blur passes under)
 
 ### Known Issues
 - `vue-tsc` typecheck fails on Node.js v24 — not a code issue

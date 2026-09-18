@@ -1,15 +1,17 @@
 <template>
-  <div class="flex flex-col min-h-dvh bg-bg-main">
+  <div class="flex flex-col h-dvh bg-bg-main">
+    <PullRefresh class="flex-1 min-h-0"
+      content-class="px-4 py-4 space-y-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
+      :refresh="refreshAll">
+    <template #header>
     <header class="sticky top-0 z-30 glass-surface hairline-bottom pt-safe px-4 py-3 flex items-center gap-3">
       <button aria-label="返回" @click="router.back()" class="p-2 -ml-2 flex items-center justify-center min-w-[44px] min-h-[44px] btn-press">
         <svg class="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
       </button>
       <h1 class="text-lg font-bold text-text-primary">{{ isEdit ? '编辑补剂' : '记录补剂' }}</h1>
     </header>
+    </template>
 
-    <PullRefresh class="flex-1 min-h-0"
-      content-class="px-4 py-4 space-y-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
-      :refresh="refreshAll">
       <!-- 补剂名称 -->
       <div>
         <label class="text-sm text-text-secondary block mb-2">补剂名称</label>
