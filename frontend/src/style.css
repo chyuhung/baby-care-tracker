@@ -43,13 +43,13 @@
   --border-color: 232 234 240;   /* #E8EAF0 分隔线/边框 */
   --segment: 255 255 255;        /* 分段控件选中段底（亮面浮起） */
 
-  /* 图表（SVG 直接引用） */
-  --chart-primary: #C7366B;
-  --chart-diaper: #F4820C;
-  --chart-temperature: #2DA84D;
-  --chart-sleep: #1AA2B8;
-  --chart-outdoor: #5CAC37;
-  --chart-supplement: #8B5CF6;
+  /* 图表（SVG 直接引用）：与记录页各关键词同色，保持全站统一 */
+  --chart-primary: rgb(var(--primary));      /* 记录页「喂奶」关键词色 */
+  --chart-diaper: rgb(var(--diaper));        /* 记录页「尿布」关键词色 */
+  --chart-temperature: rgb(var(--temperature));
+  --chart-sleep: rgb(var(--sleep));
+  --chart-outdoor: rgb(var(--outdoor));
+  --chart-supplement: rgb(var(--supplement));
   --chart-primary-count: #AF52DE; /* 喂奶次数第二色：清透紫，与奶量粉区分 */
   --chart-line: #E7EAF0;           /* 图表基线/网格线 */
   --hairline: 60 60 67;            /* 发丝线 RGB（配合 .hairline-* 的 alpha） */
@@ -62,7 +62,7 @@
   --primary-fill: 29 111 209;    /* #1D6FD1 实心按钮底（白字 4.95） */
   --bg-main: 244 249 255;        /* #F4F9FF 极淡蓝页面背景 */
 
-  --chart-primary: #1D6FD1;
+  --chart-primary: rgb(var(--primary)); /* 跟随男宝主题蓝 */
   --chart-primary-count: #AF52DE;
 }
 
@@ -96,13 +96,7 @@
     --success-deep: 48 209 88;    /* #30D158 */
     --danger-light: 58 26 26;     /* 危险提示深红底 */
 
-    /* 图表色在深底上提亮 */
-    --chart-primary: #F47298;
-    --chart-diaper: #F59E42;
-    --chart-temperature: #4AC474;
-    --chart-sleep: #58C4D6;
-    --chart-outdoor: #82C85A;
-    --chart-supplement: #B296FA;
+    /* 图表色：统一引用关键词 token，随主题自动一致（仅次数紫在深底提亮） */
     --chart-primary-count: #C084FC;
     --chart-line: #38383C;
   }
@@ -111,7 +105,6 @@
     --bg-main: 0 0 4;             /* #000004 深色蓝底 */
     --primary: 90 162 245;        /* #5AA2F5 */
     --primary-deep: 130 186 250;  /* #82BAFA */
-    --chart-primary: #5AA2F5;
     --chart-primary-count: #C084FC;
   }
 }

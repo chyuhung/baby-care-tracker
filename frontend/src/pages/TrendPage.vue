@@ -23,7 +23,7 @@
         subtitle="记录几天数据后，这里会生成图表趋势" />
       <template v-else>
         <div v-if="category === 'feeding'" class="bg-surface rounded-2xl shadow-card px-3 pt-2.5 pb-2">
-          <div class="flex items-center justify-end gap-3 mb-1 text-[10px] text-text-secondary font-normal">
+          <div class="flex items-center justify-center gap-4 mb-1 text-[10px] text-text-secondary font-normal">
             <span class="flex items-center gap-1"><span class="inline-block w-4" style="border-top: 2px solid var(--chart-primary)"></span>奶量 ml</span>
             <span class="flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 rounded-sm" style="background: var(--chart-primary-count)"></span>次数</span>
           </div>
