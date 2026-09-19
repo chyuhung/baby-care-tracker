@@ -93,6 +93,12 @@ watch(() => route.query.filter, (newFilter) => {
   }
 }, { immediate: true })
 
+// 当前宝宝就绪后重新加载：冷启动/刷新直达本页时 store 可能尚未恢复，
+// 此前只在 onMounted 调用一次导致数据存在却显示「暂无记录」
+watch(() => app.currentBaby?.id, (id) => {
+  if (id) { days.value = 7; loadRecords() }
+})
+
 const groupedRecords = computed(() => {
   const filtered = activeFilter.value ? records.value.filter(r => r.record_type === activeFilter.value) : records.value
   const groups: { label: string; records: any[] }[] = []
