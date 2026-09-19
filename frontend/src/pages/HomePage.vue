@@ -337,7 +337,9 @@ function getTimeAgo(isoString: string | null) {
   const diffHours = Math.floor(diffMins / 60)
   const diffDays = Math.floor(diffHours / 24)
   let text = ''
-  if (diffDays > 0) text = `${diffDays}天${diffHours % 24}小时前`
+  // 「距上次」最长显示 30 天：超过 30 天统一显示「30天前」
+  if (diffDays >= 30) text = '30天前'
+  else if (diffDays > 0) text = diffHours % 24 > 0 ? `${diffDays}天${diffHours % 24}小时前` : `${diffDays}天前`
   else if (diffHours > 0) text = diffMins % 60 > 0 ? `${diffHours}小时${diffMins % 60}分钟前` : `${diffHours}小时前`
   else if (diffMins > 0) text = `${diffMins}分钟前`
   else text = '刚刚'
@@ -430,9 +432,20 @@ const sleepParts = computed(() =>
 const outdoorParts = computed(() =>
   durationCompactParts(currentOutdoor.value ? elapsedMins(currentOutdoor.value.started_at) : stats.value.outdoor_duration))
 
-const avgOutdoorDuration = computed(() => stats.value.outdoor_count > 0
-  ? Math.round(stats.value.outdoor_duration / stats.value.outdoor_count)
-  : 0)
+// 户外平均时长：与睡眠同口径，取最近 10 次已结束记录的平均时长
+const avgOutdoorDuration = computed(() => {
+  const recs = allRecords.value
+    .filter(r => r.record_type === 'outdoor' && r.data?.started_at && r.data?.ended_at)
+    .map(r => ({
+      t: (new Date(r.data.ended_at).getTime() - new Date(r.data.started_at).getTime()) / 60000,
+      occurred: new Date(r.occurred_at).getTime(),
+    }))
+    .filter(x => x.t > 0)
+    .sort((a, b) => b.occurred - a.occurred)
+    .slice(0, 10)
+  if (!recs.length) return 0
+  return Math.round(recs.reduce((sum, x) => sum + x.t, 0) / recs.length)
+})
 
 const formatAvgOutdoor = computed(() => formatDurationCN(avgOutdoorDuration.value))
 

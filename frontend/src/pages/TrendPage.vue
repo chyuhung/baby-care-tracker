@@ -206,7 +206,7 @@
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">°C</text>
             <template v-for="(d, i) in trendData" :key="'tx'+i">
-              <text v-if="dateLabels[i]?.show" :x="tempPoints[i]?.x" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label" :font-weight="dateWeight(i)" :fill="dateFill(i)">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label" :font-weight="dateWeight(i)" :fill="dateFill(i)">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
@@ -217,7 +217,7 @@
           </div>
           <div v-if="periodLabel && !summary.empty" class="text-[11px] text-text-secondary">{{ periodLabel }}</div>
           <div v-if="summary.empty" class="bg-bg-main rounded-xl p-4 text-center">
-            <div class="text-sm text-text-secondary">近 {{ days - 1 }} 天暂无记录</div>
+            <div class="text-sm text-text-secondary">近 {{ days }} 天暂无记录</div>
           </div>
           <div v-else class="grid grid-cols-2 gap-2.5">
             <div v-for="c in summary.cards" :key="c.label" class="bg-bg-main rounded-xl p-3">
@@ -290,7 +290,7 @@ const summary = computed(() => {
   const P = data.length
   const sumOf = (rows: any[], f: (d: any) => number) => rows.reduce((a, d) => a + (f(d) || 0), 0)
   const maxOf = (rows: any[], f: (d: any) => number) => rows.length ? Math.max(...rows.map(d => f(d) || 0)) : 0
-  const h1 = (v: number) => v.toFixed(1)
+  const h1 = (v: number) => (v > 0 && v < 0.1) ? v.toFixed(2) : v.toFixed(1)
   const i0 = (v: number) => String(Math.round(v))
   const pv = prevRows.length ? prevRows : null
 
@@ -318,51 +318,55 @@ const summary = computed(() => {
   const avgF = (f: (d: any) => number) => (rows: any[]) => rows.length ? sumOf(rows, f) / rows.length : 0
   const countPosF = (f: (d: any) => number) => (rows: any[]) => rows.filter(d => (f(d) || 0) > 0).length
 
-  // 本周期同口径（取有记录的天，避免无数据日拉低）
-  const curMinPos = (f: (d: any) => number) => minPosF(f)(data)
-  const curAvgPos = (f: (d: any) => number) => avgPosF(f)(data)
+  // 本周期同口径（取有记录的天，避免无数据日拉低）；无记录天返回 null → 显示 --
+  const curMinPos = (f: (d: any) => number) => sumOf(data, f) > 0 ? minPosF(f)(data) : null
+  const curAvgPos = (f: (d: any) => number) => sumOf(data, f) > 0 ? avgPosF(f)(data) : null
 
   const feeding = () => {
     const has = (rows: any[]) => rows.some(d => (d.total_ml || 0) > 0 || (d.feeding_count || 0) > 0)
     if (!has(data) && !(pv && has(pv))) return emptyCards()
+    const curHas = has(data)
     const curMl = sumOf(data, d => d.total_ml || 0)
     const curCnt = sumOf(data, d => d.feeding_count || 0)
     const pMl = prevAgg(d => d.total_ml || 0, sumF(d => d.total_ml || 0))
     const pCnt = prevAgg(d => d.feeding_count || 0, sumF(d => d.feeding_count || 0))
-    push('日均奶量', 'ml', curMl / P, pMl !== null ? pMl / P : null, i0)
-    push('日均喂养次数', '次', curCnt / P, pCnt !== null ? pCnt / P : null, h1)
-    push('单次平均奶量', 'ml', curCnt ? curMl / curCnt : 0, pCnt ? pMl! / pCnt : null, i0)
-    push('单日最高奶量', 'ml', maxOf(data, d => d.total_ml || 0), prevAgg(d => d.total_ml || 0, maxF(d => d.total_ml || 0)), i0)
+    push('日均奶量', 'ml', curHas ? curMl / P : null, pMl !== null ? pMl / P : null, i0)
+    push('日均喂养次数', '次', curHas ? curCnt / P : null, pCnt !== null ? pCnt / P : null, h1)
+    push('单次平均奶量', 'ml', curCnt ? curMl / curCnt : null, pCnt ? pMl! / pCnt : null, i0)
+    push('单日最高奶量', 'ml', curHas ? maxOf(data, d => d.total_ml || 0) : null, prevAgg(d => d.total_ml || 0, maxF(d => d.total_ml || 0)), i0)
   }
 
   const diaper = () => {
     const f = (d: any) => d.diaper_count || 0
     const has = (rows: any[]) => rows.some(d => f(d) > 0)
     if (!has(data) && !(pv && has(pv))) return emptyCards()
-    push('日均尿布次数', '次', sumOf(data, f) / P, prevAgg(f, avgF(f)), h1)
-    push('单日最多', '次', maxOf(data, f), prevAgg(f, maxF(f)), i0)
-    push('单日最少', '次', curMinPos(f), prevAgg(f, minPosF(f)), i0)
-    push('期间总次数', '次', sumOf(data, f), prevAgg(f, sumF(f)), i0)
+    const curHas = has(data)
+    push('日均尿布次数', '次', curHas ? sumOf(data, f) / P : null, prevAgg(f, avgF(f)), h1)
+    push('单日最多', '次', curHas ? maxOf(data, f) : null, prevAgg(f, maxF(f)), i0)
+    push('单日最少', '次', curHas ? curMinPos(f) : null, prevAgg(f, minPosF(f)), i0)
+    push('期间总次数', '次', curHas ? sumOf(data, f) : null, prevAgg(f, sumF(f)), i0)
   }
 
   const sleep = () => {
     const f = (d: any) => d.sleep_duration_minutes || 0
     const has = (rows: any[]) => rows.some(d => f(d) > 0)
     if (!has(data) && !(pv && has(pv))) return emptyCards()
-    push('日均睡眠', '小时', sumOf(data, f) / P / 60, prevAgg(f, avgF(f)) !== null ? prevAgg(f, avgF(f))! / 60 : null, h1)
-    push('单日最长', '小时', maxOf(data, f) / 60, prevAgg(f, maxF(f)) !== null ? prevAgg(f, maxF(f))! / 60 : null, h1)
-    push('有记录日均', '小时', curAvgPos(f) / 60, prevAgg(f, avgPosF(f)) !== null ? prevAgg(f, avgPosF(f))! / 60 : null, h1)
-    push('期间总时长', '小时', sumOf(data, f) / 60, prevAgg(f, sumF(f)) !== null ? prevAgg(f, sumF(f))! / 60 : null, h1)
+    const curHas = has(data)
+    push('日均睡眠', '小时', curHas ? sumOf(data, f) / P / 60 : null, prevAgg(f, avgF(f)) !== null ? prevAgg(f, avgF(f))! / 60 : null, h1)
+    push('单日最长', '小时', curHas ? maxOf(data, f) / 60 : null, prevAgg(f, maxF(f)) !== null ? prevAgg(f, maxF(f))! / 60 : null, h1)
+    push('有记录日均', '小时', curAvgPos(f) !== null ? curAvgPos(f)! / 60 : null, prevAgg(f, avgPosF(f)) !== null ? prevAgg(f, avgPosF(f))! / 60 : null, h1)
+    push('期间总时长', '小时', curHas ? sumOf(data, f) / 60 : null, prevAgg(f, sumF(f)) !== null ? prevAgg(f, sumF(f))! / 60 : null, h1)
   }
 
   const outdoor = () => {
     const f = (d: any) => d.outdoor_duration_minutes || 0
     const has = (rows: any[]) => rows.some(d => f(d) > 0)
     if (!has(data) && !(pv && has(pv))) return emptyCards()
-    push('日均户外', '小时', sumOf(data, f) / P / 60, prevAgg(f, avgF(f)) !== null ? prevAgg(f, avgF(f))! / 60 : null, h1)
-    push('单日最长', '小时', maxOf(data, f) / 60, prevAgg(f, maxF(f)) !== null ? prevAgg(f, maxF(f))! / 60 : null, h1)
-    push('有记录日均', '小时', curAvgPos(f) / 60, prevAgg(f, avgPosF(f)) !== null ? prevAgg(f, avgPosF(f))! / 60 : null, h1)
-    push('期间总时长', '小时', sumOf(data, f) / 60, prevAgg(f, sumF(f)) !== null ? prevAgg(f, sumF(f))! / 60 : null, h1)
+    const curHas = has(data)
+    push('日均户外', '小时', curHas ? sumOf(data, f) / P / 60 : null, prevAgg(f, avgF(f)) !== null ? prevAgg(f, avgF(f))! / 60 : null, h1)
+    push('单日最长', '小时', curHas ? maxOf(data, f) / 60 : null, prevAgg(f, maxF(f)) !== null ? prevAgg(f, maxF(f))! / 60 : null, h1)
+    push('有记录日均', '小时', curAvgPos(f) !== null ? curAvgPos(f)! / 60 : null, prevAgg(f, avgPosF(f)) !== null ? prevAgg(f, avgPosF(f))! / 60 : null, h1)
+    push('期间总时长', '小时', curHas ? sumOf(data, f) / 60 : null, prevAgg(f, sumF(f)) !== null ? prevAgg(f, sumF(f))! / 60 : null, h1)
   }
 
   const temperature = () => {
@@ -373,9 +377,9 @@ const summary = computed(() => {
     const avgTemp = (rows: any[]) => rows.length ? sumOf(rows, d => d.temperature_avg || 0) / rows.length : 0
     const fever = (rows: any[]) => rows.filter(d => f(d) >= 37.5).length
     const pvMeas = pvM.length ? pvM : null
-    push('平均体温', '°C', curM.length ? avgTemp(curM) : 0, pvMeas ? avgTemp(pvMeas) : null, v => v.toFixed(1))
-    push('期间最高', '°C', curM.length ? maxOf(curM, f) : 0, pvMeas ? maxOf(pvMeas, f) : null, v => v.toFixed(1))
-    push('发烧天数', '天', fever(curM), pvMeas ? fever(pvMeas) : null, i0)
+    push('平均体温', '°C', curM.length ? avgTemp(curM) : null, pvMeas ? avgTemp(pvMeas) : null, v => v.toFixed(1))
+    push('期间最高', '°C', curM.length ? maxOf(curM, f) : null, pvMeas ? maxOf(pvMeas, f) : null, v => v.toFixed(1))
+    push('发烧天数', '天', curM.length ? fever(curM) : null, pvMeas ? fever(pvMeas) : null, i0)
     push('测温天数', '天', curM.length, pvMeas ? pvMeas.length : null, i0)
   }
 
@@ -383,10 +387,11 @@ const summary = computed(() => {
     const f = (d: any) => d.supplement_count || 0
     const has = (rows: any[]) => rows.some(d => f(d) > 0)
     if (!has(data) && !(pv && has(pv))) return emptyCards()
-    push('日均补剂次数', '次', sumOf(data, f) / P, prevAgg(f, avgF(f)), h1)
-    push('单日最多', '次', maxOf(data, f), prevAgg(f, maxF(f)), i0)
-    push('补剂天数', '天', countPosF(f)(data), prevAgg(f, countPosF(f)), i0)
-    push('期间总次数', '次', sumOf(data, f), prevAgg(f, sumF(f)), i0)
+    const curHas = has(data)
+    push('日均补剂次数', '次', curHas ? sumOf(data, f) / P : null, prevAgg(f, avgF(f)), h1)
+    push('单日最多', '次', curHas ? maxOf(data, f) : null, prevAgg(f, maxF(f)), i0)
+    push('补剂天数', '天', curHas ? countPosF(f)(data) : null, prevAgg(f, countPosF(f)), i0)
+    push('期间总次数', '次', curHas ? sumOf(data, f) : null, prevAgg(f, sumF(f)), i0)
   }
 
   function minPositiveDays(rows: any[], f: (d: any) => number) {
@@ -683,25 +688,63 @@ const sleepScatter = computed(() => buildLineChart(d => (d.sleep_duration_minute
 const outdoorScatter = computed(() => buildLineChart(d => (d.outdoor_duration_minutes || 0) / 60, { integerTicks: true }))
 const supplementScatter = computed(() => buildLineChart(d => d.supplement_count || 0, { integerTicks: true }))
 
-const tempChart = computed(() => buildLineChart(d => d.temperature_high || 0, { withPath: true }))
-const tempTicks = computed(() => tempChart.value.ticks)
-const tempPoints = computed(() => tempChart.value.points)
-const tempPath = computed(() => tempChart.value.path)
-// 温度线：过去段压暗，今日点鲜亮（与柱状图强调口径一致）
-const tempPastPath = computed(() => buildMonotonePath(tempChart.value.points.slice(0, Math.max(0, tempChart.value.points.length - 1))))
+// 体温折线：仅「有测量」的日子连点（无测量日留空，不落 0），y 轴按实测范围自适应
+// （体温恒定在 35–42℃，不能用 0 基线；并保证 37.5 发烧参考线始终在范围内）
+const tempSeries = computed(() => {
+  const data = trendData.value
+  const { padL, padR, padT, padB, svgW, svgH } = CHART
+  const chartW = svgW - padL - padR
+  const chartH = svgH - padT - padB
+  const n = data.length
+  const step = n > 1 ? chartW / (n - 1) : 0
+  const xOf = (i: number) => (n > 1 ? padL + i * step : padL + chartW / 2)
+
+  const vals = data.map(d => d.temperature_high || 0)
+  const pos = vals.filter(v => v > 0)
+  if (!pos.length) return { points: [] as { x: number, y: number, value: number }[], last: null as { x: number, y: number, value: number } | null, ticks: [] as { y: number, label: string }[], yMin: 36, yRange: 1 }
+
+  const rawMin = Math.min(...pos, 37.5)
+  const rawMax = Math.max(...pos, 37.5)
+  const span = Math.max(rawMax - rawMin, 0.5)
+  const yMin = Math.floor((rawMin - span * 0.3) * 10) / 10
+  const yMax = Math.ceil((rawMax + span * 0.3) * 10) / 10
+  const yRange = (yMax - yMin) || 1
+  const yOf = (v: number) => padT + chartH - (v - yMin) / yRange * chartH
+
+  const points = data
+    .map((d, i) => ({ i, v: d.temperature_high || 0 }))
+    .filter(p => p.v > 0)
+    .map(p => ({ x: xOf(p.i), y: yOf(p.v), value: p.v }))
+
+  // 刻度取 0.5℃ 的整数倍，最多 6 条
+  const ticks: { y: number, label: string }[] = []
+  const tStep = Math.max(0.5, Math.ceil((yRange / 5) * 2) / 2)
+  for (let v = Math.ceil(yMin / tStep) * tStep; v <= yMax + 1e-9; v += tStep) {
+    ticks.push({ y: yOf(v), label: v.toFixed(1) })
+  }
+
+  return { points, last: points.length ? points[points.length - 1] : null, ticks, yMin, yRange }
+})
+const tempTicks = computed(() => tempSeries.value.ticks)
+const tempPoints = computed(() => tempSeries.value.points)
+// 温度线：过去段压暗、今日点鲜亮（仅连接有测量的日子）
+const tempPastPath = computed(() => {
+  const p = tempSeries.value.points
+  if (!p.length) return ''
+  return buildMonotonePath(p.length > 1 ? p.slice(0, -1) : p)
+})
 const tempLastSeg = computed(() => {
-  const p = tempChart.value.points
+  const p = tempSeries.value.points
   if (p.length < 2) return ''
   return buildMonotonePath(p.slice(-2))
 })
-const tempLastPoint = computed(() => { const p = tempChart.value.points; return p.length ? p[p.length - 1] : null })
+const tempLastPoint = computed(() => tempSeries.value.last)
 
 const feverLineY = computed(() => {
   const { padT, padB, svgH } = CHART
   const chartH = svgH - padT - padB
-  const sc = tempChart.value
-  if (!sc.ticks.length) return padT + chartH / 2
-  return padT + chartH - (37.5 - sc.yMin) / sc.yRange * chartH
+  const s = tempSeries.value
+  return padT + chartH - (37.5 - s.yMin) / s.yRange * chartH
 })
 
 async function loadTrend(silent: boolean = false) {
