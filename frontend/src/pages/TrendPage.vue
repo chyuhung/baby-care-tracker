@@ -22,19 +22,12 @@
       <EmptyState v-else-if="trendData.length === 0" title="暂无趋势数据"
         subtitle="记录几天数据后，这里会生成图表趋势" />
       <template v-else>
-        <div v-if="category === 'feeding'" class="bg-surface rounded-2xl shadow-card p-4">
-          <h4 class="text-sm font-semibold text-text-secondary mb-2">
-              <span class="flex items-center gap-2">
-                🍼 每日奶量
-                <span class="flex items-center gap-1 text-[10px] font-normal">
-                  <span class="inline-block w-4" style="border-top: 2px solid var(--chart-primary)"></span>
-                  奶量
-                  <span class="inline-block w-1.5 h-2.5 rounded-sm" style="background: var(--chart-primary-count)"></span>
-                  次数
-                </span>
-              </span>
-          </h4>
-          <svg viewBox="0 0 340 170" class="w-full block">
+        <div v-if="category === 'feeding'" class="bg-surface rounded-2xl shadow-card px-3 pt-2.5 pb-2">
+          <div class="flex items-center justify-end gap-3 mb-1 text-[10px] text-text-secondary font-normal">
+            <span class="flex items-center gap-1"><span class="inline-block w-4" style="border-top: 2px solid var(--chart-primary)"></span>奶量 ml</span>
+            <span class="flex items-center gap-1"><span class="inline-block w-2.5 h-2.5 rounded-sm" style="background: var(--chart-primary-count)"></span>次数</span>
+          </div>
+          <svg viewBox="0 0 340 228" class="w-full block">
             <template v-if="days === 30">
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
               <g v-for="(t, ti) in feedingMlScatter.ticks" :key="'fl'+ti">
@@ -72,17 +65,12 @@
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">ml</text>
             <text :x="axis.rightX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">次</text>
             <template v-for="(d, i) in trendData" :key="'fx'+i">
-              <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
-        <div v-if="category === 'diaper'" class="bg-surface rounded-2xl shadow-card p-4">
-          <h4 class="text-sm font-semibold text-text-secondary mb-2">
-            <span class="flex items-center gap-2">
-              🩲 每日尿布
-            </span>
-          </h4>
-          <svg viewBox="0 0 340 170" class="w-full block">
+        <div v-if="category === 'diaper'" class="bg-surface rounded-2xl shadow-card px-3 pt-2.5 pb-2">
+          <svg viewBox="0 0 340 228" class="w-full block">
             <template v-if="days === 30">
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
               <g v-for="(t, ti) in diaperScatter.ticks" :key="'dl'+ti">
@@ -107,17 +95,12 @@
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">次</text>
             <template v-for="(d, i) in trendData" :key="'dx'+i">
-              <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
-        <div v-if="category === 'sleep'" class="bg-surface rounded-2xl shadow-card p-4">
-          <h4 class="text-sm font-semibold text-text-secondary mb-2">
-            <span class="flex items-center gap-2">
-              😴 每日睡眠
-            </span>
-          </h4>
-          <svg viewBox="0 0 340 170" class="w-full block">
+        <div v-if="category === 'sleep'" class="bg-surface rounded-2xl shadow-card px-3 pt-2.5 pb-2">
+          <svg viewBox="0 0 340 228" class="w-full block">
             <template v-if="days === 30">
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
               <g v-for="(t, ti) in sleepScatter.ticks" :key="'sl'+ti">
@@ -142,17 +125,12 @@
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">小时</text>
             <template v-for="(d, i) in trendData" :key="'sx'+i">
-              <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
-        <div v-if="category === 'outdoor'" class="bg-surface rounded-2xl shadow-card p-4">
-          <h4 class="text-sm font-semibold text-text-secondary mb-2">
-            <span class="flex items-center gap-2">
-              🌳 每日户外活动
-            </span>
-          </h4>
-          <svg viewBox="0 0 340 170" class="w-full block">
+        <div v-if="category === 'outdoor'" class="bg-surface rounded-2xl shadow-card px-3 pt-2.5 pb-2">
+          <svg viewBox="0 0 340 228" class="w-full block">
             <template v-if="days === 30">
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
               <g v-for="(t, ti) in outdoorScatter.ticks" :key="'ol'+ti">
@@ -177,17 +155,12 @@
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">小时</text>
             <template v-for="(d, i) in trendData" :key="'ox'+i">
-              <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
-        <div v-if="category === 'supplement'" class="bg-surface rounded-2xl shadow-card p-4">
-          <h4 class="text-sm font-semibold text-text-secondary mb-2">
-            <span class="flex items-center gap-2">
-              💊 每日补剂
-            </span>
-          </h4>
-          <svg viewBox="0 0 340 170" class="w-full block">
+        <div v-if="category === 'supplement'" class="bg-surface rounded-2xl shadow-card px-3 pt-2.5 pb-2">
+          <svg viewBox="0 0 340 228" class="w-full block">
             <template v-if="days === 30">
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
               <g v-for="(t, ti) in supplementScatter.ticks" :key="'sul'+ti">
@@ -212,17 +185,12 @@
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">次</text>
             <template v-for="(d, i) in trendData" :key="'sux'+i">
-              <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
-        <div v-if="category === 'temperature'" class="bg-surface rounded-2xl shadow-card p-4">
-          <h4 class="text-sm font-semibold text-text-secondary mb-2">
-            <span class="flex items-center gap-2">
-              🌡️ 每日最高体温
-            </span>
-          </h4>
-          <svg viewBox="0 0 340 170" class="w-full block">
+        <div v-if="category === 'temperature'" class="bg-surface rounded-2xl shadow-card px-3 pt-2.5 pb-2">
+          <svg viewBox="0 0 340 228" class="w-full block">
             <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <g v-for="(t, ti) in tempTicks" :key="'tl'+ti">
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
@@ -236,17 +204,30 @@
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">°C</text>
             <template v-for="(d, i) in trendData" :key="'tx'+i">
-              <text v-if="dateLabels[i]?.show" :x="tempPoints[i]?.x" y="158" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="tempPoints[i]?.x" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
-        <div v-if="summary.cards.length" class="bg-surface rounded-2xl shadow-card p-4 space-y-3">
-          <h4 class="text-sm font-semibold text-text-secondary">📊 期间概览</h4>
-          <div class="grid grid-cols-2 gap-2.5">
+        <div v-if="trendData.length" class="bg-surface rounded-2xl shadow-card p-4 space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <h4 class="text-sm font-semibold text-text-secondary shrink-0">📊 期间对比</h4>
+            <span class="text-[11px] text-text-secondary truncate">当前 vs 上一周期</span>
+          </div>
+          <div v-if="periodLabel && !summary.empty" class="text-[11px] text-text-secondary">{{ periodLabel }}</div>
+          <div v-if="summary.empty" class="bg-bg-main rounded-xl p-4 text-center">
+            <div class="text-sm text-text-secondary">近 {{ days }} 天暂无记录</div>
+          </div>
+          <div v-else class="grid grid-cols-2 gap-2.5">
             <div v-for="c in summary.cards" :key="c.label" class="bg-bg-main rounded-xl p-3">
               <div class="text-xs text-text-secondary">{{ c.label }}</div>
-              <div class="text-xl font-bold font-num text-text-primary mt-1">{{ c.value }}</div>
-              <div v-if="c.sub" class="text-xs text-text-secondary mt-0.5">{{ c.sub }}</div>
+              <div class="flex items-baseline gap-1 mt-1">
+                <span class="text-xl font-bold font-num text-text-primary">{{ c.value }}</span>
+                <span v-if="c.unit" class="text-xs text-text-secondary">{{ c.unit }}</span>
+              </div>
+              <div class="flex items-center gap-1 mt-1">
+                <span v-if="c.delta !== null" class="text-[11px] font-num font-medium px-1.5 py-0.5 rounded-md" :class="deltaClass(c.delta)">{{ deltaArrow(c.delta) }}{{ Math.abs(c.delta) }}%</span>
+                <span class="text-[11px] text-text-secondary truncate">{{ c.prevText }}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -256,7 +237,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { babyAPI } from '@/api'
 import PullRefresh from '@/components/PullRefresh.vue'
@@ -267,6 +248,7 @@ import MenuSelect from '@/components/MenuSelect.vue'
 
 const app = useAppStore()
 const trendData = ref<any[]>([])
+const trendPrev = ref<any[]>([])
 const loading = ref(false)
 const days = ref(7)
 const category = ref('feeding')
@@ -296,86 +278,143 @@ const dayOptions = [
 
 const summary = computed(() => {
   const data = trendData.value
-  const cards: { label: string, value: string, sub?: string }[] = []
-  if (!data.length) return { cards }
+  const prevRows = trendPrev.value
+  const cards: { label: string, unit: string, value: string, prevText: string, delta: number | null }[] = []
+  let noData = false
+  if (!data.length) return { cards, empty: true }
 
+  const P = data.length
   const sumOf = (rows: any[], f: (d: any) => number) => rows.reduce((a, d) => a + (f(d) || 0), 0)
-  const avgOf = (rows: any[], f: (d: any) => number) => rows.length ? sumOf(rows, f) / rows.length : 0
   const maxOf = (rows: any[], f: (d: any) => number) => rows.length ? Math.max(...rows.map(d => f(d) || 0)) : 0
-  const fmtHours = (mins: number) => `${(mins / 60).toFixed(1)}`
+  const h1 = (v: number) => v.toFixed(1)
+  const i0 = (v: number) => String(Math.round(v))
+  const pv = prevRows.length ? prevRows : null
+
+  const push = (label: string, unit: string, curVal: number | null, prevVal: number | null, fmt: (v: number) => string) => {
+    let delta: number | null = null
+    if (curVal !== null && prevVal !== null && prevVal > 0) delta = Math.round((curVal - prevVal) / prevVal * 100)
+    cards.push({
+      label, unit,
+      value: curVal === null ? '--' : fmt(curVal),
+      prevText: prevVal === null ? '上周期无数据' : `上期 ${fmt(prevVal)}${unit}`,
+      delta,
+    })
+  }
+
+  // 上周期无可比数据时返回 null（全零不算数据）
+  const prevAgg = (f: (d: any) => number, agg: (rows: any[]) => number): number | null => {
+    if (!pv) return null
+    if (!pv.some(d => (f(d) || 0) > 0)) return null
+    return agg(pv)
+  }
+  const sumF = (f: (d: any) => number) => (rows: any[]) => sumOf(rows, f)
+  const maxF = (f: (d: any) => number) => (rows: any[]) => maxOf(rows, f)
+  const minPosF = (f: (d: any) => number) => (rows: any[]) => { const v = minPositiveDays(rows, f); return v.length ? Math.min(...v) : 0 }
+  const avgPosF = (f: (d: any) => number) => (rows: any[]) => avgOver(minPositiveDays(rows, f))
+  const avgF = (f: (d: any) => number) => (rows: any[]) => rows.length ? sumOf(rows, f) / rows.length : 0
+  const countPosF = (f: (d: any) => number) => (rows: any[]) => rows.filter(d => (f(d) || 0) > 0).length
+
+  // 本周期同口径（取有记录的天，避免无数据日拉低）
+  const curMinPos = (f: (d: any) => number) => minPosF(f)(data)
+  const curAvgPos = (f: (d: any) => number) => avgPosF(f)(data)
 
   const feeding = () => {
-    const days = data.filter(d => (d.total_ml || 0) > 0 || (d.feeding_count || 0) > 0)
-    if (!days.length) return
-    cards.push(
-      { label: '日均奶量', value: `${Math.round(avgOf(days, d => d.total_ml || 0))} ml`, sub: `共 ${days.length} 天` },
-      { label: '日均次数', value: avgOf(days, d => d.feeding_count || 0).toFixed(1), sub: `共 ${sumOf(days, d => d.feeding_count || 0)} 次` },
-      { label: '期间总奶量', value: `${Math.round(sumOf(days, d => d.total_ml || 0))} ml` },
-      { label: '单日最高奶量', value: `${Math.round(maxOf(days, d => d.total_ml || 0))} ml` },
-    )
+    const has = (rows: any[]) => rows.some(d => (d.total_ml || 0) > 0 || (d.feeding_count || 0) > 0)
+    if (!has(data) && !(pv && has(pv))) return emptyCards()
+    const curMl = sumOf(data, d => d.total_ml || 0)
+    const curCnt = sumOf(data, d => d.feeding_count || 0)
+    const pMl = prevAgg(d => d.total_ml || 0, sumF(d => d.total_ml || 0))
+    const pCnt = prevAgg(d => d.feeding_count || 0, sumF(d => d.feeding_count || 0))
+    push('日均奶量', 'ml', curMl / P, pMl !== null ? pMl / P : null, i0)
+    push('日均喂养次数', '次', curCnt / P, pCnt !== null ? pCnt / P : null, h1)
+    push('单次平均奶量', 'ml', curCnt ? curMl / curCnt : 0, pCnt ? pMl! / pCnt : null, i0)
+    push('单日最高奶量', 'ml', maxOf(data, d => d.total_ml || 0), prevAgg(d => d.total_ml || 0, maxF(d => d.total_ml || 0)), i0)
   }
 
   const diaper = () => {
-    const days = data.filter(d => (d.diaper_count || 0) > 0)
-    if (!days.length) return
-    cards.push(
-      { label: '日均次数', value: avgOf(days, d => d.diaper_count || 0).toFixed(1), sub: `共 ${days.length} 天` },
-      { label: '期间总次数', value: String(sumOf(days, d => d.diaper_count || 0)) },
-      { label: '单日最多', value: `${maxOf(days, d => d.diaper_count || 0)} 次` },
-      { label: '有记录天数', value: `${days.length} 天` },
-    )
+    const f = (d: any) => d.diaper_count || 0
+    const has = (rows: any[]) => rows.some(d => f(d) > 0)
+    if (!has(data) && !(pv && has(pv))) return emptyCards()
+    push('日均尿布次数', '次', sumOf(data, f) / P, prevAgg(f, avgF(f)), h1)
+    push('单日最多', '次', maxOf(data, f), prevAgg(f, maxF(f)), i0)
+    push('单日最少', '次', curMinPos(f), prevAgg(f, minPosF(f)), i0)
+    push('期间总次数', '次', sumOf(data, f), prevAgg(f, sumF(f)), i0)
   }
 
   const sleep = () => {
-    const days = data.filter(d => (d.sleep_duration_minutes || 0) > 0)
-    if (!days.length) return
-    cards.push(
-      { label: '日均睡眠', value: fmtHours(avgOf(days, d => d.sleep_duration_minutes || 0)), sub: '小时' },
-      { label: '单日最长', value: fmtHours(maxOf(days, d => d.sleep_duration_minutes || 0)), sub: '小时' },
-      { label: '期间总时长', value: fmtHours(sumOf(days, d => d.sleep_duration_minutes || 0)), sub: '小时' },
-      { label: '有记录天数', value: `${days.length} 天` },
-    )
+    const f = (d: any) => d.sleep_duration_minutes || 0
+    const has = (rows: any[]) => rows.some(d => f(d) > 0)
+    if (!has(data) && !(pv && has(pv))) return emptyCards()
+    push('日均睡眠', '小时', sumOf(data, f) / P / 60, prevAgg(f, avgF(f)) !== null ? prevAgg(f, avgF(f))! / 60 : null, h1)
+    push('单日最长', '小时', maxOf(data, f) / 60, prevAgg(f, maxF(f)) !== null ? prevAgg(f, maxF(f))! / 60 : null, h1)
+    push('有记录日均', '小时', curAvgPos(f) / 60, prevAgg(f, avgPosF(f)) !== null ? prevAgg(f, avgPosF(f))! / 60 : null, h1)
+    push('期间总时长', '小时', sumOf(data, f) / 60, prevAgg(f, sumF(f)) !== null ? prevAgg(f, sumF(f))! / 60 : null, h1)
   }
 
   const outdoor = () => {
-    const days = data.filter(d => (d.outdoor_duration_minutes || 0) > 0)
-    if (!days.length) return
-    cards.push(
-      { label: '日均时长', value: fmtHours(avgOf(days, d => d.outdoor_duration_minutes || 0)), sub: '小时' },
-      { label: '单日最长', value: fmtHours(maxOf(days, d => d.outdoor_duration_minutes || 0)), sub: '小时' },
-      { label: '期间总时长', value: fmtHours(sumOf(days, d => d.outdoor_duration_minutes || 0)), sub: '小时' },
-      { label: '有记录天数', value: `${days.length} 天` },
-    )
+    const f = (d: any) => d.outdoor_duration_minutes || 0
+    const has = (rows: any[]) => rows.some(d => f(d) > 0)
+    if (!has(data) && !(pv && has(pv))) return emptyCards()
+    push('日均户外', '小时', sumOf(data, f) / P / 60, prevAgg(f, avgF(f)) !== null ? prevAgg(f, avgF(f))! / 60 : null, h1)
+    push('单日最长', '小时', maxOf(data, f) / 60, prevAgg(f, maxF(f)) !== null ? prevAgg(f, maxF(f))! / 60 : null, h1)
+    push('有记录日均', '小时', curAvgPos(f) / 60, prevAgg(f, avgPosF(f)) !== null ? prevAgg(f, avgPosF(f))! / 60 : null, h1)
+    push('期间总时长', '小时', sumOf(data, f) / 60, prevAgg(f, sumF(f)) !== null ? prevAgg(f, sumF(f))! / 60 : null, h1)
   }
 
   const temperature = () => {
-    const days = data.filter(d => (d.temperature_high || 0) > 0)
-    if (!days.length) return
-    cards.push(
-      { label: '平均最高体温', value: `${avgOf(days, d => d.temperature_high || 0).toFixed(1)} °C`, sub: `共 ${days.length} 天` },
-      { label: '期间最高', value: `${maxOf(days, d => d.temperature_high || 0).toFixed(1)} °C` },
-      { label: '发烧天数（≥37.5°C）', value: `${days.filter(d => (d.temperature_high || 0) >= 37.5).length} 天` },
-      { label: '有记录天数', value: `${days.length} 天` },
-    )
+    const f = (d: any) => d.temperature_high || 0
+    const meas = (rows: any[]) => rows.filter(d => f(d) > 0)
+    const curM = meas(data), pvM = pv ? meas(pv) : []
+    if (!curM.length && !pvM.length) return emptyCards()
+    const avgTemp = (rows: any[]) => rows.length ? sumOf(rows, d => d.temperature_avg || 0) / rows.length : 0
+    const fever = (rows: any[]) => rows.filter(d => f(d) >= 37.5).length
+    const pvMeas = pvM.length ? pvM : null
+    push('平均体温', '°C', curM.length ? avgTemp(curM) : 0, pvMeas ? avgTemp(pvMeas) : null, v => v.toFixed(1))
+    push('期间最高', '°C', curM.length ? maxOf(curM, f) : 0, pvMeas ? maxOf(pvMeas, f) : null, v => v.toFixed(1))
+    push('发烧天数', '天', fever(curM), pvMeas ? fever(pvMeas) : null, i0)
+    push('测温天数', '天', curM.length, pvMeas ? pvMeas.length : null, i0)
   }
 
   const supplement = () => {
-    const days = data.filter(d => (d.supplement_count || 0) > 0)
-    if (!days.length) return
-    cards.push(
-      { label: '日均次数', value: avgOf(days, d => d.supplement_count || 0).toFixed(1), sub: `共 ${days.length} 天` },
-      { label: '期间总次数', value: String(sumOf(days, d => d.supplement_count || 0)) },
-      { label: '单日最多', value: `${maxOf(days, d => d.supplement_count || 0)} 次` },
-      { label: '有记录天数', value: `${days.length} 天` },
-    )
+    const f = (d: any) => d.supplement_count || 0
+    const has = (rows: any[]) => rows.some(d => f(d) > 0)
+    if (!has(data) && !(pv && has(pv))) return emptyCards()
+    push('日均补剂次数', '次', sumOf(data, f) / P, prevAgg(f, avgF(f)), h1)
+    push('单日最多', '次', maxOf(data, f), prevAgg(f, maxF(f)), i0)
+    push('补剂天数', '天', countPosF(f)(data), prevAgg(f, countPosF(f)), i0)
+    push('期间总次数', '次', sumOf(data, f), prevAgg(f, sumF(f)), i0)
+  }
+
+  function minPositiveDays(rows: any[], f: (d: any) => number) {
+    return rows.map(d => f(d) || 0).filter(x => x > 0)
+  }
+  function avgOver(v: number[]) { return v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0 }
+
+  function emptyCards() {
+    noData = true
   }
 
   const builders: Record<string, () => void> = { feeding, diaper, sleep, outdoor, temperature, supplement }
   builders[category.value]?.()
-  return { cards }
+  return { cards, empty: noData }
 })
 
-const CHART = { padL: 32, padR: 30, padT: 15, padB: 35, svgW: 340, svgH: 170 }
+// 本周期 / 上周期 日期范围文案
+const periodLabel = computed(() => {
+  const f = (d: any) => `${parseInt(d.date.split('-')[1])}/${parseInt(d.date.split('-')[2])}`
+  const cur = trendData.value, pv = trendPrev.value
+  if (!cur.length) return ''
+  const curTxt = `${f(cur[0])} – ${f(cur[cur.length - 1])}`
+  const pvTxt = pv.length ? `${f(pv[0])} – ${f(pv[pv.length - 1])}` : '无上期数据'
+  return `本周期 ${curTxt} · 上周期 ${pvTxt}`
+})
+
+function deltaArrow(d: number): string { return d > 0 ? '↑' : d < 0 ? '↓' : '—' }
+// 中性配色：只表达方向，不对“多/少”做价值判断
+function deltaClass(_d: number): string { return 'bg-muted text-text-secondary' }
+
+const CHART = { padL: 26, padR: 24, padT: 12, padB: 32, svgW: 340, svgH: 228 }
+const DATE_LABEL_Y = CHART.svgH - 11
 const MAX_TICKS = Math.max(5, Math.min(9, Math.floor((CHART.svgH - CHART.padT - CHART.padB) / 13)))
 
 const axis = computed(() => {
@@ -650,10 +689,13 @@ async function loadTrend(silent: boolean = false) {
   if (!baby) return
   if (!silent) loading.value = true
   try {
-    const res = await babyAPI.trend(baby.id, days.value)
-    trendData.value = res.data
+    const res = await babyAPI.trend(baby.id, days.value * 2)
+    const all = res.data || []
+    trendPrev.value = all.slice(0, Math.max(0, all.length - days.value))
+    trendData.value = all.slice(-days.value)
   } catch {
     trendData.value = []
+    trendPrev.value = []
     app.showToast('趋势数据加载失败', 'error')
   } finally {
     loading.value = false
@@ -661,4 +703,9 @@ async function loadTrend(silent: boolean = false) {
 }
 
 onMounted(() => { if (app.currentBaby) loadTrend() })
+
+// 冷启动/切换宝宝时 currentBaby 可能晚于本页挂载就绪（同 P0）：监听其就绪后补载
+watch(() => app.currentBaby?.id, (id) => {
+  if (id) loadTrend()
+})
 </script>

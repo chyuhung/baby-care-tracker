@@ -59,7 +59,9 @@ const headerH = ref(0)
 
 let startY = 0
 let tracking = false
-let decided = false   // 是否已判定接管为"下拉"
+let engaged = false    // 是否已进入"下拉接管"
+let anchorY = 0       // 列表触顶那一刻的触点 Y（从此往上算下拉行程）
+let lastY = 0         // 上一帧触点 Y（用于判定本次移动方向）
 let performed = false
 
 const indicatorVisible = computed(() => refreshing.value || pulling.value > 0)
@@ -90,41 +92,56 @@ function measureHeader() {
   headerH.value = h ? Math.round(h.getBoundingClientRect().height) : 0
 }
 
-/* ========== 经典下拉状态机（等价 iOS UIRefreshControl） ========== */
+/* ========== 下拉状态机（等价 iOS UIRefreshControl） ==========
+ * 连续模型：一次手势里，手指向下拖时先让原生滚动把列表带回顶部，
+ * 一旦列表触顶（scrollTop<=0），就锚定此刻触点 Y，把之后的向下行程
+ * 全部转成「整页下拉」位移，并 preventDefault 压掉原生 overscroll。
+ * 因此「先上滑再回顶下拉」与「直接下拉」表现完全一致，
+ * 且顶部始终是整页下拉刷新，永不露出底色（--bg-main 粉/白）或滚动条。 */
 
 function onTouchStart(e: TouchEvent) {
   if (refreshing.value || e.touches.length !== 1) return
   measureHeader()
   startY = e.touches[0].clientY
+  lastY = startY
   tracking = true
-  decided = false
+  engaged = false
   performed = false
   animating.value = false
+  // 已在顶部：立刻锚定，保证从第一个像素就按整页下拉计算
+  anchorY = atTop() ? startY : 0
 }
 
 function onTouchMove(e: TouchEvent) {
   if (!tracking || refreshing.value) return
-  const dy = e.touches[0].clientY - startY
+  const el = rootRef.value
+  if (!el) return
+  const y = e.touches[0].clientY
+  const dy = y - startY
+  const dyMove = y - lastY
+  lastY = y
 
   // 死区：位移太小视为点击
-  if (!decided) {
-    if (Math.abs(dy) < SLOP) return
-    // 只接管"从顶部向下拉"；其它情况交给原生滚动
-    if (dy < 0 || !atTop()) { tracking = false; return }
-    decided = true
-  }
+  if (!engaged && Math.abs(dy) < SLOP) return
 
-  // 拖动过程中已不在顶部 → 复位，交给原生滚动
-  if (!atTop()) {
-    tracking = false
-    pulling.value = 0
+  if (el.scrollTop > 0) {
+    // 仍有原生滚动余量：交给浏览器滚动，重置锚点（回弹不参与下拉）
+    anchorY = 0
+    if (pulling.value) pulling.value = 0
     armed.value = false
     return
   }
 
-  // 真正进入下拉：接管触摸，压掉原生回弹 / 滚动条
+  // 列表已在顶部
+  if (!engaged) {
+    if (dyMove <= 0) return // 本次在向上拖（=向下滚动）：交给原生滚动
+    engaged = true
+    anchorY = y
+  }
+
+  // 进入/维持「整页下拉」：接管触摸，压掉原生回弹 / 滚动条
   if (e.cancelable) e.preventDefault()
-  pulling.value = Math.min(dy * RESIST, MAX_PULL)
+  pulling.value = Math.max(0, Math.min((y - anchorY) * RESIST, MAX_PULL))
   armed.value = pulling.value >= THRESHOLD
   if (armed.value) performed = true
 }
@@ -159,6 +176,9 @@ function finish(trigger: boolean) {
     window.setTimeout(() => { animating.value = false }, 340)
   }
   if (performed) suppressNextClick()
+  engaged = false
+  anchorY = 0
+  lastY = 0
 }
 
 /* 下拉手势结束后，吞掉紧随的合成 click（防幽灵点击） */

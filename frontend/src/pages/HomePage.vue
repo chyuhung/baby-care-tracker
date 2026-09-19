@@ -143,18 +143,28 @@
             <div class="text-xs text-text-secondary mb-1">今日体温</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-1">
-                <span v-if="stats.latest_temperature > 0" class="text-3xl font-bold font-num" :class="stats.latest_temperature >= 37.5 ? 'text-danger' : 'text-text-primary'">{{ stats.latest_temperature }}</span>
+                <span v-if="todayTemp" class="text-3xl font-bold font-num" :class="todayTemp >= 37.5 ? 'text-danger' : 'text-text-primary'">{{ todayTemp }}</span>
+                <span v-else class="text-3xl font-bold font-num text-text-secondary">--</span>
                 <span class="text-sm text-text-secondary">°C</span>
               </div>
               <div class="text-3xl">🌡️</div>
             </div>
-            <div v-if="lastTempAgo" class="mt-2 flex items-center justify-between">
+            <div v-if="todayTemp" class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
-              <span class="text-xs font-medium" :class="lastTempAgo.isLong ? 'text-warning' : 'text-text-secondary'">{{ lastTempAgo.text }}</span>
+              <span class="text-xs font-medium" :class="lastTempTodayAgo?.isLong ? 'text-warning' : 'text-text-secondary'">{{ lastTempTodayAgo?.text }}</span>
             </div>
-            <div v-if="tempHighValue" class="mt-1 flex items-center justify-between">
-              <span class="text-xs text-text-secondary">最高体温</span>
-              <span class="text-xs font-medium font-num" :class="+tempHighValue >= 37.5 ? 'text-danger' : 'text-text-secondary'">{{ tempHighValue }}°C</span>
+            <div v-else class="mt-2 flex items-center justify-between">
+              <span class="text-xs text-text-secondary">今日未测温</span>
+            </div>
+            <div class="mt-1 flex items-center justify-between">
+              <template v-if="todayTemp">
+                <span class="text-xs text-text-secondary">今日最高</span>
+                <span class="text-xs font-medium font-num" :class="(todayTempHigh || 0) >= 37.5 ? 'text-danger' : 'text-text-secondary'">{{ todayTempHigh?.toFixed(1) }}°C</span>
+              </template>
+              <template v-else>
+                <span class="text-xs text-text-secondary">上次测温</span>
+                <span class="text-xs font-medium text-text-secondary">{{ lastTempAgo ? lastTempAgo.text : '暂无历史' }}</span>
+              </template>
             </div>
             <button @click.stop="goToAddTemperature"
               class="mt-3 w-full min-h-[44px] py-2 bg-temperature/10 text-temperature-deep text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1">
@@ -384,15 +394,24 @@ const sleepAvgDuration = computed(() => {
   return formatDurationCN(Math.round(recs.reduce((sum, x) => sum + x.t, 0) / recs.length))
 })
 
-const tempHighValue = computed(() => {
-  const recs = allRecords.value
-    .filter(r => r.record_type === 'temperature' && r.data?.temperature > 0)
-    .map(r => ({ v: r.data.temperature, occurred: new Date(r.occurred_at).getTime() }))
-    .sort((a, b) => b.occurred - a.occurred)
-    .slice(0, 3)
-  if (!recs.length) return null
-  return Math.max(...recs.map(x => x.v)).toFixed(1)
-})
+// 今日日期判定（按本地时区）
+function isToday(iso?: string | null) {
+  if (!iso) return false
+  const d = new Date(iso)
+  const n = new Date()
+  return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate()
+}
+
+// 今日测温记录（新→旧）；今日未测温时温度为 null，主数字显示 -- 占位符
+const todayTempRecords = computed(() =>
+  allRecords.value
+    .filter(r => r.record_type === 'temperature' && r.data?.temperature > 0 && isToday(r.occurred_at))
+    .sort((a, b) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime()))
+const todayTemp = computed<number | null>(() => todayTempRecords.value.length ? todayTempRecords.value[0].data.temperature : null)
+const todayTempHigh = computed<number | null>(() => todayTempRecords.value.length
+  ? Math.max(...todayTempRecords.value.map((r: any) => r.data.temperature))
+  : null)
+const lastTempTodayAgo = computed(() => { tick.value; return getTimeAgo(todayTempRecords.value[0]?.occurred_at) })
 
 const lastFeedingAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_feeding) })
 const lastDiaperAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_diaper) })
