@@ -12,7 +12,7 @@
       <div>
         <label class="text-sm text-text-secondary block mb-2">记录时间</label>
         <input v-model="form.occurred_at" type="datetime-local"
-          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+          class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
       </div>
 
       <!-- 喂奶 -->
@@ -28,7 +28,7 @@
           <div>
             <label class="text-sm text-text-secondary block mb-2">时长（分钟）</label>
             <input v-model.number="feedingForm.duration_minutes" type="number" min="0" inputmode="numeric" placeholder="如 15"
-              class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+              class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
           </div>
           <div>
             <label class="text-sm text-text-secondary block mb-2">喂养侧</label>
@@ -42,12 +42,12 @@
           <div>
             <label class="text-sm text-text-secondary block mb-2">奶量（ml）</label>
             <input v-model.number="feedingForm.amount_ml" type="number" min="0" inputmode="numeric" placeholder="如 120"
-              class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+              class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
           </div>
           <div v-if="feedingForm.type === 'formula'">
             <label class="text-sm text-text-secondary block mb-2">品牌（可选）</label>
             <input v-model="feedingForm.brand" type="text" placeholder="奶粉品牌"
-              class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+              class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
           </div>
         </template>
       </template>
@@ -59,19 +59,19 @@
           <div class="grid grid-cols-3 gap-3">
             <button type="button" @click="diaperForm.type = 'pee'"
               :class="['flex flex-col items-center justify-center gap-1 py-4 rounded-xl border-2 transition-all btn-press min-h-[88px]',
-                diaperForm.type === 'pee' ? 'border-primary bg-primary/5' : 'border-border-color bg-white']">
+                diaperForm.type === 'pee' ? 'border-primary bg-primary/5' : 'border-border-color bg-surface']">
               <span class="text-2xl">💧</span>
               <span class="text-sm font-medium" :class="diaperForm.type === 'pee' ? 'text-primary-deep' : 'text-text-secondary'">小便</span>
             </button>
             <button type="button" @click="diaperForm.type = 'poop'"
               :class="['flex flex-col items-center justify-center gap-1 py-4 rounded-xl border-2 transition-all btn-press min-h-[88px]',
-                diaperForm.type === 'poop' ? 'border-primary bg-primary/5' : 'border-border-color bg-white']">
+                diaperForm.type === 'poop' ? 'border-primary bg-primary/5' : 'border-border-color bg-surface']">
               <span class="text-2xl">💩</span>
               <span class="text-sm font-medium" :class="diaperForm.type === 'poop' ? 'text-primary-deep' : 'text-text-secondary'">大便</span>
             </button>
             <button type="button" @click="diaperForm.type = 'mixed'"
               :class="['flex flex-col items-center justify-center gap-1 py-4 rounded-xl border-2 transition-all btn-press min-h-[88px]',
-                diaperForm.type === 'mixed' ? 'border-primary bg-primary/5' : 'border-border-color bg-white']">
+                diaperForm.type === 'mixed' ? 'border-primary bg-primary/5' : 'border-border-color bg-surface']">
               <span class="text-2xl">🌪️</span>
               <span class="text-sm font-medium" :class="diaperForm.type === 'mixed' ? 'text-primary-deep' : 'text-text-secondary'">混合</span>
             </button>
@@ -83,7 +83,7 @@
       <div>
         <label class="text-sm text-text-secondary block mb-2">备注</label>
         <textarea v-model="form.note" rows="3" placeholder="可选"
-          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary resize-none focus:border-primary focus:outline-none transition-colors"></textarea>
+          class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary resize-none focus:border-primary focus:outline-none transition-colors"></textarea>
       </div>
 
       <div v-if="error" class="bg-danger-light text-danger text-sm px-4 py-2 rounded-xl text-center">
@@ -92,7 +92,7 @@
 
       <!-- 删除（编辑态，留在内容区） -->
       <button v-if="isEdit" type="button" @click="showDelete = true"
-        class="btn-press w-full py-3 bg-white text-danger font-medium rounded-xl border border-danger/25 min-h-[44px]">
+        class="btn-press w-full py-3 bg-surface text-danger font-medium rounded-xl border border-danger/25 min-h-[44px]">
         删除此记录
       </button>
     </main>
@@ -100,7 +100,7 @@
     <!-- 固定底部操作栏 -->
     <FormBar>
       <button type="button" @click="save" :disabled="saving"
-        class="btn-press w-full py-3.5 bg-primary-deep text-white font-semibold rounded-xl shadow-card disabled:opacity-50 flex items-center justify-center gap-2">
+        class="btn-press w-full py-3.5 bg-primary-fill text-white font-semibold rounded-xl shadow-card disabled:opacity-50 flex items-center justify-center gap-2">
         <ActivityIndicator v-if="saving" :size="20" class="text-white" />
         <span>{{ saving ? '保存中...' : (isEdit ? '更新记录' : '记录') }}</span>
       </button>

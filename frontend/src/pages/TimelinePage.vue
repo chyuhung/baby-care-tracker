@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col h-dvh">
-    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(5rem+env(safe-area-inset-bottom))]"
+    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
       :refresh="() => loadRecords(true, true)">
     <template #header>
     <header class="sticky top-0 z-30 glass-surface hairline-bottom pt-safe px-4 py-3">
@@ -10,7 +10,7 @@
         <button v-for="f in filters" :key="f.value"
           @click="activeFilter = f.value"
           :class="['px-3 py-2 min-h-[44px] flex items-center justify-center rounded-full text-xs font-medium transition-colors btn-press whitespace-nowrap',
-            activeFilter === f.value ? 'bg-primary-deep text-white' : 'bg-muted text-text-secondary']">
+            activeFilter === f.value ? 'bg-primary-fill text-white' : 'bg-muted text-text-secondary']">
           {{ f.label }}
         </button>
       </div>
@@ -20,10 +20,14 @@
       <div v-if="loading" class="flex justify-center py-20">
         <ActivityIndicator :size="28" class="text-text-secondary" />
       </div>
-      <div v-else-if="groupedRecords.length === 0" class="text-center py-16">
-        <img src="/icon-192.png" alt="" class="w-14 h-14 mx-auto block mb-4" />
-        <p class="text-text-secondary">暂无记录</p>
-      </div>
+      <EmptyState v-else-if="groupedRecords.length === 0" title="暂无记录"
+        subtitle="记录宝宝的每一次喂奶、睡眠与成长瞬间">
+        <button @click="router.push('/')"
+          class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-fill text-white rounded-xl font-medium text-sm btn-press shadow-card">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          立即记录
+        </button>
+      </EmptyState>
       <div v-else class="space-y-6">
         <div v-for="group in groupedRecords" :key="group.label">
           <h3 class="text-xs font-semibold text-text-secondary mb-3 sticky top-0 bg-bg-main py-1">
@@ -59,6 +63,7 @@ import RecordCard from '@/components/RecordCard.vue'
 import PullRefresh from '@/components/PullRefresh.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
+import EmptyState from '@/components/EmptyState.vue'
 import { WEEKDAY_LONG } from '@/utils'
 
 const app = useAppStore()

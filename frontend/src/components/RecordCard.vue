@@ -1,5 +1,5 @@
 <template>
-  <div v-if="record.record_type === 'feeding'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+  <div v-if="record.record_type === 'feeding'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
     <div class="w-1.5 h-12 rounded-full bg-primary flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -19,7 +19,7 @@
     </button>
   </div>
 
-  <div v-else-if="record.record_type === 'diaper'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+  <div v-else-if="record.record_type === 'diaper'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
     <div class="w-1.5 h-12 rounded-full bg-diaper flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -33,7 +33,7 @@
     </button>
   </div>
 
-  <div v-else-if="record.record_type === 'sleep'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+  <div v-else-if="record.record_type === 'sleep'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
     <div class="w-1.5 h-12 rounded-full bg-sleep flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -50,7 +50,7 @@
     </button>
   </div>
 
-  <div v-else-if="record.record_type === 'temperature'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+  <div v-else-if="record.record_type === 'temperature'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
     <div class="w-1.5 h-12 rounded-full bg-temperature flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -69,7 +69,7 @@
     </button>
   </div>
 
-  <div v-else-if="record.record_type === 'supplement'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+  <div v-else-if="record.record_type === 'supplement'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
     <div class="w-1.5 h-12 rounded-full bg-supplement flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -86,7 +86,7 @@
     </button>
   </div>
 
-  <div v-else role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-white rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+  <div v-else role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
     <div class="w-1.5 h-12 rounded-full bg-outdoor flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">

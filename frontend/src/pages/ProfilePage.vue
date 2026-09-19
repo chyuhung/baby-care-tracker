@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col h-dvh">
-    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-4 pb-[calc(5rem+env(safe-area-inset-bottom))]"
+    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
       :refresh="refreshAll">
     <template #header>
     <header class="sticky top-0 z-30 glass-surface hairline-bottom pt-safe px-4 py-3">
@@ -9,7 +9,7 @@
     </template>
 
       <!-- 用户信息 -->
-      <div class="bg-white rounded-2xl p-4 shadow-card flex items-center gap-4">
+      <div class="bg-surface rounded-2xl p-4 shadow-card flex items-center gap-4">
         <div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-2xl">👤</div>
         <div>
           <div class="font-semibold text-text-primary">{{ auth.user?.username }}</div>
@@ -18,7 +18,7 @@
       </div>
 
       <!-- 家庭信息 -->
-      <div class="bg-white rounded-2xl p-4 shadow-card space-y-3">
+      <div class="bg-surface rounded-2xl p-4 shadow-card space-y-3">
         <div class="flex items-center justify-between">
           <h2 class="text-sm font-semibold text-text-secondary">我的家庭</h2>
           <button v-if="family && family.members.length > 1" @click="leaveFamily" class="text-xs text-danger/80 font-medium py-2 px-3 -mr-2 flex items-center min-h-[44px]">退出家庭</button>
@@ -49,16 +49,18 @@
             重新生成邀请码
           </button>
         </div>
+      </div>
 
-        <!-- 加入其他家庭（始终显示） -->
-        <div class="border-t border-border-color pt-3">
-          <p class="text-xs text-text-secondary mb-2">加入其他家庭后，你和你的宝宝数据将切换到新家庭</p>
-          <div class="flex gap-2">
-            <input v-model="joinCode" placeholder="输入对方的邀请码" maxlength="6"
-              aria-label="邀请码"
-              class="flex-1 px-3 py-2 border border-border-color rounded-xl text-sm focus:border-primary focus:outline-none transition-colors uppercase" />
-            <button @click="joinFamily" class="px-4 py-3 bg-primary-deep text-white text-sm font-medium rounded-xl btn-press min-h-[44px]">加入</button>
-          </div>
+      <!-- 加入其他家庭（独立卡片） -->
+      <div class="bg-surface rounded-2xl p-4 shadow-card space-y-2">
+        <h2 class="text-sm font-semibold text-text-secondary">加入其他家庭</h2>
+        <p class="text-xs text-text-secondary">加入其他家庭后，你和你的宝宝数据将切换到新家庭</p>
+        <div class="flex gap-2 pt-1">
+          <input v-model="joinCode" placeholder="输入对方的邀请码" maxlength="6"
+            aria-label="邀请码"
+            class="flex-1 min-h-[44px] px-3 py-2.5 bg-bg-secondary border border-border-color rounded-xl text-base focus:border-primary focus:outline-none transition-colors uppercase" />
+          <button @click="joinFamily" :disabled="!joinCode.trim()"
+            class="px-4 py-3 bg-primary-fill text-white text-sm font-medium rounded-xl btn-press min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed">加入</button>
         </div>
       </div>
 
@@ -72,12 +74,11 @@
           </router-link>
         </div>
 
-        <div v-if="app.babies.length === 0" class="bg-white rounded-2xl p-6 text-center shadow-card">
-          <img src="/icon-192.png" alt="" class="w-12 h-12 mx-auto block mb-2" />
-          <p class="text-text-secondary text-sm">还没有宝宝档案</p>
+        <div v-if="app.babies.length === 0" class="bg-surface rounded-2xl p-6 text-center shadow-card">
+          <EmptyState title="还没有宝宝档案" size="sm" />
         </div>
 
-        <div v-for="baby in app.babies" :key="baby.id" class="bg-white rounded-2xl shadow-card">
+        <div v-for="baby in app.babies" :key="baby.id" class="bg-surface rounded-2xl shadow-card">
           <div class="p-4 flex items-center gap-3 cursor-pointer btn-press rounded-2xl" role="button" tabindex="0"
             @keydown.enter.prevent="router.push(`/baby/${baby.id}/edit`)"
             @click="router.push(`/baby/${baby.id}/edit`)">
@@ -94,7 +95,7 @@
       </div>
 
       <!-- 登出 -->
-      <button @click="logout" class="w-full py-3 bg-white text-danger font-medium rounded-xl shadow-card btn-press mt-8 min-h-[44px]">
+      <button @click="logout" class="w-full py-3 bg-surface text-danger font-medium rounded-xl shadow-card btn-press mt-8 min-h-[44px]">
         退出登录
       </button>
     </PullRefresh>
@@ -113,6 +114,7 @@ import { useAppStore } from '@/stores/app'
 import { familyAPI } from '@/api'
 import PullRefresh from '@/components/PullRefresh.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
+import EmptyState from '@/components/EmptyState.vue'
 
 interface FamilyMember {
   id: number

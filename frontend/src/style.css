@@ -13,7 +13,8 @@
 [data-theme='female'] {
   /* 樱花粉 */
   --primary: 242 92 140;         /* #F25C8C 樱花粉（图标/图表/浅底/边框） */
-  --primary-deep: 199 54 107;    /* #C7366B 加深粉（实心按钮/选中态/彩字，白字5.04） */
+  --primary-deep: 199 54 107;    /* #C7366B 加深粉（彩字/图标，白底 5.04） */
+  --primary-fill: 199 54 107;    /* #C7366B 实心按钮/选中态底色（白字 5.04） */
   --bg-main: 255 246 250;        /* #FFF6FA 极淡粉页面背景 */
 
   /* 功能色（清透 iOS 系统色，两主题通用） */
@@ -27,11 +28,20 @@
   --outdoor-deep: 63 122 34;     /* #3F7A22 加深绿（5.23） */
   --supplement: 139 92 246;      /* #8B5CF6 补剂紫 */
   --supplement-deep: 124 58 237; /* #7C3AED 加深紫 */
-  --success-deep: 37 150 68;     /* #259644 成功绿（Toast 白字3.8） */
+  --supplement-fill: 124 58 237; /* #7C3AED 补剂选中填充底 */
+  --success-deep: 37 150 68;     /* #259644 成功绿（Toast 白字 3.8） */
   --warning-deep: 168 87 10;     /* #A8570A 提醒橙（5.21） */
-  --danger-deep: 220 38 38;      /* #DC2626 WCAG 达标危险红（白字4.83） */
+  --danger-deep: 220 38 38;      /* #DC2626 WCAG 达标危险红（白字 4.83） */
+  --danger-fill: 220 38 38;      /* #DC2626 危险按钮填充底（白字 4.83） */
+  --danger-light: 255 236 235;   /* #FFECEB 危险提示浅底 */
 
-  --text-secondary: 95 102 114;  /* #5F6672 清透中性冷灰（次要文字，白底5.79 / 灰底5.20） */
+  /* 中性面：白卡 / 灰 chip / 主文字 / 次文字 / 发丝线（暗色模式仅改这些） */
+  --surface: 255 255 255;        /* #FFFFFF 卡片/输入框/弹层底 */
+  --muted: 241 243 247;          /* #F1F3F7 灰 chip / 分段底 */
+  --text-primary: 28 28 30;      /* #1C1C1E 主文字 */
+  --text-secondary: 95 102 114;  /* #5F6672 次要文字（白底 5.79 / 灰底 5.20） */
+  --border-color: 232 234 240;   /* #E8EAF0 分隔线/边框 */
+  --segment: 255 255 255;        /* 分段控件选中段底（亮面浮起） */
 
   /* 图表（SVG 直接引用） */
   --chart-primary: #C7366B;
@@ -41,16 +51,69 @@
   --chart-outdoor: #5CAC37;
   --chart-supplement: #8B5CF6;
   --chart-primary-count: #AF52DE; /* 喂奶次数第二色：清透紫，与奶量粉区分 */
+  --chart-line: #E7EAF0;           /* 图表基线/网格线 */
+  --hairline: 60 60 67;            /* 发丝线 RGB（配合 .hairline-* 的 alpha） */
 }
 
 [data-theme='male'] {
   /* 晴空蓝 */
   --primary: 52 142 237;         /* #348EED 晴空蓝 */
-  --primary-deep: 29 111 209;    /* #1D6FD1 加深蓝（白字4.95） */
+  --primary-deep: 29 111 209;    /* #1D6FD1 加深蓝（彩字） */
+  --primary-fill: 29 111 209;    /* #1D6FD1 实心按钮底（白字 4.95） */
   --bg-main: 244 249 255;        /* #F4F9FF 极淡蓝页面背景 */
 
   --chart-primary: #1D6FD1;
   --chart-primary-count: #AF52DE;
+}
+
+/* ============================================================
+   暗色模式（跟随系统）：仅覆盖中性面/文字/图表线与彩字深度，
+   实心主色（--primary-fill）保持不变以维持白字对比度。
+   ============================================================ */
+@media (prefers-color-scheme: dark) {
+  :root,
+  [data-theme='neutral'],
+  [data-theme='female'] {
+    --bg-main: 0 0 0;             /* #000000 深色页面底（iOS 深色基准） */
+    --surface: 28 28 30;          /* #1C1C1E 卡片/输入框/弹层（抬升面） */
+    --muted: 44 44 46;            /* #2C2C2E 灰 chip / 分段底 */
+    --text-primary: 242 242 247;  /* #F2F2F7 主文字 */
+    --text-secondary: 160 166 176;/* #A0A6B0 次要文字 */
+    --border-color: 56 56 60;     /* #38383C 边框 */
+    --segment: 72 72 74;          /* #48484A 分段选中段（systemGray3，明显浮起，对比 track ≈1.53） */
+    --hairline: 84 84 88;         /* 深色发丝线 */
+
+    /* 彩字在深底上提亮（保对比度） */
+    --primary: 244 114 152;       /* #F47298 */
+    --primary-deep: 246 140 172;  /* #F68CAC */
+    --diaper-deep: 245 158 66;    /* #F59E42 */
+    --temperature-deep: 74 196 116; /* #4AC474 */
+    --sleep-deep: 88 196 214;     /* #58C4D6 */
+    --outdoor-deep: 130 200 90;   /* #82C85A */
+    --supplement-deep: 178 150 250; /* #B296FA */
+    --danger-deep: 255 105 97;    /* #FF6961 */
+    --warning-deep: 245 158 66;   /* #F59E42 */
+    --success-deep: 48 209 88;    /* #30D158 */
+    --danger-light: 58 26 26;     /* 危险提示深红底 */
+
+    /* 图表色在深底上提亮 */
+    --chart-primary: #F47298;
+    --chart-diaper: #F59E42;
+    --chart-temperature: #4AC474;
+    --chart-sleep: #58C4D6;
+    --chart-outdoor: #82C85A;
+    --chart-supplement: #B296FA;
+    --chart-primary-count: #C084FC;
+    --chart-line: #38383C;
+  }
+
+  [data-theme='male'] {
+    --bg-main: 0 0 4;             /* #000004 深色蓝底 */
+    --primary: 90 162 245;        /* #5AA2F5 */
+    --primary-deep: 130 186 250;  /* #82BAFA */
+    --chart-primary: #5AA2F5;
+    --chart-primary-count: #C084FC;
+  }
 }
 
 * {
@@ -62,6 +125,7 @@ html, body {
   margin: 0;
   padding: 0;
   background-color: rgb(var(--bg-main));
+  color: rgb(var(--text-primary));
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   -webkit-font-smoothing: antialiased;
 }
@@ -75,6 +139,7 @@ body {
   max-width: 480px;
   margin: 0 auto;
   background: rgb(var(--bg-main));
+  color: rgb(var(--text-primary));
   position: relative;
   overflow-x: hidden;
   transition: background-color 0.35s ease;
@@ -171,7 +236,7 @@ body {
 
 /* 三段式 chrome（顶部标题栏 / 底部 Tab / 表单操作栏）：苹果常规白色主打，与内容区粉底形成明度分层 */
 .glass-surface {
-  background: rgb(255 255 255);
+  background: rgb(var(--surface));
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
 }
@@ -186,10 +251,10 @@ header.glass-surface {
 
 /* iOS 0.5px hairline 细线：三段式 chrome（顶部标题栏 / 底部 Tab）与内容区的分割 */
 .hairline-top {
-  border-top: 0.5px solid rgba(60, 60, 67, 0.26);
+  border-top: 0.5px solid rgb(var(--hairline) / 0.26);
 }
 .hairline-bottom {
-  border-bottom: 0.5px solid rgba(60, 60, 67, 0.26);
+  border-bottom: 0.5px solid rgb(var(--hairline) / 0.26);
 }
 
 /* 数字字体 */
@@ -225,8 +290,8 @@ input, select, textarea {
 }
 
 /* 趋势图 SVG 线条颜色（清透冷净灰 + 跟随主题） */
-.chart-grid { stroke: #EDEFF4; stroke-width: 0.8; stroke-dasharray: 4,3; }
-.chart-guide { stroke: #E7EAF0; stroke-width: 0.8; stroke-dasharray: 3,3; }
+.chart-grid { stroke: var(--chart-line); stroke-width: 0.8; stroke-dasharray: 4,3; }
+.chart-guide { stroke: var(--chart-line); stroke-width: 0.8; stroke-dasharray: 3,3; }
 .chart-line-temperature { stroke: var(--chart-temperature); }
 
 /* 趋势图 SVG 文字颜色（变量驱动，替代硬编码 fill） */

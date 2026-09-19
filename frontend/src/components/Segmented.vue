@@ -4,11 +4,11 @@
     <button v-for="opt in options" :key="String(opt.value)" type="button" role="tab"
       :aria-selected="modelValue === opt.value"
       @click="$emit('update:modelValue', opt.value)"
-      :class="['flex-1 min-h-[44px] px-1.5 rounded-[10px] flex items-center justify-center gap-1.5 font-medium transition-all btn-press whitespace-nowrap',
+      :class="['flex-1 min-h-[44px] min-w-0 px-1.5 rounded-[10px] flex items-center justify-center gap-1.5 font-medium transition-all btn-press',
         compact ? 'text-xs' : 'text-sm',
-        modelValue === opt.value ? 'bg-white text-text-primary shadow-sm font-semibold' : 'text-text-secondary']">
+        modelValue === opt.value ? 'bg-segment text-text-primary shadow-sm font-semibold' : 'text-text-secondary']">
       <span v-if="opt.emoji" class="text-base leading-none">{{ opt.emoji }}</span>
-      <span>{{ opt.label }}</span>
+      <span class="truncate">{{ opt.label }}</span>
     </button>
   </div>
 </template>

@@ -1,27 +1,23 @@
 <template>
   <div class="flex flex-col h-dvh">
-    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(5rem+env(safe-area-inset-bottom))] space-y-6"
+    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] space-y-6"
       :refresh="() => loadTrend(true)">
     <template #header>
     <header class="sticky top-0 z-30 glass-surface hairline-bottom pt-safe px-4 py-3">
       <h1 class="text-lg font-bold text-text-primary">趋势</h1>
-      <!-- 类别筛选 -->
-      <div class="flex flex-wrap gap-2 mt-2">
+      <!-- 类别筛选（横向滚动 pill） -->
+      <div class="flex gap-2 mt-2 overflow-x-auto -mx-4 px-4">
         <button v-for="c in categoryOptions" :key="c.value"
           @click="category = c.value"
-          :class="['px-3 py-2 min-h-[44px] flex items-center justify-center rounded-full text-xs font-medium transition-colors btn-press whitespace-nowrap',
-            category === c.value ? 'bg-primary-deep text-white' : 'bg-muted text-text-secondary']">
+          :class="['px-3 py-2 min-h-[44px] flex items-center justify-center rounded-full text-xs font-medium transition-colors btn-press whitespace-nowrap shrink-0',
+            category === c.value ? 'bg-primary-fill text-white' : 'bg-muted text-text-secondary']">
           {{ c.label }}
         </button>
       </div>
-      <!-- 时间筛选 -->
-      <div class="flex gap-2 mt-2">
-        <button v-for="d in dayOptions" :key="d.value"
-          @click="days = d.value; loadTrend()"
-          :class="['px-3 py-2 min-h-[44px] flex items-center justify-center rounded-full text-xs font-medium transition-colors btn-press',
-            days === d.value ? 'bg-primary-deep text-white' : 'bg-muted text-text-secondary']">
-          {{ d.label }}
-        </button>
+      <!-- 时间范围（iOS 分段控件，与上方类别筛选拉开层级） -->
+      <div class="mt-2">
+        <Segmented :model-value="String(days)" :options="dayOptions" compact
+          @update:model-value="(v: string) => { days = Number(v); loadTrend() }" />
       </div>
     </header>
     </template>
@@ -29,12 +25,10 @@
       <div v-if="loading" class="flex justify-center py-20">
         <ActivityIndicator :size="28" class="text-text-secondary" />
       </div>
-      <div v-else-if="trendData.length === 0" class="text-center py-16">
-        <img src="/icon-192.png" alt="" class="w-16 h-16 mx-auto block mb-4" />
-        <p class="text-text-secondary">暂无趋势数据</p>
-      </div>
+      <EmptyState v-else-if="trendData.length === 0" title="暂无趋势数据"
+        subtitle="记录几天数据后，这里会生成图表趋势" />
       <template v-else>
-        <div v-if="category === 'feeding'" class="bg-white rounded-2xl shadow-card p-4">
+        <div v-if="category === 'feeding'" class="bg-surface rounded-2xl shadow-card p-4">
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
               <span class="flex items-center gap-2">
                 🍼 每日奶量
@@ -48,7 +42,7 @@
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <template v-if="days === 30">
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
               <g v-for="(t, ti) in feedingMlScatter.ticks" :key="'fl'+ti">
                 <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
                 <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" class="chart-value-label">{{ t.label }}</text>
@@ -77,10 +71,10 @@
                 <rect :x="feedingRects(i).countX" :y="b.y" :width="w2" :height="b.h" rx="2" fill="var(--chart-primary-count)" opacity="0.85"/>
                 <text v-if="b.h > 0" :x="feedingRects(i).countX + w2 / 2" :y="b.y - 3" text-anchor="middle" font-size="8" class="chart-value-label">{{ b.label }}</text>
               </g>
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             </template>
-            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
-            <line :x1="axis.rightX" :x2="axis.rightX" :y1="axis.topY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
+            <line :x1="axis.rightX" :x2="axis.rightX" :y1="axis.topY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">ml</text>
             <text :x="axis.rightX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">次</text>
             <template v-for="(d, i) in trendData" :key="'fx'+i">
@@ -88,7 +82,7 @@
             </template>
           </svg>
         </div>
-        <div v-if="category === 'diaper'" class="bg-white rounded-2xl shadow-card p-4">
+        <div v-if="category === 'diaper'" class="bg-surface rounded-2xl shadow-card p-4">
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
             <span class="flex items-center gap-2">
               🩲 每日尿布
@@ -96,7 +90,7 @@
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <template v-if="days === 30">
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
               <g v-for="(t, ti) in diaperScatter.ticks" :key="'dl'+ti">
                 <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
                 <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" class="chart-value-label">{{ t.label }}</text>
@@ -114,16 +108,16 @@
                 <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-diaper)" opacity="0.85"/>
                 <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" class="chart-value-label">{{ b.label }}</text>
               </g>
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             </template>
-            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">次</text>
             <template v-for="(d, i) in trendData" :key="'dx'+i">
               <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
-        <div v-if="category === 'sleep'" class="bg-white rounded-2xl shadow-card p-4">
+        <div v-if="category === 'sleep'" class="bg-surface rounded-2xl shadow-card p-4">
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
             <span class="flex items-center gap-2">
               😴 每日睡眠
@@ -131,7 +125,7 @@
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <template v-if="days === 30">
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
               <g v-for="(t, ti) in sleepScatter.ticks" :key="'sl'+ti">
                 <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
                 <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" class="chart-value-label">{{ t.label }}</text>
@@ -149,16 +143,16 @@
                 <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-sleep)" opacity="0.85"/>
                 <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" class="chart-value-label">{{ b.label }}</text>
               </g>
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             </template>
-            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">小时</text>
             <template v-for="(d, i) in trendData" :key="'sx'+i">
               <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
-        <div v-if="category === 'outdoor'" class="bg-white rounded-2xl shadow-card p-4">
+        <div v-if="category === 'outdoor'" class="bg-surface rounded-2xl shadow-card p-4">
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
             <span class="flex items-center gap-2">
               🌳 每日户外活动
@@ -166,7 +160,7 @@
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <template v-if="days === 30">
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
               <g v-for="(t, ti) in outdoorScatter.ticks" :key="'ol'+ti">
                 <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
                 <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" class="chart-value-label">{{ t.label }}</text>
@@ -184,16 +178,16 @@
                 <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-outdoor)" opacity="0.85"/>
                 <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" class="chart-value-label">{{ b.label }}</text>
               </g>
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             </template>
-            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">小时</text>
             <template v-for="(d, i) in trendData" :key="'ox'+i">
               <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
-        <div v-if="category === 'supplement'" class="bg-white rounded-2xl shadow-card p-4">
+        <div v-if="category === 'supplement'" class="bg-surface rounded-2xl shadow-card p-4">
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
             <span class="flex items-center gap-2">
               💊 每日补剂
@@ -201,7 +195,7 @@
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
             <template v-if="days === 30">
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
               <g v-for="(t, ti) in supplementScatter.ticks" :key="'sul'+ti">
                 <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
                 <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" class="chart-value-label">{{ t.label }}</text>
@@ -219,23 +213,23 @@
                 <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-supplement)" opacity="0.85"/>
                 <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" class="chart-value-label">{{ b.label }}</text>
               </g>
-              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+              <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             </template>
-            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">次</text>
             <template v-for="(d, i) in trendData" :key="'sux'+i">
               <text v-if="dateLabels[i]?.show" :x="dateX(i)" y="158" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
-        <div v-if="category === 'temperature'" class="bg-white rounded-2xl shadow-card p-4">
+        <div v-if="category === 'temperature'" class="bg-surface rounded-2xl shadow-card p-4">
           <h4 class="text-sm font-semibold text-text-secondary mb-2">
             <span class="flex items-center gap-2">
               🌡️ 每日最高体温
             </span>
           </h4>
           <svg viewBox="0 0 340 170" class="w-full block">
-            <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+            <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <g v-for="(t, ti) in tempTicks" :key="'tl'+ti">
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="t.y" :y2="t.y" class="chart-grid"/>
               <text :x="axis.leftX - 5" :y="t.y + 3" text-anchor="end" font-size="9" class="chart-value-label">{{ t.label }}</text>
@@ -243,16 +237,16 @@
             <g v-for="(pt, i) in tempPoints" :key="'tv'+i">
               <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
             </g>
-            <line :x1="axis.leftX" :x2="axis.rightX" :y1="feverLineY" :y2="feverLineY" stroke="#FF3B30" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
+            <line :x1="axis.leftX" :x2="axis.rightX" :y1="feverLineY" :y2="feverLineY" stroke="rgb(var(--danger-deep))" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
             <path :d="tempPath" class="chart-line-temperature" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="#E7EAF0" stroke-width="1"/>
+            <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">°C</text>
             <template v-for="(d, i) in trendData" :key="'tx'+i">
               <text v-if="dateLabels[i]?.show" :x="tempPoints[i]?.x" y="158" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
-        <div v-if="summary.cards.length" class="bg-white rounded-2xl shadow-card p-4 space-y-3">
+        <div v-if="summary.cards.length" class="bg-surface rounded-2xl shadow-card p-4 space-y-3">
           <h4 class="text-sm font-semibold text-text-secondary">📊 期间概览</h4>
           <div class="grid grid-cols-2 gap-2.5">
             <div v-for="c in summary.cards" :key="c.label" class="bg-bg-main rounded-xl p-3">
@@ -273,6 +267,8 @@ import { useAppStore } from '@/stores/app'
 import { babyAPI } from '@/api'
 import PullRefresh from '@/components/PullRefresh.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
+import EmptyState from '@/components/EmptyState.vue'
+import Segmented from '@/components/Segmented.vue'
 
 const app = useAppStore()
 const trendData = ref<any[]>([])
@@ -299,8 +295,8 @@ const dateLabels = computed(() => {
 })
 
 const dayOptions = [
-  { label: '7天', value: 7 },
-  { label: '30天', value: 30 },
+  { label: '7天', value: '7' },
+  { label: '30天', value: '30' },
 ]
 
 const summary = computed(() => {

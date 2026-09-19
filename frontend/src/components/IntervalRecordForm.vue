@@ -15,23 +15,23 @@
         <div>
           <label class="text-sm text-text-secondary block mb-2">开始时间</label>
           <input v-model="form.started_at" type="datetime-local"
-            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+            class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
         </div>
         <div>
           <label class="text-sm text-text-secondary block mb-2">结束时间</label>
           <input v-model="form.ended_at" type="datetime-local"
-            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+            class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
         </div>
         <div>
           <label class="text-sm text-text-secondary block mb-2">备注</label>
           <textarea v-model="form.note" rows="3" placeholder="可选"
-            class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary resize-none focus:border-primary focus:outline-none transition-colors"></textarea>
+            class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary resize-none focus:border-primary focus:outline-none transition-colors"></textarea>
         </div>
 
         <div v-if="error" class="bg-danger-light text-danger text-sm px-4 py-2 rounded-xl text-center">{{ error }}</div>
 
         <button type="button" @click="showDelete = true"
-          class="btn-press w-full py-3 bg-white text-danger font-medium rounded-xl border border-danger/25">
+          class="btn-press w-full py-3 bg-surface text-danger font-medium rounded-xl border border-danger/25">
           删除此记录
         </button>
       </template>
@@ -39,7 +39,7 @@
 
     <FormBar>
       <button type="button" @click="save" :disabled="submitting || !loaded"
-        class="btn-press w-full py-3.5 bg-primary-deep text-white font-semibold rounded-xl shadow-card disabled:opacity-50 flex items-center justify-center gap-2">
+        class="btn-press w-full py-3.5 bg-primary-fill text-white font-semibold rounded-xl shadow-card disabled:opacity-50 flex items-center justify-center gap-2">
         <ActivityIndicator v-if="submitting" :size="20" class="text-white" />
         <span>{{ submitting ? '保存中...' : '更新记录' }}</span>
       </button>

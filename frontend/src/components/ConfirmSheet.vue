@@ -6,7 +6,7 @@
           <div v-if="open" class="w-full max-w-[480px] px-3 pb-safe space-y-2" role="alertdialog" aria-modal="true"
             :aria-label="title || confirmText">
             <!-- 上组：说明 + 确认按钮 -->
-            <div class="bg-white rounded-2xl overflow-hidden text-center">
+            <div class="bg-surface rounded-2xl overflow-hidden text-center">
               <div class="pt-2.5 flex justify-center">
                 <span class="w-9 h-1 rounded-full bg-border-color"></span>
               </div>
@@ -23,7 +23,7 @@
             </div>
             <!-- 取消（独立成组） -->
             <button type="button" @click="cancel"
-              class="w-full py-4 bg-white rounded-2xl text-[17px] font-semibold text-text-primary btn-press">
+              class="w-full py-4 bg-surface rounded-2xl text-[17px] font-semibold text-text-primary btn-press">
               {{ cancelText }}
             </button>
           </div>

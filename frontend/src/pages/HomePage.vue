@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col h-dvh">
-    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-4 pb-[calc(5rem+env(safe-area-inset-bottom))]"
+    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
       :refresh="loadData">
       <!-- Header -->
       <template #header>
@@ -26,7 +26,7 @@
       <div v-if="app.currentBaby" class="mt-3 flex items-center gap-2">
         <div class="relative flex-1">
           <select v-model="selectedBabyId" @change="switchBaby"
-            class="w-full px-3 py-2 bg-white border border-border-color rounded-xl text-sm text-text-primary appearance-none cursor-pointer focus:border-primary focus:outline-none transition-colors pr-8">
+            class="w-full min-h-[44px] px-3 py-2.5 bg-surface border border-border-color rounded-xl text-base text-text-primary appearance-none cursor-pointer focus:border-primary focus:outline-none transition-colors pr-8">
             <option v-for="b in app.babies" :key="b.id" :value="b.id">{{ b.name }}</option>
           </select>
           <svg class="w-4 h-4 text-text-secondary pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -36,26 +36,25 @@
     </template>
 
       <!-- 空状态：无宝宝 -->
-      <div v-if="app.babies.length === 0" class="text-center py-16">
-        <img src="/icon-192.png" alt="" class="w-16 h-16 mx-auto block mb-4" />
-        <p class="text-text-secondary mb-4">还没有添加宝宝</p>
+      <EmptyState v-if="app.babies.length === 0" title="还没有添加宝宝"
+        subtitle="添加宝宝档案后即可开始记录护理数据">
         <router-link to="/baby/new"
-          class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-deep text-white rounded-xl font-medium text-sm btn-press shadow-card">
+          class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-fill text-white rounded-xl font-medium text-sm btn-press shadow-card">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
           添加宝宝
         </router-link>
-      </div>
+      </EmptyState>
 
       <!-- 主内容 -->
       <template v-else>
         <!-- 统计卡片（可点击跳转） -->
         <div class="grid grid-cols-2 gap-3">
           <!-- 喂奶卡片 -->
-          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('feeding')" @click="goToTimeline('feeding')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('feeding')" @click="goToTimeline('feeding')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer btn-press">
             <div class="text-xs text-text-secondary mb-1">今日喂奶</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-0.5">
-                <span class="text-3xl font-bold text-primary-deep font-num">{{ stats.total_ml_today }}<sup v-if="stats.feeding_count > 0" class="text-[0.55em] font-bold text-primary-deep font-num leading-none">{{ stats.feeding_count }}</sup></span>
+                <span class="text-3xl font-bold text-text-primary font-num">{{ stats.total_ml_today }}<sup v-if="stats.feeding_count > 0" class="text-[0.55em] font-bold text-text-secondary font-num leading-none">{{ stats.feeding_count }}</sup></span>
                 <span :class="UNIT_CLASS">ml</span>
               </div>
               <div class="text-3xl">🍼</div>
@@ -78,11 +77,11 @@
           </div>
 
           <!-- 尿布卡片 -->
-          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('diaper')" @click="goToTimeline('diaper')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('diaper')" @click="goToTimeline('diaper')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer btn-press">
             <div class="text-xs text-text-secondary mb-1">今日尿布</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-bold font-num text-diaper-deep">{{ stats.diaper_count }}</span>
+                <span class="text-3xl font-bold font-num text-text-primary">{{ stats.diaper_count }}</span>
                 <span class="text-sm text-text-secondary">次</span>
               </div>
               <div class="text-3xl">🩲</div>
@@ -105,14 +104,14 @@
           </div>
 
           <!-- 睡眠卡片 -->
-          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('sleep')" @click="goToTimeline('sleep')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('sleep')" @click="goToTimeline('sleep')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer btn-press">
             <div class="text-xs text-text-secondary mb-1">今日睡眠</div>
             <div class="flex items-end justify-between">
               <div class="flex items-center gap-1 min-w-0">
                 <span v-if="currentSleep" class="w-1.5 h-1.5 rounded-full bg-sleep-deep animate-pulse shrink-0"></span>
                 <div class="flex items-baseline gap-px min-w-0">
                   <template v-for="(part, pi) in sleepParts" :key="pi">
-                    <span class="text-3xl font-bold font-num text-sleep-deep leading-none">{{ part.val }}</span>
+                    <span class="text-3xl font-bold font-num text-text-primary leading-none">{{ part.val }}</span>
                     <span :class="UNIT_CLASS">{{ part.unit }}</span>
                   </template>
                 </div>
@@ -128,7 +127,7 @@
               <span class="text-xs font-medium text-text-secondary">{{ sleepAvgDuration }}</span>
             </div>
             <button v-if="currentSleep" @click.stop="stopSleep" :disabled="loadingAction === 'stop-sleep'"
-              class="mt-3 w-full min-h-[44px] py-2 bg-danger text-white text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1 disabled:opacity-50">
+              class="mt-3 w-full min-h-[44px] py-2 bg-danger-fill text-white text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1 disabled:opacity-50">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
               {{ loadingAction === 'stop-sleep' ? '处理中...' : '结束' }}
             </button>
@@ -140,11 +139,11 @@
           </div>
 
           <!-- 体温卡片 -->
-          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('temperature')" @click="goToTimeline('temperature')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('temperature')" @click="goToTimeline('temperature')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer btn-press">
             <div class="text-xs text-text-secondary mb-1">今日体温</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-1">
-                <span v-if="stats.latest_temperature > 0" class="text-3xl font-bold font-num" :class="stats.latest_temperature >= 37.5 ? 'text-danger' : 'text-temperature-deep'">{{ stats.latest_temperature }}</span>
+                <span v-if="stats.latest_temperature > 0" class="text-3xl font-bold font-num" :class="stats.latest_temperature >= 37.5 ? 'text-danger' : 'text-text-primary'">{{ stats.latest_temperature }}</span>
                 <span class="text-sm text-text-secondary">°C</span>
               </div>
               <div class="text-3xl">🌡️</div>
@@ -164,14 +163,14 @@
           </div>
 
           <!-- 户外活动卡片 -->
-          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('outdoor')" @click="goToTimeline('outdoor')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('outdoor')" @click="goToTimeline('outdoor')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer btn-press">
             <div class="text-xs text-text-secondary mb-1">今日户外活动</div>
             <div class="flex items-end justify-between">
               <div class="flex items-center gap-1 min-w-0">
                 <span v-if="currentOutdoor" class="w-1.5 h-1.5 rounded-full bg-outdoor-deep animate-pulse shrink-0"></span>
                 <div class="flex items-baseline gap-px min-w-0">
                   <template v-for="(part, pi) in outdoorParts" :key="pi">
-                    <span class="text-3xl font-bold font-num text-outdoor-deep leading-none">{{ part.val }}</span>
+                    <span class="text-3xl font-bold font-num text-text-primary leading-none">{{ part.val }}</span>
                     <span :class="UNIT_CLASS">{{ part.unit }}</span>
                   </template>
                 </div>
@@ -187,7 +186,7 @@
               <span class="text-xs font-medium text-text-secondary">{{ formatAvgOutdoor }}</span>
             </div>
             <button v-if="currentOutdoor" @click.stop="stopOutdoor" :disabled="loadingAction === 'stop-outdoor'"
-              class="mt-3 w-full min-h-[44px] py-2 bg-danger text-white text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1 disabled:opacity-50">
+              class="mt-3 w-full min-h-[44px] py-2 bg-danger-fill text-white text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1 disabled:opacity-50">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
               {{ loadingAction === 'stop-outdoor' ? '处理中...' : '结束' }}
             </button>
@@ -199,11 +198,11 @@
           </div>
 
           <!-- 补剂卡片 -->
-          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('supplement')" @click="goToTimeline('supplement')" class="bg-white rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('supplement')" @click="goToTimeline('supplement')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer btn-press">
             <div class="text-xs text-text-secondary mb-1">今日补剂</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-bold font-num text-supplement-deep">{{ stats.supplement_count }}</span>
+                <span class="text-3xl font-bold font-num text-text-primary">{{ stats.supplement_count }}</span>
                 <span class="text-sm text-text-secondary">次</span>
               </div>
               <div class="text-3xl">💊</div>
@@ -226,9 +225,8 @@
         <!-- 最近记录 -->
         <div class="space-y-2">
           <h2 class="text-sm font-semibold text-text-secondary">最近记录</h2>
-          <div v-if="displayRecords.length === 0" class="bg-white rounded-2xl p-6 text-center shadow-card">
-            <img src="/icon-192.png" alt="" class="w-12 h-12 mx-auto block mb-2" />
-            <p class="text-text-secondary text-sm">还没有记录</p>
+          <div v-if="displayRecords.length === 0" class="bg-surface rounded-2xl shadow-card">
+            <EmptyState title="还没有记录" subtitle="从上方卡片快速记录喂奶、睡眠等" size="sm" />
           </div>
           <RecordCard v-for="(r, i) in displayRecords" :key="r.record_type + '-' + r.id" :record="r"
             :style="{ animationDelay: `${i * 60}ms` }" class="card-in"
@@ -261,6 +259,7 @@ import type { BabyStats, SleepRecord, OutdoorRecord } from '@/api'
 import RecordCard from '@/components/RecordCard.vue'
 import PullRefresh from '@/components/PullRefresh.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
+import EmptyState from '@/components/EmptyState.vue'
 import { durationCompactParts, formatDurationCN, WEEKDAY_SHORT } from '@/utils'
 
 const tick = ref(0)

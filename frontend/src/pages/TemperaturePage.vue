@@ -16,7 +16,7 @@
       <div>
         <label class="text-sm text-text-secondary block mb-2">测量时间</label>
         <input v-model="form.occurred_at" type="datetime-local"
-          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+          class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
       </div>
 
       <!-- 体温 -->
@@ -24,7 +24,7 @@
         <label class="text-sm text-text-secondary block mb-2">体温（°C）</label>
         <input v-model.number="form.temperature" type="number" step="0.1" min="30" max="45" inputmode="decimal"
           placeholder="36.5"
-          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-3xl text-center font-num font-bold focus:border-primary focus:outline-none transition-colors" />
+          class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-3xl text-center font-num font-bold focus:border-primary focus:outline-none transition-colors" />
       </div>
 
       <!-- 测量位置（iOS 分段控件，单行 5 段） -->
@@ -38,7 +38,7 @@
       <div>
         <label class="text-sm text-text-secondary block mb-2">备注</label>
         <textarea v-model="form.note" rows="3" placeholder="如：吃奶后、哭闹等"
-          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary resize-none focus:border-primary focus:outline-none transition-colors"></textarea>
+          class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary resize-none focus:border-primary focus:outline-none transition-colors"></textarea>
       </div>
 
       <!-- 发烧提示 -->
@@ -54,7 +54,7 @@
 
       <!-- 删除（编辑态，留在内容区） -->
       <button v-if="isEdit" type="button" @click="showDelete = true"
-        class="btn-press w-full py-3 bg-white text-danger font-medium rounded-xl border border-danger/25 min-h-[44px]">
+        class="btn-press w-full py-3 bg-surface text-danger font-medium rounded-xl border border-danger/25 min-h-[44px]">
         删除此记录
       </button>
     </PullRefresh>
@@ -62,7 +62,7 @@
     <!-- 固定底部操作栏 -->
     <FormBar>
       <button type="button" @click="save" :disabled="saving"
-        class="btn-press w-full py-3.5 bg-primary-deep text-white font-semibold rounded-xl shadow-card disabled:opacity-50 flex items-center justify-center gap-2">
+        class="btn-press w-full py-3.5 bg-primary-fill text-white font-semibold rounded-xl shadow-card disabled:opacity-50 flex items-center justify-center gap-2">
         <ActivityIndicator v-if="saving" :size="20" class="text-white" />
         <span>{{ saving ? '保存中...' : (isEdit ? '更新记录' : '记录') }}</span>
       </button>

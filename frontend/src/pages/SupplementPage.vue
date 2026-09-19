@@ -19,13 +19,13 @@
           <button v-for="opt in nameOptions" :key="opt"
             type="button"
             :class="['px-4 py-2.5 min-h-[44px] rounded-full text-sm font-medium transition-colors btn-press',
-              form.name === opt ? 'bg-supplement text-white font-semibold' : 'bg-white border border-border-color text-text-secondary']"
+              form.name === opt ? 'bg-supplement-fill text-white font-semibold' : 'bg-surface border border-border-color text-text-secondary']"
             @click="selectName(opt)">
             {{ opt }}
           </button>
         </div>
         <input v-if="form.name === '其他'" v-model="customName" type="text" maxlength="20" placeholder="输入补剂名称"
-          class="mt-2 w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+          class="mt-2 w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
       </div>
 
       <!-- 剂量 -->
@@ -33,7 +33,7 @@
         <label class="text-sm text-text-secondary block mb-2">剂量</label>
         <input v-model.number="form.dosage_value" type="number" step="0.1" min="0" inputmode="decimal"
           placeholder="如 1 或 2.5"
-          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-xl text-center font-num font-bold focus:border-primary focus:outline-none transition-colors" />
+          class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-xl text-center font-num font-bold focus:border-primary focus:outline-none transition-colors" />
       </div>
 
       <!-- 剂量单位（iOS 分段控件） -->
@@ -47,14 +47,14 @@
       <div>
         <label class="text-sm text-text-secondary block mb-2">记录时间</label>
         <input v-model="form.occurred_at" type="datetime-local"
-          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+          class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
       </div>
 
       <!-- 备注 -->
       <div>
         <label class="text-sm text-text-secondary block mb-2">备注</label>
         <textarea v-model="form.note" rows="3" placeholder="如：晚上睡前、随奶服用等"
-          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary resize-none focus:border-primary focus:outline-none transition-colors"></textarea>
+          class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary resize-none focus:border-primary focus:outline-none transition-colors"></textarea>
       </div>
 
       <div v-if="error" class="bg-danger-light text-danger text-sm px-4 py-2 rounded-xl text-center">
@@ -63,7 +63,7 @@
 
       <!-- 删除（编辑态，留在内容区） -->
       <button v-if="isEdit" type="button" @click="showDelete = true"
-        class="btn-press w-full py-3 bg-white text-danger font-medium rounded-xl border border-danger/25 min-h-[44px]">
+        class="btn-press w-full py-3 bg-surface text-danger font-medium rounded-xl border border-danger/25 min-h-[44px]">
         删除此记录
       </button>
     </PullRefresh>
@@ -71,7 +71,7 @@
     <!-- 固定底部操作栏 -->
     <FormBar>
       <button type="button" @click="save" :disabled="saving"
-        class="btn-press w-full py-3.5 bg-primary-deep text-white font-semibold rounded-xl shadow-card disabled:opacity-50 flex items-center justify-center gap-2">
+        class="btn-press w-full py-3.5 bg-primary-fill text-white font-semibold rounded-xl shadow-card disabled:opacity-50 flex items-center justify-center gap-2">
         <ActivityIndicator v-if="saving" :size="20" class="text-white" />
         <span>{{ saving ? '保存中...' : (isEdit ? '更新记录' : '记录') }}</span>
       </button>

@@ -26,14 +26,14 @@
       <div>
         <label class="text-sm text-text-secondary block mb-2">姓名 *</label>
         <input v-model="form.name" type="text" placeholder="宝宝的名字"
-          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+          class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
       </div>
 
       <!-- 出生日期 -->
       <div>
         <label class="text-sm text-text-secondary block mb-2">出生日期 *</label>
         <input v-model="form.birth_date" type="datetime-local"
-          class="w-full px-4 py-3 bg-white border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+          class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
       </div>
 
       <!-- 性别（iOS 分段控件） -->
@@ -48,7 +48,7 @@
 
       <!-- 删除（编辑态，留在内容区） -->
       <button v-if="isEdit" type="button" @click="showDelete = true"
-        class="btn-press w-full py-3 bg-white text-danger font-medium rounded-xl border border-danger/25 min-h-[44px]">
+        class="btn-press w-full py-3 bg-surface text-danger font-medium rounded-xl border border-danger/25 min-h-[44px]">
         删除宝宝
       </button>
     </main>
@@ -56,7 +56,7 @@
     <!-- 固定底部保存栏 -->
     <FormBar>
       <button type="button" @click="save" :disabled="saving"
-        class="btn-press w-full py-3.5 bg-primary-deep text-white font-semibold rounded-xl shadow-card disabled:opacity-50 flex items-center justify-center gap-2">
+        class="btn-press w-full py-3.5 bg-primary-fill text-white font-semibold rounded-xl shadow-card disabled:opacity-50 flex items-center justify-center gap-2">
         <ActivityIndicator v-if="saving" :size="20" class="text-white" />
         <span>{{ saving ? '保存中...' : '保存' }}</span>
       </button>
