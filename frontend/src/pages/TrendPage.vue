@@ -5,19 +5,13 @@
     <template #header>
     <header class="sticky top-0 z-30 glass-surface hairline-bottom pt-safe px-4 py-3">
       <h1 class="text-lg font-bold text-text-primary">趋势</h1>
-      <!-- 类别筛选（横向滚动 pill） -->
-      <div class="flex gap-2 mt-2 overflow-x-auto -mx-4 px-4">
-        <button v-for="c in categoryOptions" :key="c.value"
-          @click="category = c.value"
-          :class="['px-3 py-2 min-h-[44px] flex items-center justify-center rounded-full text-xs font-medium transition-colors btn-press whitespace-nowrap shrink-0',
-            category === c.value ? 'bg-primary-fill text-white' : 'bg-muted text-text-secondary']">
-          {{ c.label }}
-        </button>
-      </div>
-      <!-- 时间范围（iOS 分段控件，与上方类别筛选拉开层级） -->
-      <div class="mt-2">
-        <Segmented :model-value="String(days)" :options="dayOptions" compact
-          @update:model-value="(v: string) => { days = Number(v); loadTrend() }" />
+      <!-- 类别（iOS 下拉菜单）+ 时间范围（分段控件）：单行排列，零横向滚动 -->
+      <div class="flex items-center gap-2 mt-2">
+        <MenuSelect v-model="category" :options="categoryOptions" title="选择类别" aria-label="选择类别" />
+        <div class="flex-1 min-w-0">
+          <Segmented :model-value="String(days)" :options="dayOptions" compact
+            @update:model-value="(v: string) => { days = Number(v); loadTrend() }" />
+        </div>
       </div>
     </header>
     </template>
@@ -269,6 +263,7 @@ import PullRefresh from '@/components/PullRefresh.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import Segmented from '@/components/Segmented.vue'
+import MenuSelect from '@/components/MenuSelect.vue'
 
 const app = useAppStore()
 const trendData = ref<any[]>([])
@@ -277,12 +272,12 @@ const days = ref(7)
 const category = ref('feeding')
 
 const categoryOptions = [
-  { label: '🍼 喂奶', value: 'feeding' },
-  { label: '🩲 尿布', value: 'diaper' },
-  { label: '😴 睡眠', value: 'sleep' },
-  { label: '🌡️ 体温', value: 'temperature' },
-  { label: '🌳 户外', value: 'outdoor' },
-  { label: '💊 补剂', value: 'supplement' },
+  { label: '喂奶', emoji: '🍼', value: 'feeding' },
+  { label: '尿布', emoji: '🩲', value: 'diaper' },
+  { label: '睡眠', emoji: '😴', value: 'sleep' },
+  { label: '体温', emoji: '🌡️', value: 'temperature' },
+  { label: '户外', emoji: '🌳', value: 'outdoor' },
+  { label: '补剂', emoji: '💊', value: 'supplement' },
 ]
 
 const dateLabels = computed(() => {
