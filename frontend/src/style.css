@@ -165,19 +165,27 @@ body {
   transform: translateY(100%);
 }
 
-/* 毛玻璃表面（底部固定导航 / 表单底部操作栏 / 悬浮标题栏）：主题同色半透明，滚动时通透不割裂 */
+/* 三段式 chrome（顶部标题栏 / 底部 Tab / 表单操作栏）：苹果常规白色主打，与内容区粉底形成明度分层 */
 .glass-surface {
-  background: rgb(var(--bg-main) / 0.82);
+  background: rgb(255 255 255);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
 }
 
+/* chrome 轻微投影，强化顶/底栏「浮起」的层级感 */
+nav.glass-surface {
+  box-shadow: 0 -0.5px 16px rgba(24, 34, 52, 0.05);
+}
+header.glass-surface {
+  box-shadow: 0 0.5px 16px rgba(24, 34, 52, 0.045);
+}
+
 /* iOS 0.5px hairline 细线：三段式 chrome（顶部标题栏 / 底部 Tab）与内容区的分割 */
 .hairline-top {
-  border-top: 0.5px solid rgba(0, 0, 0, 0.08);
+  border-top: 0.5px solid rgba(60, 60, 67, 0.26);
 }
 .hairline-bottom {
-  border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 0.5px solid rgba(60, 60, 67, 0.26);
 }
 
 /* 数字字体 */

@@ -8,7 +8,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#FFF6FA",
-  "theme_color": "#FFF6FA",
+  "theme_color": "#FFFFFF",
   "lang": "zh-CN",
   "categories": ["family", "health", "lifestyle"],
   "icons": [

@@ -18,11 +18,11 @@ import { onMounted, watch } from 'vue'
 const auth = useAuthStore()
 const app = useAppStore()
 
-// 主题色随粉/蓝主题动态更新（iOS 状态栏 / Android chrome）
+// 状态栏/chrome 颜色：与三段式顶栏保持一致，统一为白色
 const THEME_COLOR: Record<string, string> = {
-  male: '#F4F9FF',
-  female: '#FFF6FA',
-  neutral: '#FFF6FA',
+  male: '#FFFFFF',
+  female: '#FFFFFF',
+  neutral: '#FFFFFF',
 }
 watch(() => app.theme, (t) => {
   const meta = document.querySelector('meta[name="theme-color"]')
