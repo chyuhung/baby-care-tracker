@@ -43,20 +43,20 @@
               <line v-if="feedingMlScatter.trend" :x1="feedingMlScatter.trend.x1" :y1="feedingMlScatter.trend.y1" :x2="feedingMlScatter.trend.x2" :y2="feedingMlScatter.trend.y2" stroke="var(--chart-primary)" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.85"/>
               <line v-if="feedingCountScatter.trend" :x1="feedingCountScatter.trend.x1" :y1="feedingCountScatter.trend.y1" :x2="feedingCountScatter.trend.x2" :y2="feedingCountScatter.trend.y2" stroke="var(--chart-primary-count)" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.85"/>
               <g v-for="(pt, i) in feedingMlScatter.points" :key="'dp'+i">
-                <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="var(--chart-primary)"/>
+                <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="var(--chart-primary)" :opacity="nodeOpacity(i)"/>
               </g>
               <g v-for="(pt, i) in feedingCountScatter.points" :key="'cp'+i">
-                <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="var(--chart-primary-count)"/>
+                <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="var(--chart-primary-count)" :opacity="nodeOpacity(i)"/>
               </g>
             </template>
             <template v-else>
               <g v-for="(b, i) in feedingMl.items" :key="'bm'+i">
-                <rect :x="feedingRects(i).mlX" :y="b.y" :width="w2" :height="b.h" rx="2" fill="var(--chart-primary)" opacity="0.85"/>
-                <text v-if="b.h > 0" :x="feedingRects(i).mlX + w2 / 2" :y="b.y - 3" text-anchor="middle" font-size="8" class="chart-value-label">{{ b.label }}</text>
+                <rect :x="feedingRects(i).mlX" :y="b.y" :width="w2" :height="b.h" rx="2" fill="var(--chart-primary)" :opacity="barOpacity(i)"/>
+                <text v-if="b.h > 0" :x="feedingRects(i).mlX + w2 / 2" :y="b.y - 3" text-anchor="middle" font-size="8" :font-weight="labelWeight(i)" class="chart-value-label">{{ b.label }}</text>
               </g>
               <g v-for="(b, i) in feedingCount.items" :key="'bc'+i">
-                <rect :x="feedingRects(i).countX" :y="b.y" :width="w2" :height="b.h" rx="2" fill="var(--chart-primary-count)" opacity="0.85"/>
-                <text v-if="b.h > 0" :x="feedingRects(i).countX + w2 / 2" :y="b.y - 3" text-anchor="middle" font-size="8" class="chart-value-label">{{ b.label }}</text>
+                <rect :x="feedingRects(i).countX" :y="b.y" :width="w2" :height="b.h" rx="2" fill="var(--chart-primary-count)" :opacity="barOpacity(i)"/>
+                <text v-if="b.h > 0" :x="feedingRects(i).countX + w2 / 2" :y="b.y - 3" text-anchor="middle" font-size="8" :font-weight="labelWeight(i)" class="chart-value-label">{{ b.label }}</text>
               </g>
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             </template>
@@ -65,7 +65,7 @@
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">ml</text>
             <text :x="axis.rightX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">次</text>
             <template v-for="(d, i) in trendData" :key="'fx'+i">
-              <text v-if="dateLabels[i]?.show" :x="dateX(i)" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label" :font-weight="dateWeight(i)" :fill="dateFill(i)">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
@@ -82,20 +82,20 @@
               </g>
               <line v-if="diaperScatter.trend" :x1="diaperScatter.trend.x1" :y1="diaperScatter.trend.y1" :x2="diaperScatter.trend.x2" :y2="diaperScatter.trend.y2" stroke="var(--chart-diaper)" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.85"/>
               <g v-for="(pt, i) in diaperScatter.points" :key="'dp'+i">
-                <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="var(--chart-diaper)"/>
+                <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="var(--chart-diaper)" :opacity="nodeOpacity(i)"/>
               </g>
             </template>
             <template v-else>
               <g v-for="(b, i) in diaper.items" :key="'db'+i">
-                <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-diaper)" opacity="0.85"/>
-                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" class="chart-value-label">{{ b.label }}</text>
+                <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-diaper)" :opacity="barOpacity(i)"/>
+                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" :font-weight="labelWeight(i)" class="chart-value-label">{{ b.label }}</text>
               </g>
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             </template>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">次</text>
             <template v-for="(d, i) in trendData" :key="'dx'+i">
-              <text v-if="dateLabels[i]?.show" :x="dateX(i)" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label" :font-weight="dateWeight(i)" :fill="dateFill(i)">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
@@ -112,20 +112,20 @@
               </g>
               <line v-if="sleepScatter.trend" :x1="sleepScatter.trend.x1" :y1="sleepScatter.trend.y1" :x2="sleepScatter.trend.x2" :y2="sleepScatter.trend.y2" stroke="var(--chart-sleep)" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.85"/>
               <g v-for="(pt, i) in sleepScatter.points" :key="'sp'+i">
-                <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="var(--chart-sleep)"/>
+                <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="var(--chart-sleep)" :opacity="nodeOpacity(i)"/>
               </g>
             </template>
             <template v-else>
               <g v-for="(b, i) in sleep.items" :key="'sb'+i">
-                <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-sleep)" opacity="0.85"/>
-                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" class="chart-value-label">{{ b.label }}</text>
+                <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-sleep)" :opacity="barOpacity(i)"/>
+                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" :font-weight="labelWeight(i)" class="chart-value-label">{{ b.label }}</text>
               </g>
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             </template>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">小时</text>
             <template v-for="(d, i) in trendData" :key="'sx'+i">
-              <text v-if="dateLabels[i]?.show" :x="dateX(i)" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label" :font-weight="dateWeight(i)" :fill="dateFill(i)">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
@@ -142,20 +142,20 @@
               </g>
               <line v-if="outdoorScatter.trend" :x1="outdoorScatter.trend.x1" :y1="outdoorScatter.trend.y1" :x2="outdoorScatter.trend.x2" :y2="outdoorScatter.trend.y2" stroke="var(--chart-outdoor)" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.85"/>
               <g v-for="(pt, i) in outdoorScatter.points" :key="'op'+i">
-                <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="var(--chart-outdoor)"/>
+                <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="var(--chart-outdoor)" :opacity="nodeOpacity(i)"/>
               </g>
             </template>
             <template v-else>
               <g v-for="(b, i) in outdoor.items" :key="'ob'+i">
-                <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-outdoor)" opacity="0.85"/>
-                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" class="chart-value-label">{{ b.label }}</text>
+                <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-outdoor)" :opacity="barOpacity(i)"/>
+                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" :font-weight="labelWeight(i)" class="chart-value-label">{{ b.label }}</text>
               </g>
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             </template>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">小时</text>
             <template v-for="(d, i) in trendData" :key="'ox'+i">
-              <text v-if="dateLabels[i]?.show" :x="dateX(i)" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label" :font-weight="dateWeight(i)" :fill="dateFill(i)">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
@@ -172,20 +172,20 @@
               </g>
               <line v-if="supplementScatter.trend" :x1="supplementScatter.trend.x1" :y1="supplementScatter.trend.y1" :x2="supplementScatter.trend.x2" :y2="supplementScatter.trend.y2" stroke="var(--chart-supplement)" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.85"/>
               <g v-for="(pt, i) in supplementScatter.points" :key="'sup'+i">
-                <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="var(--chart-supplement)"/>
+                <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="var(--chart-supplement)" :opacity="nodeOpacity(i)"/>
               </g>
             </template>
             <template v-else>
               <g v-for="(b, i) in supplement.items" :key="'sub'+i">
-                <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-supplement)" opacity="0.85"/>
-                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" class="chart-value-label">{{ b.label }}</text>
+                <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-supplement)" :opacity="barOpacity(i)"/>
+                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="8" :font-weight="labelWeight(i)" class="chart-value-label">{{ b.label }}</text>
               </g>
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             </template>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">次</text>
             <template v-for="(d, i) in trendData" :key="'sux'+i">
-              <text v-if="dateLabels[i]?.show" :x="dateX(i)" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="dateX(i)" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label" :font-weight="dateWeight(i)" :fill="dateFill(i)">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
@@ -200,22 +200,24 @@
               <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
             </g>
             <line :x1="axis.leftX" :x2="axis.rightX" :y1="feverLineY" :y2="feverLineY" stroke="rgb(var(--danger-deep))" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
-            <path :d="tempPath" class="chart-line-temperature" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path :d="tempPastPath" fill="none" stroke="var(--chart-temperature)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.3"/>
+            <path v-if="tempLastSeg" :d="tempLastSeg" fill="none" stroke="var(--chart-temperature)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle v-if="tempLastPoint" :cx="tempLastPoint.x" :cy="tempLastPoint.y" r="3.5" fill="var(--chart-temperature)"/>
             <line :x1="axis.leftX" :x2="axis.leftX" :y1="axis.topY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <text :x="axis.leftX" :y="axis.topY - 5" text-anchor="middle" font-size="9" class="chart-axis-label">°C</text>
             <template v-for="(d, i) in trendData" :key="'tx'+i">
-              <text v-if="dateLabels[i]?.show" :x="tempPoints[i]?.x" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label">{{ dateLabels[i]?.label }}</text>
+              <text v-if="dateLabels[i]?.show" :x="tempPoints[i]?.x" :y="DATE_LABEL_Y" text-anchor="middle" font-size="9" class="chart-axis-label" :font-weight="dateWeight(i)" :fill="dateFill(i)">{{ dateLabels[i]?.label }}</text>
             </template>
           </svg>
         </div>
         <div v-if="trendData.length" class="bg-surface rounded-2xl shadow-card p-4 space-y-3">
           <div class="flex items-center justify-between gap-2">
             <h4 class="text-sm font-semibold text-text-secondary shrink-0">📊 期间对比</h4>
-            <span class="text-[11px] text-text-secondary truncate">当前 vs 上一周期</span>
+            <span class="text-[11px] text-text-secondary truncate">不含今日 · 当前 vs 上一周期</span>
           </div>
           <div v-if="periodLabel && !summary.empty" class="text-[11px] text-text-secondary">{{ periodLabel }}</div>
           <div v-if="summary.empty" class="bg-bg-main rounded-xl p-4 text-center">
-            <div class="text-sm text-text-secondary">近 {{ days }} 天暂无记录</div>
+            <div class="text-sm text-text-secondary">近 {{ days - 1 }} 天暂无记录</div>
           </div>
           <div v-else class="grid grid-cols-2 gap-2.5">
             <div v-for="c in summary.cards" :key="c.label" class="bg-bg-main rounded-xl p-3">
@@ -248,6 +250,7 @@ import MenuSelect from '@/components/MenuSelect.vue'
 
 const app = useAppStore()
 const trendData = ref<any[]>([])
+const trendCur = ref<any[]>([])
 const trendPrev = ref<any[]>([])
 const loading = ref(false)
 const days = ref(7)
@@ -277,7 +280,8 @@ const dayOptions = [
 ]
 
 const summary = computed(() => {
-  const data = trendData.value
+  // 当日数据尚未完善，不参与对比：周期自前一天起算，cur/prev 由 loadTrend 切好
+  const data = trendCur.value
   const prevRows = trendPrev.value
   const cards: { label: string, unit: string, value: string, prevText: string, delta: number | null }[] = []
   let noData = false
@@ -399,10 +403,10 @@ const summary = computed(() => {
   return { cards, empty: noData }
 })
 
-// 本周期 / 上周期 日期范围文案
+// 本周期 / 上周期 日期范围文案（自前一天起算，不含今日）
 const periodLabel = computed(() => {
   const f = (d: any) => `${parseInt(d.date.split('-')[1])}/${parseInt(d.date.split('-')[2])}`
-  const cur = trendData.value, pv = trendPrev.value
+  const cur = trendCur.value, pv = trendPrev.value
   if (!cur.length) return ''
   const curTxt = `${f(cur[0])} – ${f(cur[cur.length - 1])}`
   const pvTxt = pv.length ? `${f(pv[0])} – ${f(pv[pv.length - 1])}` : '无上期数据'
@@ -427,6 +431,14 @@ const axis = computed(() => {
     baseY: padT + chartH,
   }
 })
+
+// 当日列标（图表最右一列 = 今日，鲜亮；其余为过去，压暗）
+const lastIdx = computed(() => trendData.value.length - 1)
+function barOpacity(i: number) { return i === lastIdx.value ? 1 : 0.3 }
+function nodeOpacity(i: number) { return i === lastIdx.value ? 1 : 0.35 }
+function labelWeight(i: number) { return i === lastIdx.value ? 700 : 400 }
+function dateWeight(i: number) { return i === lastIdx.value ? 700 : 400 }
+function dateFill(i: number) { return i === lastIdx.value ? 'rgb(var(--text-primary))' : 'rgb(var(--text-secondary))' }
 
 function xPos(i: number) {
   const n = trendData.value.length
@@ -675,6 +687,14 @@ const tempChart = computed(() => buildLineChart(d => d.temperature_high || 0, { 
 const tempTicks = computed(() => tempChart.value.ticks)
 const tempPoints = computed(() => tempChart.value.points)
 const tempPath = computed(() => tempChart.value.path)
+// 温度线：过去段压暗，今日点鲜亮（与柱状图强调口径一致）
+const tempPastPath = computed(() => buildMonotonePath(tempChart.value.points.slice(0, Math.max(0, tempChart.value.points.length - 1))))
+const tempLastSeg = computed(() => {
+  const p = tempChart.value.points
+  if (p.length < 2) return ''
+  return buildMonotonePath(p.slice(-2))
+})
+const tempLastPoint = computed(() => { const p = tempChart.value.points; return p.length ? p[p.length - 1] : null })
 
 const feverLineY = computed(() => {
   const { padT, padB, svgH } = CHART
@@ -689,12 +709,17 @@ async function loadTrend(silent: boolean = false) {
   if (!baby) return
   if (!silent) loading.value = true
   try {
-    const res = await babyAPI.trend(baby.id, days.value * 2)
+    const res = await babyAPI.trend(baby.id, days.value * 3 + 1)
     const all = res.data || []
-    trendPrev.value = all.slice(0, Math.max(0, all.length - days.value))
-    trendData.value = all.slice(-days.value)
+    // 图表含当日（今日 + 往前 days 天 = days+1 列）；对比周期不含今日
+    // cur = 前 1~N 天；prev = 再往前 N 天
+    const d = days.value
+    trendData.value = all.slice(-(d + 1))
+    trendCur.value = all.slice(-(d + 1), -1)
+    trendPrev.value = all.slice(-(2 * d + 1), -(d + 1))
   } catch {
     trendData.value = []
+    trendCur.value = []
     trendPrev.value = []
     app.showToast('趋势数据加载失败', 'error')
   } finally {

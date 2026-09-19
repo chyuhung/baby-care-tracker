@@ -59,15 +59,15 @@
               </div>
               <div class="text-3xl">🍼</div>
             </div>
-            <div v-if="lastFeedingAgo" class="mt-2 flex items-center justify-between">
+            <div class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
-              <span class="text-xs font-medium" :class="lastFeedingAgo.isLong ? 'text-warning' : 'text-text-secondary'">
-                {{ lastFeedingAgo.text }}
+              <span class="text-xs font-medium" :class="lastFeedingAgo && lastFeedingAgo.isLong ? 'text-warning' : 'text-text-secondary'">
+                {{ lastFeedingAgo ? lastFeedingAgo.text : '--' }}
               </span>
             </div>
-            <div v-if="feedingAvgInterval" class="mt-1 flex items-center justify-between">
+            <div class="mt-1 flex items-center justify-between">
               <span class="text-xs text-text-secondary">平均间隔</span>
-              <span class="text-xs font-medium text-text-secondary">{{ feedingAvgInterval }}</span>
+              <span class="text-xs font-medium text-text-secondary">{{ feedingAvgInterval || '--' }}</span>
             </div>
             <!-- 新增喂奶入口 -->
             <button @click.stop="goToAddFeeding"
@@ -86,15 +86,15 @@
               </div>
               <div class="text-3xl">🩲</div>
             </div>
-            <div v-if="lastDiaperAgo" class="mt-2 flex items-center justify-between">
+            <div class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
-              <span class="text-xs font-medium" :class="lastDiaperAgo.isLong ? 'text-warning' : 'text-text-secondary'">
-                {{ lastDiaperAgo.text }}
+              <span class="text-xs font-medium" :class="lastDiaperAgo && lastDiaperAgo.isLong ? 'text-warning' : 'text-text-secondary'">
+                {{ lastDiaperAgo ? lastDiaperAgo.text : '--' }}
               </span>
             </div>
-            <div v-if="diaperAvgInterval" class="mt-1 flex items-center justify-between">
+            <div class="mt-1 flex items-center justify-between">
               <span class="text-xs text-text-secondary">平均间隔</span>
-              <span class="text-xs font-medium text-text-secondary">{{ diaperAvgInterval }}</span>
+              <span class="text-xs font-medium text-text-secondary">{{ diaperAvgInterval || '--' }}</span>
             </div>
             <!-- 新增尿布入口 -->
             <button @click.stop="goToAddDiaper"
@@ -118,13 +118,13 @@
               </div>
               <div class="text-3xl">😴</div>
             </div>
-            <div v-if="lastSleepAgo" class="mt-2 flex items-center justify-between">
+            <div class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
-              <span class="text-xs font-medium" :class="lastSleepAgo.isLong ? 'text-warning' : 'text-text-secondary'">{{ lastSleepAgo.text }}</span>
+              <span class="text-xs font-medium" :class="lastSleepAgo && lastSleepAgo.isLong ? 'text-warning' : 'text-text-secondary'">{{ lastSleepAgo ? lastSleepAgo.text : '--' }}</span>
             </div>
-            <div v-if="sleepAvgDuration" class="mt-1 flex items-center justify-between">
+            <div class="mt-1 flex items-center justify-between">
               <span class="text-xs text-text-secondary">平均时长</span>
-              <span class="text-xs font-medium text-text-secondary">{{ sleepAvgDuration }}</span>
+              <span class="text-xs font-medium text-text-secondary">{{ sleepAvgDuration || '--' }}</span>
             </div>
             <button v-if="currentSleep" @click.stop="stopSleep" :disabled="loadingAction === 'stop-sleep'"
               class="mt-3 w-full min-h-[44px] py-2 bg-danger-fill text-white text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1 disabled:opacity-50">
@@ -149,22 +149,13 @@
               </div>
               <div class="text-3xl">🌡️</div>
             </div>
-            <div v-if="todayTemp" class="mt-2 flex items-center justify-between">
+            <div class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
-              <span class="text-xs font-medium" :class="lastTempTodayAgo?.isLong ? 'text-warning' : 'text-text-secondary'">{{ lastTempTodayAgo?.text }}</span>
-            </div>
-            <div v-else class="mt-2 flex items-center justify-between">
-              <span class="text-xs text-text-secondary">今日未测温</span>
+              <span class="text-xs font-medium" :class="todayTemp && lastTempTodayAgo && lastTempTodayAgo.isLong ? 'text-warning' : 'text-text-secondary'">{{ todayTemp ? (lastTempTodayAgo?.text || '--') : '--' }}</span>
             </div>
             <div class="mt-1 flex items-center justify-between">
-              <template v-if="todayTemp">
-                <span class="text-xs text-text-secondary">今日最高</span>
-                <span class="text-xs font-medium font-num" :class="(todayTempHigh || 0) >= 37.5 ? 'text-danger' : 'text-text-secondary'">{{ todayTempHigh?.toFixed(1) }}°C</span>
-              </template>
-              <template v-else>
-                <span class="text-xs text-text-secondary">上次测温</span>
-                <span class="text-xs font-medium text-text-secondary">{{ lastTempAgo ? lastTempAgo.text : '暂无历史' }}</span>
-              </template>
+              <span class="text-xs text-text-secondary">今日最高</span>
+              <span class="text-xs font-medium font-num" :class="todayTemp && (todayTempHigh || 0) >= 37.5 ? 'text-danger' : 'text-text-secondary'">{{ todayTemp ? `${todayTempHigh?.toFixed(1)}°C` : '--' }}</span>
             </div>
             <button @click.stop="goToAddTemperature"
               class="mt-3 w-full min-h-[44px] py-2 bg-temperature/10 text-temperature-deep text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1">
@@ -187,13 +178,13 @@
               </div>
               <div class="text-3xl">🌳</div>
             </div>
-            <div v-if="lastOutdoorAgo" class="mt-2 flex items-center justify-between">
+            <div class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
-              <span class="text-xs font-medium" :class="lastOutdoorAgo.isLong ? 'text-warning' : 'text-text-secondary'">{{ lastOutdoorAgo.text }}</span>
+              <span class="text-xs font-medium" :class="lastOutdoorAgo && lastOutdoorAgo.isLong ? 'text-warning' : 'text-text-secondary'">{{ lastOutdoorAgo ? lastOutdoorAgo.text : '--' }}</span>
             </div>
-            <div v-if="avgOutdoorDuration > 0" class="mt-1 flex items-center justify-between">
+            <div class="mt-1 flex items-center justify-between">
               <span class="text-xs text-text-secondary">平均时长</span>
-              <span class="text-xs font-medium text-text-secondary">{{ formatAvgOutdoor }}</span>
+              <span class="text-xs font-medium text-text-secondary">{{ avgOutdoorDuration > 0 ? formatAvgOutdoor : '--' }}</span>
             </div>
             <button v-if="currentOutdoor" @click.stop="stopOutdoor" :disabled="loadingAction === 'stop-outdoor'"
               class="mt-3 w-full min-h-[44px] py-2 bg-danger-fill text-white text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1 disabled:opacity-50">
@@ -217,13 +208,13 @@
               </div>
               <div class="text-3xl">💊</div>
             </div>
-            <div v-if="lastSupplementAgo" class="mt-2 flex items-center justify-between">
+            <div class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
-              <span class="text-xs font-medium" :class="lastSupplementAgo.isLong ? 'text-warning' : 'text-text-secondary'">{{ lastSupplementAgo.text }}</span>
+              <span class="text-xs font-medium" :class="lastSupplementAgo && lastSupplementAgo.isLong ? 'text-warning' : 'text-text-secondary'">{{ lastSupplementAgo ? lastSupplementAgo.text : '--' }}</span>
             </div>
-            <div v-if="supplementAvgInterval" class="mt-1 flex items-center justify-between">
+            <div class="mt-1 flex items-center justify-between">
               <span class="text-xs text-text-secondary">平均间隔</span>
-              <span class="text-xs font-medium text-text-secondary">{{ supplementAvgInterval }}</span>
+              <span class="text-xs font-medium text-text-secondary">{{ supplementAvgInterval || '--' }}</span>
             </div>
             <button @click.stop="goToAddSupplement"
               class="mt-3 w-full min-h-[44px] py-2 bg-supplement/10 text-supplement-deep text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1">
