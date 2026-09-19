@@ -13,28 +13,28 @@
 [data-theme='female'] {
   /* 樱花粉 */
   --primary: 242 92 140;         /* #F25C8C 樱花粉（图标/图表/浅底/边框） */
-  --primary-deep: 237 79 134;    /* #ED4F86 加深粉（实心按钮/选中态/彩字，白字3.46） */
+  --primary-deep: 199 54 107;    /* #C7366B 加深粉（实心按钮/选中态/彩字，白字5.04） */
   --bg-main: 255 246 250;        /* #FFF6FA 极淡粉页面背景 */
 
   /* 功能色（清透 iOS 系统色，两主题通用） */
   --diaper: 244 130 12;          /* #F4820C 尿布橙（装饰条/浅底） */
-  --diaper-deep: 224 114 5;      /* #E07205 加深橙（白卡彩字） */
+  --diaper-deep: 168 87 10;      /* #A8570A 加深橙（白卡彩字，5.21） */
   --temperature: 45 168 77;      /* #2DA84D 体温绿 */
-  --temperature-deep: 34 145 66; /* #229142 加深绿 */
+  --temperature-deep: 21 128 61; /* #15803D 加深绿（5.02） */
   --sleep: 26 162 184;           /* #1AA2B8 睡眠青 */
-  --sleep-deep: 18 143 163;      /* #128FA3 加深青 */
+  --sleep-deep: 14 116 144;      /* #0E7490 加深青（5.36） */
   --outdoor: 92 172 55;          /* #5CAC37 户外草绿 */
-  --outdoor-deep: 78 152 46;     /* #4E982E 加深绿 */
+  --outdoor-deep: 63 122 34;     /* #3F7A22 加深绿（5.23） */
   --supplement: 139 92 246;      /* #8B5CF6 补剂紫 */
   --supplement-deep: 124 58 237; /* #7C3AED 加深紫 */
   --success-deep: 37 150 68;     /* #259644 成功绿（Toast 白字3.8） */
-  --warning-deep: 232 118 10;    /* #E8760A 提醒橙 */
-  --danger-deep: 255 59 48;      /* #FF3B30 iOS 危险红（白字3.55） */
+  --warning-deep: 168 87 10;     /* #A8570A 提醒橙（5.21） */
+  --danger-deep: 220 38 38;      /* #DC2626 WCAG 达标危险红（白字4.83） */
 
-  --text-secondary: 124 131 143; /* #7C838F 清透中性冷灰（次要文字） */
+  --text-secondary: 95 102 114;  /* #5F6672 清透中性冷灰（次要文字，白底5.79 / 灰底5.20） */
 
   /* 图表（SVG 直接引用） */
-  --chart-primary: #ED4F86;
+  --chart-primary: #C7366B;
   --chart-diaper: #F4820C;
   --chart-temperature: #2DA84D;
   --chart-sleep: #1AA2B8;
@@ -46,10 +46,10 @@
 [data-theme='male'] {
   /* 晴空蓝 */
   --primary: 52 142 237;         /* #348EED 晴空蓝 */
-  --primary-deep: 35 128 230;    /* #2380E6 加深蓝（白字3.96） */
+  --primary-deep: 29 111 209;    /* #1D6FD1 加深蓝（白字4.95） */
   --bg-main: 244 249 255;        /* #F4F9FF 极淡蓝页面背景 */
 
-  --chart-primary: #2380E6;
+  --chart-primary: #1D6FD1;
   --chart-primary-count: #AF52DE;
 }
 

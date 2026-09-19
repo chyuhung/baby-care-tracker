@@ -29,7 +29,7 @@ export default {
         'bg-main': 'rgb(var(--bg-main) / <alpha-value>)',
         'bg-secondary': '#F1F3F7',
         'text-primary': '#1C1C1E',
-        'text-secondary': '#7C838F',
+        'text-secondary': '#5F6672',
         'border-color': '#E8EAF0',
       },
       fontFamily: {
