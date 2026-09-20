@@ -39,7 +39,7 @@ const props = withDefaults(defineProps<{
 const attrs = useAttrs()
 const rootRef = ref<HTMLElement | null>(null)
 const rootClass = computed(() =>
-  `relative flex-1 min-h-0 overflow-y-auto overscroll-contain ${(attrs.class as string) || ''}`
+  `relative flex-1 min-h-0 overflow-y-auto overscroll-none ${(attrs.class as string) || ''}`
 )
 
 /* 手势阈值 */
