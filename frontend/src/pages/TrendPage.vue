@@ -216,8 +216,13 @@
             <span class="text-[11px] text-text-secondary truncate">不含今日 · 当前 vs 上一周期</span>
           </div>
           <div v-if="periodLabel && !summary.empty" class="text-[11px] text-text-secondary">{{ periodLabel }}</div>
-          <div v-if="summary.empty" class="bg-bg-main rounded-xl p-4 text-center">
-            <div class="text-sm text-text-secondary">近 {{ days }} 天暂无记录</div>
+          <div v-if="summary.empty" class="bg-bg-main rounded-xl">
+            <EmptyState size="sm" :title="`近 ${days} 天暂无记录`" subtitle="记录几天后，这里会生成周期对比">
+              <router-link to="/"
+                class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-primary-fill text-white rounded-xl font-medium text-sm btn-press shadow-card">
+                去记录
+              </router-link>
+            </EmptyState>
           </div>
           <div v-else class="grid grid-cols-2 gap-2.5">
             <div v-for="c in summary.cards" :key="c.label" class="bg-bg-main rounded-xl p-3">
@@ -296,11 +301,14 @@ const summary = computed(() => {
 
   const push = (label: string, unit: string, curVal: number | null, prevVal: number | null, fmt: (v: number) => string) => {
     let delta: number | null = null
-    if (curVal !== null && prevVal !== null && prevVal > 0) delta = Math.round((curVal - prevVal) / prevVal * 100)
+    if (curVal !== null && prevVal !== null) {
+      if (prevVal > 0) delta = Math.round((curVal - prevVal) / prevVal * 100)
+      else if (curVal === 0) delta = 0 // 两期均为 0：无变化，同样给出「—0%」徽章，避免徽章位空缺
+    }
     cards.push({
       label, unit,
       value: curVal === null ? '--' : fmt(curVal),
-      prevText: prevVal === null ? '上周期无数据' : `上期 ${fmt(prevVal)}${unit}`,
+      prevText: prevVal === null ? '—' : `上期 ${fmt(prevVal)}${unit}`,
       delta,
     })
   }
@@ -405,7 +413,20 @@ const summary = computed(() => {
 
   const builders: Record<string, () => void> = { feeding, diaper, sleep, outdoor, temperature, supplement }
   builders[category.value]?.()
-  return { cards, empty: noData }
+
+  // 上周期在「当前类别」下是否有可比数据（用于周期行是否标注「上周期无记录」）
+  const prevHas = (() => {
+    if (!pv) return false
+    const c = category.value
+    if (c === 'feeding') return pv.some((d: any) => (d.total_ml || 0) > 0 || (d.feeding_count || 0) > 0)
+    if (c === 'diaper') return pv.some((d: any) => (d.diaper_count || 0) > 0)
+    if (c === 'sleep') return pv.some((d: any) => (d.sleep_duration_minutes || 0) > 0)
+    if (c === 'outdoor') return pv.some((d: any) => (d.outdoor_duration_minutes || 0) > 0)
+    if (c === 'temperature') return pv.some((d: any) => (d.temperature_high || 0) > 0)
+    if (c === 'supplement') return pv.some((d: any) => (d.supplement_count || 0) > 0)
+    return false
+  })()
+  return { cards, empty: noData, prevHas }
 })
 
 // 本周期 / 上周期 日期范围文案（自前一天起算，不含今日）
@@ -415,7 +436,9 @@ const periodLabel = computed(() => {
   if (!cur.length) return ''
   const curTxt = `${f(cur[0])} – ${f(cur[cur.length - 1])}`
   const pvTxt = pv.length ? `${f(pv[0])} – ${f(pv[pv.length - 1])}` : '无上期数据'
-  return `本周期 ${curTxt} · 上周期 ${pvTxt}`
+  // 上周期在当前类别下无记录时，提示语只在此处打印一次，避免四个 tile 重复同一句
+  const tail = pv.length && !summary.value.prevHas ? ' · 上周期无记录' : ''
+  return `本周期 ${curTxt} · 上周期 ${pvTxt}${tail}`
 })
 
 function deltaArrow(d: number): string { return d > 0 ? '↑' : d < 0 ? '↓' : '—' }

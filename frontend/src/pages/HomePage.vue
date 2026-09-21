@@ -151,7 +151,7 @@
             </div>
             <div class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
-              <span class="text-xs font-medium" :class="todayTemp && lastTempTodayAgo && lastTempTodayAgo.isLong ? 'text-warning' : 'text-text-secondary'">{{ todayTemp ? (lastTempTodayAgo?.text || '--') : '--' }}</span>
+              <span class="text-xs font-medium" :class="lastTempAgo && lastTempAgo.isLong ? 'text-warning' : 'text-text-secondary'">{{ lastTempAgo ? lastTempAgo.text : '--' }}</span>
             </div>
             <div class="mt-1 flex items-center justify-between">
               <span class="text-xs text-text-secondary">今日最高</span>
@@ -404,13 +404,19 @@ const todayTemp = computed<number | null>(() => todayTempRecords.value.length ? 
 const todayTempHigh = computed<number | null>(() => todayTempRecords.value.length
   ? Math.max(...todayTempRecords.value.map((r: any) => r.data.temperature))
   : null)
-const lastTempTodayAgo = computed(() => { tick.value; return getTimeAgo(todayTempRecords.value[0]?.occurred_at) })
 
 const lastFeedingAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_feeding) })
 const lastDiaperAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_diaper) })
 const lastSleepAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_sleep_end) })
+// 距上次取「全局最近一次」，不受今日是否有记录影响（超过 30 天统一显示 30天前）
 const lastTempAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_temperature) })
-const lastOutdoorAgo = computed(() => { tick.value; return getTimeAgo(stats.value.last_outdoor_end) })
+const lastOutdoorAgo = computed(() => {
+  tick.value
+  const t = stats.value.last_outdoor_end
+  if (t) return getTimeAgo(t)
+  const recs = allRecords.value.filter(r => r.record_type === 'outdoor').map(r => r.occurred_at).sort()
+  return getTimeAgo(recs.length ? recs[recs.length - 1] : null)
+})
 const lastSupplementAgo = computed(() => {
   tick.value
   const t = stats.value.last_supplement
