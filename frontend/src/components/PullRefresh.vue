@@ -49,6 +49,8 @@ const MAX_PULL = 110   // 内容最大行程
 const RESIST = 0.45    // 阻尼系数
 const HOLD = 56        // 刷新中内容顶住的高度
 const SPIN = 26        // 指示器尺寸
+const REFRESH_TIMEOUT = 3000 // 刷新请求超时兜底（3s 内必复位，避免请求悬挂导致「刷新卡死」）
+const SUPPRESS_WINDOW = 400  // 手势结束后短路合成 click 的时间窗
 
 /* 状态 */
 const pulling = ref(0)
@@ -63,6 +65,8 @@ let engaged = false    // 是否已进入"下拉接管"
 let anchorY = 0       // 列表触顶那一刻的触点 Y（从此往上算下拉行程）
 let lastY = 0         // 上一帧触点 Y（用于判定本次移动方向）
 let performed = false
+let refreshTimer: number | null = null
+let suppressUntil = 0  // 仅在该时间戳之前短路 click，之后一律放行
 
 const indicatorVisible = computed(() => refreshing.value || pulling.value > 0)
 const pullOpacity = computed(() => {
@@ -100,6 +104,8 @@ function measureHeader() {
  * 且顶部始终是整页下拉刷新，永不露出底色（--bg-main 粉/白）或滚动条。 */
 
 function onTouchStart(e: TouchEvent) {
+  // 任何新的触摸都立即取消待生效的短路（只吞本次手势自身的合成 click）
+  suppressUntil = 0
   if (refreshing.value || e.touches.length !== 1) return
   measureHeader()
   startY = e.touches[0].clientY
@@ -163,10 +169,16 @@ function finish(trigger: boolean) {
     refreshing.value = true
     pulling.value = 0
     armed.value = false
-    Promise.resolve()
-      .then(() => props.refresh())
-      .catch(() => {})
+    // 超时兜底：即使 refresh 请求悬挂不返回，最多 REFRESH_TIMEOUT 后也复位 UI
+    const timeoutDone = new Promise<void>((resolve) => {
+      refreshTimer = window.setTimeout(resolve, REFRESH_TIMEOUT)
+    })
+    Promise.race([
+      Promise.resolve().then(() => props.refresh()).catch(() => {}),
+      timeoutDone,
+    ])
       .finally(() => {
+        if (refreshTimer !== null) { window.clearTimeout(refreshTimer); refreshTimer = null }
         refreshing.value = false
         window.setTimeout(() => { animating.value = false }, 340)
       })
@@ -181,13 +193,19 @@ function finish(trigger: boolean) {
   lastY = 0
 }
 
-/* 下拉手势结束后，吞掉紧随的合成 click（防幽灵点击） */
+/* 下拉手势结束后，仅短路紧随其后的合成 click（防幽灵点击）。
+ * 采用「时间窗」而非长驻监听：窗口一过立即放行，
+ * 因此绝不会永久吞掉手势之后的真实点击（原 once 监听在未收到合成 click 时会残留）。 */
 function suppressNextClick() {
   performed = false
-  document.addEventListener('click', (e) => {
-    e.stopPropagation()
-    e.preventDefault()
-  }, { capture: true, once: true })
+  suppressUntil = Date.now() + SUPPRESS_WINDOW
+}
+
+function onDocumentClick(e: MouseEvent) {
+  if (Date.now() > suppressUntil) return
+  suppressUntil = 0
+  e.stopPropagation()
+  e.preventDefault()
 }
 
 onMounted(() => {
@@ -197,14 +215,19 @@ onMounted(() => {
   el.addEventListener('touchmove', onTouchMove, { passive: false }) // 非被动：可 preventDefault
   el.addEventListener('touchend', onTouchEnd)
   el.addEventListener('touchcancel', onCancel)
+  document.addEventListener('click', onDocumentClick, { capture: true })
 })
 
 onUnmounted(() => {
   const el = rootRef.value
-  if (!el) return
-  el.removeEventListener('touchstart', onTouchStart)
-  el.removeEventListener('touchmove', onTouchMove)
-  el.removeEventListener('touchend', onTouchEnd)
-  el.removeEventListener('touchcancel', onCancel)
+  if (el) {
+    el.removeEventListener('touchstart', onTouchStart)
+    el.removeEventListener('touchmove', onTouchMove)
+    el.removeEventListener('touchend', onTouchEnd)
+    el.removeEventListener('touchcancel', onCancel)
+  }
+  document.removeEventListener('click', onDocumentClick, { capture: true })
+  if (refreshTimer !== null) { window.clearTimeout(refreshTimer); refreshTimer = null }
+  suppressUntil = 0
 })
 </script>
