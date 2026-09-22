@@ -36,6 +36,8 @@ const props = withDefaults(defineProps<{
   contentClass?: string
 }>(), { contentClass: '' })
 
+const emit = defineEmits<{ (e: 'scroll', top: number): void }>()
+
 const attrs = useAttrs()
 const rootRef = ref<HTMLElement | null>(null)
 const rootClass = computed(() =>
@@ -208,6 +210,11 @@ function onDocumentClick(e: MouseEvent) {
   e.preventDefault()
 }
 
+function onScroll() {
+  const el = rootRef.value
+  if (el) emit('scroll', el.scrollTop)
+}
+
 onMounted(() => {
   const el = rootRef.value
   if (!el) return
@@ -215,6 +222,7 @@ onMounted(() => {
   el.addEventListener('touchmove', onTouchMove, { passive: false }) // 非被动：可 preventDefault
   el.addEventListener('touchend', onTouchEnd)
   el.addEventListener('touchcancel', onCancel)
+  el.addEventListener('scroll', onScroll, { passive: true })
   document.addEventListener('click', onDocumentClick, { capture: true })
 })
 
@@ -225,6 +233,7 @@ onUnmounted(() => {
     el.removeEventListener('touchmove', onTouchMove)
     el.removeEventListener('touchend', onTouchEnd)
     el.removeEventListener('touchcancel', onCancel)
+    el.removeEventListener('scroll', onScroll)
   }
   document.removeEventListener('click', onDocumentClick, { capture: true })
   if (refreshTimer !== null) { window.clearTimeout(refreshTimer); refreshTimer = null }

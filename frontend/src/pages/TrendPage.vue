@@ -1,24 +1,22 @@
 <template>
   <div class="flex flex-col h-dvh">
     <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] space-y-6"
-      :refresh="() => loadTrend(true)">
+      :refresh="() => loadTrend(true)" @scroll="navScroll = $event">
     <template #header>
-    <header class="sticky top-0 z-30 glass-surface hairline-bottom pt-safe px-4 py-3">
-      <h1 class="text-lg font-bold text-text-primary">趋势</h1>
-      <!-- 类别（iOS 下拉菜单）+ 时间范围（分段控件）：单行排列，零横向滚动 -->
-      <div class="flex items-center gap-2 mt-2">
-        <MenuSelect v-model="category" :options="categoryOptions" title="选择类别" aria-label="选择类别" />
-        <div class="flex-1 min-w-0">
-          <Segmented :model-value="String(days)" :options="dayOptions" compact
-            @update:model-value="(v: string) => { days = Number(v); loadTrend() }" />
+    <LargeTitleNav title="趋势" :scroll-top="navScroll">
+      <template #filters>
+        <div class="flex items-center gap-2 mt-2">
+          <MenuSelect v-model="category" :options="categoryOptions" title="选择类别" aria-label="选择类别" />
+          <div class="flex-1 min-w-0">
+            <Segmented :model-value="String(days)" :options="dayOptions" compact
+              @update:model-value="(v: string) => { days = Number(v); loadTrend() }" />
+          </div>
         </div>
-      </div>
-    </header>
+      </template>
+    </LargeTitleNav>
     </template>
 
-      <div v-if="loading" class="flex justify-center py-20">
-        <ActivityIndicator :size="28" class="text-text-secondary" />
-      </div>
+      <SkeletonCard v-if="loading" :count="4" />
       <EmptyState v-else-if="trendData.length === 0" title="暂无趋势数据"
         subtitle="记录几天数据后，这里会生成图表趋势" />
       <template v-else>
@@ -217,7 +215,7 @@
           </div>
           <div v-if="periodLabel && !summary.empty" class="text-[11px] text-text-secondary">{{ periodLabel }}</div>
           <div v-if="summary.empty" class="bg-bg-main rounded-xl">
-            <EmptyState size="sm" :title="`近 ${days} 天暂无记录`" subtitle="记录几天后，这里会生成周期对比">
+            <EmptyState size="sm" icon="chart" :title="`近 ${days} 天暂无记录`" subtitle="记录几天后，这里会生成周期对比">
               <router-link to="/"
                 class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-primary-fill text-white rounded-xl font-medium text-sm btn-press shadow-card">
                 去记录
@@ -252,6 +250,8 @@ import ActivityIndicator from '@/components/ActivityIndicator.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import Segmented from '@/components/Segmented.vue'
 import MenuSelect from '@/components/MenuSelect.vue'
+import LargeTitleNav from '@/components/LargeTitleNav.vue'
+import SkeletonCard from '@/components/SkeletonCard.vue'
 
 const app = useAppStore()
 const trendData = ref<any[]>([])
@@ -260,6 +260,7 @@ const trendPrev = ref<any[]>([])
 const loading = ref(false)
 const days = ref(7)
 const category = ref('feeding')
+const navScroll = ref(0)
 
 const categoryOptions = [
   { label: '喂奶', emoji: '🍼', value: 'feeding' },

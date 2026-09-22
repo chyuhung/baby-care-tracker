@@ -1,5 +1,5 @@
 <template>
-  <div v-if="record.record_type === 'feeding'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+  <div v-if="record.record_type === 'feeding'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
     <div class="w-1.5 h-12 rounded-full bg-primary flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -19,7 +19,7 @@
     </button>
   </div>
 
-  <div v-else-if="record.record_type === 'diaper'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+  <div v-else-if="record.record_type === 'diaper'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
     <div class="w-1.5 h-12 rounded-full bg-diaper flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -33,7 +33,7 @@
     </button>
   </div>
 
-  <div v-else-if="record.record_type === 'sleep'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+  <div v-else-if="record.record_type === 'sleep'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
     <div class="w-1.5 h-12 rounded-full bg-sleep flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -50,7 +50,7 @@
     </button>
   </div>
 
-  <div v-else-if="record.record_type === 'temperature'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+  <div v-else-if="record.record_type === 'temperature'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
     <div class="w-1.5 h-12 rounded-full bg-temperature flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -69,7 +69,7 @@
     </button>
   </div>
 
-  <div v-else-if="record.record_type === 'supplement'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+  <div v-else-if="record.record_type === 'supplement'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
     <div class="w-1.5 h-12 rounded-full bg-supplement flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -86,7 +86,7 @@
     </button>
   </div>
 
-  <div v-else role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @click="$emit('edit')">
+  <div v-else role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
     <div class="w-1.5 h-12 rounded-full bg-outdoor flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -107,9 +107,19 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { formatDurationCompact, formatTimeRange, formatDayTime } from '@/utils'
+import { useLongPress } from '@/composables/useLongPress'
 
 const props = withDefaults(defineProps<{ record: any; showDate?: boolean }>(), { showDate: true })
-defineEmits(['edit', 'delete'])
+const emit = defineEmits(['edit', 'delete', 'context'])
+
+// 长按 → iOS 上下文菜单（编辑 / 删除）
+const lp = useLongPress(() => emit('context', props.record))
+
+// 长按后紧随的合成 click 需要被吞掉，否则会误触发「编辑」
+function onCardClick() {
+  if (lp.consumeClick()) return
+  emit('edit')
+}
 
 // 五类记录的 data 字段统一为一个别名
 const rd = computed(() => props.record.data || {})

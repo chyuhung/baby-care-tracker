@@ -15,8 +15,8 @@
     <transition name="sheet-mask">
       <div v-if="open" class="fixed inset-0 z-[80] bg-black/35" @click.self="close">
         <transition name="sheet-panel" appear>
-          <div v-if="open"
-            class="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] px-3 pb-safe space-y-2"
+          <div v-if="open" ref="panelRef" tabindex="-1"
+            class="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] px-3 pb-safe space-y-2 outline-none"
             role="dialog" aria-modal="true" :aria-label="title">
             <!-- 选项组 -->
             <div class="bg-surface rounded-2xl overflow-hidden">
@@ -46,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onUnmounted } from 'vue'
 
 export interface MenuOption {
   label: string
@@ -69,6 +69,7 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{ (e: 'update:modelValue', v: string | number): void }>()
 
 const open = ref(false)
+const panelRef = ref<HTMLElement | null>(null)
 const current = computed(() => props.options.find(o => o.value === props.modelValue))
 
 function select(v: string | number) {
@@ -76,14 +77,34 @@ function select(v: string | number) {
   close()
 }
 function close() { open.value = false }
-function onKey(e: KeyboardEvent) { if (e.key === 'Escape') close() }
 
-// 打开时锁定背景滚动 + 监听 Esc
-watch(open, (v) => {
+/* 焦点陷阱（a11y）+ Esc 关闭 */
+function onKey(e: KeyboardEvent) {
+  if (e.key === 'Escape') { e.preventDefault(); close(); return }
+  if (e.key !== 'Tab' || !panelRef.value) return
+  const focusables = Array.from(panelRef.value.querySelectorAll<HTMLElement>('button:not([disabled])'))
+  if (!focusables.length) return
+  const first = focusables[0]
+  const last = focusables[focusables.length - 1]
+  const active = document.activeElement as HTMLElement | null
+  if (e.shiftKey && (active === first || !panelRef.value.contains(active))) {
+    e.preventDefault(); last.focus()
+  } else if (!e.shiftKey && active === last) {
+    e.preventDefault(); first.focus()
+  }
+}
+
+// 打开时锁定背景滚动 + 监听 Esc/焦点 + 初始聚焦
+watch(open, async (v) => {
   if (typeof document === 'undefined') return
   document.body.style.overflow = v ? 'hidden' : ''
-  if (v) window.addEventListener('keydown', onKey)
-  else window.removeEventListener('keydown', onKey)
+  if (v) {
+    window.addEventListener('keydown', onKey)
+    await nextTick()
+    panelRef.value?.focus()
+  } else {
+    window.removeEventListener('keydown', onKey)
+  }
 })
 onUnmounted(() => {
   if (typeof document !== 'undefined') {

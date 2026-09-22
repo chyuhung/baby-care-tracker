@@ -81,6 +81,12 @@ const router = createRouter({
       component: () => import('@/pages/OutdoorPage.vue'),
       meta: { requiresAuth: true },
     },
+    {
+      path: '/growth',
+      name: 'growth',
+      component: () => import('@/pages/GrowthPage.vue'),
+      meta: { requiresAuth: true },
+    },
     { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 })

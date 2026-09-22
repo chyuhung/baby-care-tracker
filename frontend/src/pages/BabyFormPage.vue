@@ -25,15 +25,14 @@
       <!-- 姓名 -->
       <div>
         <label class="text-sm text-text-secondary block mb-2">姓名 *</label>
-        <input v-model="form.name" type="text" placeholder="宝宝的名字"
+        <input v-model="form.name" type="text" placeholder="宝宝的名字" enterkeyhint="done" autocomplete="off"
           class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
       </div>
 
       <!-- 出生日期 -->
       <div>
         <label class="text-sm text-text-secondary block mb-2">出生日期 *</label>
-        <input v-model="form.birth_date" type="datetime-local"
-          class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+        <DateTimeField v-model="form.birth_date" title="出生日期" aria-label="选择出生日期" />
       </div>
 
       <!-- 性别（iOS 分段控件） -->
@@ -74,6 +73,7 @@ import { useAppStore } from '@/stores/app'
 import { babyAPI } from '@/api'
 import { nowLocalDatetime, toLocalDatetime } from '@/utils'
 import Segmented from '@/components/Segmented.vue'
+import DateTimeField from '@/components/DateTimeField.vue'
 import FormBar from '@/components/FormBar.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'

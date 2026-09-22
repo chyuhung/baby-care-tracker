@@ -3,7 +3,7 @@
   <div class="flex bg-muted rounded-xl p-1 gap-1" role="tablist">
     <button v-for="opt in options" :key="String(opt.value)" type="button" role="tab"
       :aria-selected="modelValue === opt.value"
-      @click="$emit('update:modelValue', opt.value)"
+      @click="onPick(opt.value)"
       :class="['flex-1 min-h-[44px] min-w-0 px-1.5 rounded-[10px] flex items-center justify-center gap-1.5 font-medium transition-all btn-press',
         compact ? 'text-xs' : 'text-sm',
         modelValue === opt.value ? 'bg-segment text-text-primary shadow-sm font-semibold' : 'text-text-secondary']">
@@ -14,17 +14,24 @@
 </template>
 
 <script setup lang="ts">
+import { hapticSelection } from '@/utils/haptic'
+
 export interface SegOption {
   value: string
   label: string
   emoji?: string
 }
 
-withDefaults(defineProps<{
+const props = withDefaults(defineProps<{
   modelValue: string
   options: SegOption[]
   compact?: boolean
 }>(), { compact: false })
 
-defineEmits<{ (e: 'update:modelValue', v: string): void }>()
+const emit = defineEmits<{ (e: 'update:modelValue', v: string): void }>()
+
+function onPick(v: string) {
+  if (v !== props.modelValue) hapticSelection()
+  emit('update:modelValue', v)
+}
 </script>

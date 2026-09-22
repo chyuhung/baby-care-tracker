@@ -1,26 +1,20 @@
 <template>
   <div class="flex flex-col h-dvh">
     <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
-      :refresh="() => loadRecords(true, true)">
+      :refresh="() => loadRecords(true, true)" @scroll="navScroll = $event">
     <template #header>
-    <header class="sticky top-0 z-30 glass-surface hairline-bottom pt-safe px-4 py-3">
-      <h1 class="text-lg font-bold text-text-primary">时间线</h1>
-      <!-- 筛选 -->
-      <div class="flex flex-wrap gap-2 mt-2">
-        <button v-for="f in filters" :key="f.value"
-          @click="activeFilter = f.value"
-          :class="['px-3 py-2 min-h-[44px] flex items-center justify-center rounded-full text-xs font-medium transition-colors btn-press whitespace-nowrap',
-            activeFilter === f.value ? 'bg-primary-fill text-white' : 'bg-muted text-text-secondary']">
-          {{ f.label }}
-        </button>
-      </div>
-    </header>
+    <LargeTitleNav title="时间线" :scroll-top="navScroll">
+      <template #filters>
+        <div class="flex items-center gap-2 mt-2">
+          <MenuSelect :model-value="activeFilter" :options="filterOptions" title="筛选记录"
+            aria-label="筛选记录类型" @update:model-value="(v: string | number) => activeFilter = String(v)" />
+        </div>
+      </template>
+    </LargeTitleNav>
     </template>
 
-      <div v-if="loading" class="flex justify-center py-20">
-        <ActivityIndicator :size="28" class="text-text-secondary" />
-      </div>
-      <EmptyState v-else-if="groupedRecords.length === 0" title="暂无记录"
+      <SkeletonCard v-if="loading" :count="6" />
+      <EmptyState v-else-if="groupedRecords.length === 0" title="暂无记录" icon="clock"
         subtitle="记录宝宝的每一次喂奶、睡眠与成长瞬间">
         <button @click="router.push('/')"
           class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-fill text-white rounded-xl font-medium text-sm btn-press shadow-card">
@@ -34,9 +28,11 @@
             {{ group.label }}
           </h3>
           <div class="space-y-2">
-            <RecordCard v-for="(r, i) in group.records" :key="r.record_type + '-' + r.id"
-              :record="r" :show-date="false" :style="{ animationDelay: `${i * 40}ms` }" class="card-in"
-              @edit="editRecord(r)" @delete="deleteRecord(r)" />
+            <SwipeToDelete v-for="(r, i) in group.records" :key="r.record_type + '-' + r.id"
+              @delete="softDelete(r)">
+              <RecordCard :record="r" :show-date="false" :style="{ animationDelay: `${i * 40}ms` }" class="card-in"
+                @edit="editRecord(r)" @delete="deleteRecord(r)" @context="openContext" />
+            </SwipeToDelete>
           </div>
         </div>
 
@@ -49,8 +45,13 @@
     </PullRefresh>
 
     <!-- 删除确认（iOS 底部操作表） -->
-    <ConfirmSheet :open="showDeleteConfirm" message="确定要删除这条记录吗？删除后无法恢复。"
+    <ConfirmSheet :open="showDeleteConfirm" message="确定要删除这条记录吗？删除后可在提示条上撤销。"
       @confirm="confirmDelete" @cancel="showDeleteConfirm = false" />
+
+    <!-- 长按上下文菜单 -->
+    <ContextMenu :open="contextOpen" :title="contextRecord?.title" :subtitle="contextRecord?.subtitle"
+      :emoji="contextRecord?.emoji" :actions="contextActions"
+      @update:open="contextOpen = $event" @select="onContextSelect" />
   </div>
 </template>
 
@@ -59,17 +60,45 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { recordAPI } from '@/api'
+import { recordDisplay, CONTEXT_ICONS } from '@/utils/recordDisplay'
 import RecordCard from '@/components/RecordCard.vue'
 import PullRefresh from '@/components/PullRefresh.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
+import ContextMenu from '@/components/ContextMenu.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
 import EmptyState from '@/components/EmptyState.vue'
+import LargeTitleNav from '@/components/LargeTitleNav.vue'
+import SkeletonCard from '@/components/SkeletonCard.vue'
+import MenuSelect from '@/components/MenuSelect.vue'
+import SwipeToDelete from '@/components/SwipeToDelete.vue'
+import { useUndoDelete } from '@/composables/useUndoDelete'
 import { WEEKDAY_LONG } from '@/utils'
 
 const app = useAppStore()
 const router = useRouter()
 const route = useRoute()
+const navScroll = ref(0)
 const records = ref<any[]>([])
+const { softDelete } = useUndoDelete(records)
+
+// ── 长按上下文菜单 ─────────────────────────────────────────
+const contextOpen = ref(false)
+const contextRecord = ref<any>(null)
+const contextActions = computed(() => [
+  { key: 'edit', label: '编辑', icon: CONTEXT_ICONS.edit },
+  { key: 'delete', label: '删除', icon: CONTEXT_ICONS.delete, danger: true },
+])
+function openContext(rec: any) {
+  const d = recordDisplay(rec)
+  contextRecord.value = { record: rec, ...d }
+  contextOpen.value = true
+}
+function onContextSelect(key: string) {
+  const rec = contextRecord.value?.record
+  if (!rec) return
+  if (key === 'edit') editRecord(rec)
+  else if (key === 'delete') deleteRecord(rec)
+}
 const loading = ref(false)
 const loadingMore = ref(false)
 const activeFilter = ref('')
@@ -82,14 +111,15 @@ const sentinelEl = ref<HTMLElement | null>(null)
 let io: IntersectionObserver | null = null
 
 const filters = [
-  { label: '全部', value: '' },
-  { label: '🍼 喂奶', value: 'feeding' },
-  { label: '🩲 尿布', value: 'diaper' },
-  { label: '😴 睡眠', value: 'sleep' },
-  { label: '🌡️ 体温', value: 'temperature' },
-  { label: '🌳 户外', value: 'outdoor' },
-  { label: '💊 补剂', value: 'supplement' },
+  { label: '全部', emoji: '📋', value: '' },
+  { label: '喂奶', emoji: '🍼', value: 'feeding' },
+  { label: '尿布', emoji: '🩲', value: 'diaper' },
+  { label: '睡眠', emoji: '😴', value: 'sleep' },
+  { label: '体温', emoji: '🌡️', value: 'temperature' },
+  { label: '户外', emoji: '🌳', value: 'outdoor' },
+  { label: '补剂', emoji: '💊', value: 'supplement' },
 ]
+const filterOptions = filters
 
 // 监听路由参数变化，自动切换筛选
 watch(() => route.query.filter, (newFilter) => {
@@ -182,15 +212,8 @@ function deleteRecord(r: any) {
 
 async function confirmDelete() {
   if (!recordToDelete.value) return
-  try {
-    const { id, record_type: typ } = recordToDelete.value
-    await recordAPI.delete(id, typ)
-    window.dispatchEvent(new CustomEvent('record-deleted', { detail: { id, type: typ } }))
-    app.showToast('已删除', 'success')
-    showDeleteConfirm.value = false
-  } catch {
-    app.showToast('删除失败', 'error')
-  }
+  showDeleteConfirm.value = false
+  softDelete(recordToDelete.value)
 }
 
 function onRecordCreated(e: Event) {

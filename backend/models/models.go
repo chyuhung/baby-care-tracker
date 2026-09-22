@@ -123,6 +123,19 @@ type OutdoorRecord struct {
 	RecordType string  `json:"record_type"` // outdoor
 }
 
+// GrowthRecord 成长记录（身高/体重/头围）
+type GrowthRecord struct {
+	ID         int64   `json:"id"`
+	BabyID     int64   `json:"baby_id"`
+	UserID     int64   `json:"user_id"`
+	MeasuredAt string  `json:"measured_at"`
+	WeightKg   float64 `json:"weight_kg"`
+	HeightCm   float64 `json:"height_cm"`
+	HeadCm     float64 `json:"head_cm"`
+	Note       string  `json:"note"`
+	CreatedAt  string  `json:"created_at"`
+}
+
 // Record 统一记录类型
 type Record struct {
 	ID         int64  `json:"id"`
@@ -231,6 +244,14 @@ type CreateSupplementRequest struct {
 type StopOutdoorRequest struct {
 	EndedAt string `json:"ended_at" binding:"required"`
 	Note    string `json:"note"`
+}
+
+type CreateGrowthRequest struct {
+	MeasuredAt string  `json:"measured_at" binding:"required"`
+	WeightKg   float64 `json:"weight_kg"`
+	HeightCm   float64 `json:"height_cm"`
+	HeadCm     float64 `json:"head_cm"`
+	Note       string  `json:"note"`
 }
 
 type WebSocketMessage struct {

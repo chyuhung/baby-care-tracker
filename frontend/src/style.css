@@ -121,6 +121,9 @@ html, body {
   color: rgb(var(--text-primary));
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   -webkit-font-smoothing: antialiased;
+  /* iOS Dynamic Type：跟随系统文字大小，基准 100% */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -244,10 +247,10 @@ header.glass-surface {
 
 /* iOS 0.5px hairline 细线：三段式 chrome（顶部标题栏 / 底部 Tab）与内容区的分割 */
 .hairline-top {
-  border-top: 0.5px solid rgb(var(--hairline) / 0.26);
+  border-top: 0.5px solid rgb(var(--hairline) / var(--hairline-alpha, 0.26));
 }
 .hairline-bottom {
-  border-bottom: 0.5px solid rgb(var(--hairline) / 0.26);
+  border-bottom: 0.5px solid rgb(var(--hairline) / var(--hairline-alpha, 0.26));
 }
 
 /* 数字字体 */
@@ -280,6 +283,27 @@ header.glass-surface {
 /* iOS 聚焦时若字号 <16px 会强制放大页面，统一至少 16px */
 input, select, textarea {
   font-size: 16px;
+}
+
+/* ============================================================
+   iOS 辅助功能适配
+   · 降低透明度（Reduce Transparency）→ 毛玻璃改为不透明实底
+   · 增强对比度（Increase Contrast）→ 发丝线/边框加深
+   ============================================================ */
+@media (prefers-reduced-transparency: reduce) {
+  .glass-surface {
+    background: rgb(var(--surface)) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --hairline: 60 60 67;
+    --border-color: 120 120 128;
+    --hairline-alpha: 0.6;
+  }
 }
 
 /* 趋势图 SVG 线条颜色（清透冷净灰 + 跟随主题） */

@@ -3,6 +3,8 @@ frontend/dist/
 backend/dist/
 data/
 *.exe
+*.exe~
+*~
 *.db
 *.db-wal
 *.db-shm

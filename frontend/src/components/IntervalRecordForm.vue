@@ -14,13 +14,11 @@
       <template v-else>
         <div>
           <label class="text-sm text-text-secondary block mb-2">开始时间</label>
-          <input v-model="form.started_at" type="datetime-local"
-            class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+          <DateTimeField v-model="form.started_at" title="开始时间" aria-label="选择开始时间" />
         </div>
         <div>
           <label class="text-sm text-text-secondary block mb-2">结束时间</label>
-          <input v-model="form.ended_at" type="datetime-local"
-            class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+          <DateTimeField v-model="form.ended_at" title="结束时间" aria-label="选择结束时间" />
         </div>
         <div>
           <label class="text-sm text-text-secondary block mb-2">备注</label>
@@ -59,6 +57,7 @@ import { toLocalDatetime } from '@/utils'
 import FormBar from './FormBar.vue'
 import ConfirmSheet from './ConfirmSheet.vue'
 import ActivityIndicator from './ActivityIndicator.vue'
+import DateTimeField from './DateTimeField.vue'
 
 const props = defineProps<{ type: 'sleep' | 'outdoor' }>()
 

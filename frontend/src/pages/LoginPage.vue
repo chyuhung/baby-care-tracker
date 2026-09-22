@@ -12,7 +12,7 @@
       <div class="space-y-1">
         <label class="text-sm text-text-secondary">用户名</label>
         <input v-model="form.username" type="text" :placeholder="isRegister ? '2-20位字符' : '输入用户名'"
-          autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"
+          autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next"
             class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary placeholder-text-secondary/50 focus:border-primary focus:outline-none transition-colors" />
       </div>
 
@@ -20,7 +20,7 @@
         <label class="text-sm text-text-secondary">{{ isRegister ? '设置密码' : '密码' }}</label>
         <div class="relative">
           <input v-model="form.password" :type="showPassword ? 'text' : 'password'" :placeholder="isRegister ? '至少6位' : '输入密码'"
-            :autocomplete="isRegister ? 'new-password' : 'current-password'"
+            :autocomplete="isRegister ? 'new-password' : 'current-password'" enterkeyhint="done"
             class="w-full px-4 py-3 pr-12 bg-surface border border-border-color rounded-xl text-text-primary placeholder-text-secondary/50 focus:border-primary focus:outline-none transition-colors" />
           <button type="button" :aria-label="showPassword ? '隐藏密码' : '显示密码'" @click="showPassword = !showPassword"
             class="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center text-text-secondary btn-press">

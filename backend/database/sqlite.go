@@ -150,6 +150,23 @@ func createTables() error {
 	CREATE INDEX IF NOT EXISTS idx_outdoor_started ON outdoor_records(started_at);
 	CREATE INDEX IF NOT EXISTS idx_supplement_baby ON supplement_records(baby_id);
 	CREATE INDEX IF NOT EXISTS idx_supplement_occurred ON supplement_records(occurred_at);
+
+	CREATE TABLE IF NOT EXISTS growth_records (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		baby_id INTEGER NOT NULL,
+		user_id INTEGER NOT NULL,
+		measured_at DATE NOT NULL,
+		weight_kg REAL DEFAULT 0,
+		height_cm REAL DEFAULT 0,
+		head_cm REAL DEFAULT 0,
+		note TEXT DEFAULT '',
+		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (baby_id) REFERENCES babies(id) ON DELETE CASCADE,
+		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+	);
+
+	CREATE INDEX IF NOT EXISTS idx_growth_baby ON growth_records(baby_id);
+	CREATE INDEX IF NOT EXISTS idx_growth_measured ON growth_records(measured_at);
 	`
 
 	_, err := DB.Exec(schema)

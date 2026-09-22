@@ -184,6 +184,41 @@ export interface CreateSupplementData {
   occurred_at: string
 }
 
+export interface GrowthRecord {
+  id: number
+  baby_id: number
+  user_id: number
+  measured_at: string
+  weight_kg: number
+  height_cm: number
+  head_cm: number
+  note: string
+  created_at: string
+}
+
+export interface GrowthStats {
+  empty?: boolean
+  age_months?: number
+  gender?: string
+  weight_kg?: number
+  height_cm?: number
+  head_cm?: number
+  weight_pct?: number
+  height_pct?: number
+  head_pct?: number
+  weight_z?: number
+  height_z?: number
+  head_z?: number
+}
+
+export interface CreateGrowthData {
+  measured_at: string
+  weight_kg: number
+  height_cm: number
+  head_cm: number
+  note?: string
+}
+
 const api = axios.create({
   baseURL: '/api',
   timeout: 10000,
@@ -233,6 +268,14 @@ export const babyAPI = {
   latestFeeding: (id: number) => api.get<FeedingRecord>(`/babies/${id}/latest-feeding`),
   latestTemperature: (id: number) => api.get<{ temperature: number; location: string; note: string }>(`/babies/${id}/latest-temperature`),
   latestSupplement: (id: number) => api.get<{ name: string; dosage_value: number; dosage_unit: string; note: string }>(`/babies/${id}/latest-supplement`),
+  growth: (id: number) => api.get<GrowthRecord[]>(`/babies/${id}/growth`),
+  growthStats: (id: number) => api.get<GrowthStats>(`/babies/${id}/growth/stats`),
+  createGrowth: (id: number, data: CreateGrowthData) => api.post<{ id: number }>(`/babies/${id}/growth`, data),
+  deleteGrowth: (id: number) => api.delete(`/growth/${id}`),
+  exportUrl: (id: number, days?: number) => {
+    const q = days ? `?days=${days}` : ''
+    return `/api/babies/${id}/export${q}`
+  },
 }
 
 export const recordAPI = {
@@ -264,6 +307,11 @@ export const recordAPI = {
     api.put<Record>(`/babies/${babyId}/outdoor/${outdoorId}/stop`, data),
   getCurrentOutdoor: (babyId: number) =>
     api.get<OutdoorRecord | Record<string, never>>(`/babies/${babyId}/outdoor/current`),
+  exportRecords: async (babyId: number, days?: number) => {
+    const params: Record<string, string | number> = {}
+    if (days) params.days = days
+    return api.get(`/babies/${babyId}/export`, { params, responseType: 'blob' })
+  },
   update: (id: number, type: string, data: UpdateRecordData) =>
     api.put<Record>(`/records/${id}?type=${type}`, data),
   delete: (id: number, type: string) =>

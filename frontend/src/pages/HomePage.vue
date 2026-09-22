@@ -1,42 +1,38 @@
 <template>
   <div class="flex flex-col h-dvh">
     <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
-      :refresh="loadData">
+      :refresh="loadData" @scroll="navScroll = $event">
       <!-- Header -->
       <template #header>
-      <header class="sticky top-0 z-30 glass-surface hairline-bottom pt-safe px-4 pb-3">
-      <div class="flex items-center justify-between gap-2">
-        <div class="min-w-0">
-          <h1 class="text-lg font-bold text-text-primary truncate">
-            {{ app.currentBaby?.name ? `${app.currentBaby?.name} 的记录` : '宝宝护理' }}
-          </h1>
-          <p v-if="app.currentBaby?.birth_date" class="text-xs text-text-secondary mt-0.5 truncate">
-            {{ ageText }} · {{ todayDateText }}
-          </p>
-        </div>
-        <div class="flex items-center gap-2 flex-shrink-0">
+      <LargeTitleNav :title="app.currentBaby?.name ? `${app.currentBaby?.name} 的记录` : '宝宝护理'"
+        inline-title="记录" :scroll-top="navScroll">
+        <template #actions>
           <span v-if="app.wsConnected" class="text-xs text-success flex items-center gap-1">
             <span class="w-2 h-2 bg-success rounded-full inline-block"></span>同步
           </span>
           <span v-else class="text-xs text-text-secondary">离线</span>
-        </div>
-      </div>
-
-      <!-- 宝宝切换 -->
-      <div v-if="app.currentBaby" class="mt-3 flex items-center gap-2">
-        <div class="relative flex-1">
-          <select v-model="selectedBabyId" @change="switchBaby"
-            class="w-full min-h-[44px] px-3 py-2.5 bg-surface border border-border-color rounded-xl text-base text-text-primary appearance-none cursor-pointer focus:border-primary focus:outline-none transition-colors pr-8">
-            <option v-for="b in app.babies" :key="b.id" :value="b.id">{{ b.name }}</option>
-          </select>
-          <svg class="w-4 h-4 text-text-secondary pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-        </div>
-      </div>
-    </header>
+        </template>
+        <template #sub>
+          <p v-if="app.currentBaby?.birth_date" class="text-xs text-text-secondary truncate mt-0.5">
+            {{ ageText }} · {{ todayDateText }}
+          </p>
+        </template>
+        <template #filters>
+          <div v-if="app.currentBaby" class="flex items-center gap-2 mt-2">
+            <div class="relative flex-1">
+              <select v-model="selectedBabyId" @change="switchBaby"
+                class="w-full min-h-[44px] px-3 py-2.5 bg-surface border border-border-color rounded-xl text-base text-text-primary appearance-none cursor-pointer focus:border-primary focus:outline-none transition-colors pr-8">
+                <option v-for="b in app.babies" :key="b.id" :value="b.id">{{ b.name }}</option>
+              </select>
+              <svg class="w-4 h-4 text-text-secondary pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </div>
+          </div>
+        </template>
+      </LargeTitleNav>
     </template>
 
       <!-- 空状态：无宝宝 -->
-      <EmptyState v-if="app.babies.length === 0" title="还没有添加宝宝"
+      <EmptyState v-if="app.babies.length === 0" title="还没有添加宝宝" icon="folder"
         subtitle="添加宝宝档案后即可开始记录护理数据">
         <router-link to="/baby/new"
           class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-fill text-white rounded-xl font-medium text-sm btn-press shadow-card">
@@ -227,11 +223,12 @@
         <div class="space-y-2">
           <h2 class="text-sm font-semibold text-text-secondary">最近记录</h2>
           <div v-if="displayRecords.length === 0" class="bg-surface rounded-2xl shadow-card">
-            <EmptyState title="还没有记录" subtitle="从上方卡片快速记录喂奶、睡眠等" size="sm" />
+            <EmptyState title="还没有记录" subtitle="从上方卡片快速记录喂奶、睡眠等" size="sm" icon="clock" />
           </div>
-          <RecordCard v-for="(r, i) in displayRecords" :key="r.record_type + '-' + r.id" :record="r"
-            :style="{ animationDelay: `${i * 60}ms` }" class="card-in"
-            @edit="editRecord(r)" @delete="deleteRecord(r)" />
+          <SwipeToDelete v-for="(r, i) in displayRecords" :key="r.record_type + '-' + r.id"
+            :style="{ animationDelay: `${i * 60}ms` }" class="card-in" @delete="softDelete(r)">
+            <RecordCard :record="r" @edit="editRecord(r)" @delete="deleteRecord(r)" @context="openContext" />
+          </SwipeToDelete>
 
           <!-- 展开全部记录（iOS 朴素文字行） -->
           <button v-if="!showAllRecords && allRecords.length > displayRecords.length"
@@ -244,9 +241,14 @@
     </PullRefresh>
 
     <!-- 删除确认（iOS 底部操作表） -->
-    <ConfirmSheet :open="showDeleteConfirm" :loading="deleting"
-      message="确定要删除这条记录吗？删除后无法恢复。"
+    <ConfirmSheet :open="showDeleteConfirm"
+      message="确定要删除这条记录吗？删除后可在提示条上撤销。"
       @confirm="confirmDelete" @cancel="showDeleteConfirm = false" />
+
+    <!-- 长按上下文菜单 -->
+    <ContextMenu :open="contextOpen" :title="contextRecord?.title" :subtitle="contextRecord?.subtitle"
+      :emoji="contextRecord?.emoji" :actions="contextActions"
+      @update:open="contextOpen = $event" @select="onContextSelect" />
   </div>
 </template>
 
@@ -258,21 +260,66 @@ import { useAppStore } from '@/stores/app'
 import { babyAPI, recordAPI } from '@/api'
 import type { BabyStats, SleepRecord, OutdoorRecord } from '@/api'
 import RecordCard from '@/components/RecordCard.vue'
+import SwipeToDelete from '@/components/SwipeToDelete.vue'
+import { useUndoDelete } from '@/composables/useUndoDelete'
 import PullRefresh from '@/components/PullRefresh.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
+import ContextMenu from '@/components/ContextMenu.vue'
+import { recordDisplay, CONTEXT_ICONS } from '@/utils/recordDisplay'
 import EmptyState from '@/components/EmptyState.vue'
+import LargeTitleNav from '@/components/LargeTitleNav.vue'
 import { durationCompactParts, formatDurationCN, WEEKDAY_SHORT } from '@/utils'
 
 const tick = ref(0)
 let tickTimer: number | null = null
 const router = useRouter()
 const app = useAppStore()
+const navScroll = ref(0)
 const UNIT_CLASS = 'text-sm text-text-secondary'
 const stats = ref<BabyStats>({ feeding_count: 0, diaper_count: 0, total_ml_today: 0, last_feeding: '', last_diaper: '', sleep_count: 0, sleep_duration: 0, last_sleep_end: '', temperature_count: 0, latest_temperature: 0, last_temperature: '', outdoor_count: 0, outdoor_duration: 0, last_outdoor_end: '', supplement_count: 0, last_supplement: '' })
 const allRecords = ref<any[]>([])
 const showAllRecords = ref(false)
 const showDeleteConfirm = ref(false)
 const recordToDelete = ref<any>(null)
+const { softDelete } = useUndoDelete(allRecords, { onRestored: () => refreshStatsSoon() })
+
+// ── 长按上下文菜单 ─────────────────────────────────────────
+const contextOpen = ref(false)
+const contextRecord = ref<any>(null)
+const contextActions = [
+  { key: 'edit', label: '编辑', icon: CONTEXT_ICONS.edit },
+  { key: 'delete', label: '删除', icon: CONTEXT_ICONS.delete, danger: true },
+]
+function openContext(rec: any) {
+  contextRecord.value = { record: rec, ...recordDisplay(rec) }
+  contextOpen.value = true
+}
+function onContextSelect(key: string) {
+  const rec = contextRecord.value?.record
+  if (!rec) return
+  if (key === 'edit') editRecord(rec)
+  else if (key === 'delete') deleteRecord(rec)
+}
+
+// 删除/撤销后仅刷新统计（不重拉列表，避免打断撤销窗口内的乐观 UI）
+let statsSoonTimer: number | null = null
+function refreshStatsSoon() {
+  if (statsSoonTimer) clearTimeout(statsSoonTimer)
+  statsSoonTimer = window.setTimeout(async () => {
+    const baby = app.currentBaby
+    if (!baby) return
+    try {
+      const [statsRes, curSleep, curOutdoor] = await Promise.all([
+        babyAPI.stats(baby.id),
+        recordAPI.getCurrentSleep(baby.id),
+        recordAPI.getCurrentOutdoor(baby.id),
+      ])
+      stats.value = statsRes.data
+      currentSleep.value = (curSleep.data as any)?.id ? (curSleep.data as any) : null
+      currentOutdoor.value = (curOutdoor.data as any)?.id ? (curOutdoor.data as any) : null
+    } catch { /* 静默 */ }
+  }, 120)
+}
 const currentSleep = ref<SleepRecord | null>(null)
 const currentOutdoor = ref<OutdoorRecord | null>(null)
 const loadingAction = ref<string | null>(null)
@@ -601,18 +648,10 @@ function deleteRecord(r: any) {
 
 async function confirmDelete() {
   if (!recordToDelete.value || deleting.value) return
-  deleting.value = true
-  try {
-    const { id, record_type: typ } = recordToDelete.value
-    await recordAPI.delete(id, typ)
-    window.dispatchEvent(new CustomEvent('record-deleted', { detail: { id, type: typ } }))
-    app.showToast('已删除', 'success')
-    showDeleteConfirm.value = false
-  } catch (e: any) {
-    app.showToast(e.response?.data?.error || '删除失败', 'error')
-  } finally {
-    deleting.value = false
-  }
+  const target = recordToDelete.value
+  showDeleteConfirm.value = false
+  softDelete(target)
+  refreshStatsSoon()
 }
 
 function onRecordCreated(e: Event) {

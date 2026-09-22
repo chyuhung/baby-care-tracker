@@ -133,6 +133,11 @@ func main() {
 
 			protected.GET("/babies/:id/records", handlers.GetRecords)
 			protected.GET("/babies/:id/records/count", handlers.GetRecordsCount)
+			protected.GET("/babies/:id/export", handlers.ExportRecords)
+			protected.GET("/babies/:id/growth", handlers.GetGrowthRecords)
+			protected.GET("/babies/:id/growth/stats", handlers.GetGrowthStats)
+			protected.POST("/babies/:id/growth", handlers.CreateGrowthRecord)
+			protected.DELETE("/growth/:id", handlers.DeleteGrowthRecord)
 			protected.POST("/babies/:id/feeding", handlers.CreateFeeding)
 			protected.POST("/babies/:id/diaper", handlers.CreateDiaper)
 			protected.POST("/babies/:id/sleep/start", handlers.StartSleep)

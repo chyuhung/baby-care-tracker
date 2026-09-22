@@ -13,10 +13,16 @@ export interface Baby {
   created_at: string
 }
 
+export interface ToastAction {
+  label: string
+  handler: () => void
+}
+
 export interface ToastMessage {
   id: number
   message: string
   type: 'success' | 'error' | 'info'
+  action?: ToastAction
 }
 
 export const useAppStore = defineStore('app', () => {
@@ -25,6 +31,7 @@ export const useAppStore = defineStore('app', () => {
   const toasts = ref<ToastMessage[]>([])
   const wsConnected = ref(false)
   let toastCounter = 0
+  const toastTimers = new Map<number, ReturnType<typeof setTimeout>>()
   let ws: WebSocket | null = null
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null
   let reconnectAttempts = 0
@@ -62,12 +69,25 @@ export const useAppStore = defineStore('app', () => {
     localStorage.setItem('currentBabyId', String(id))
   }
 
-  function showToast(message: string, type: 'success' | 'error' | 'info' = 'success') {
+  function dismissToast(id: number) {
+    toasts.value = toasts.value.filter(t => t.id !== id)
+  }
+
+  function showToast(
+    message: string,
+    type: 'success' | 'error' | 'info' = 'success',
+    action?: ToastAction,
+    duration?: number,
+  ) {
     const id = ++toastCounter
-    toasts.value.push({ id, message, type })
-    setTimeout(() => {
-      toasts.value = toasts.value.filter(t => t.id !== id)
-    }, 2500)
+    toasts.value.push({ id, message, type, action })
+    // 带「撤销」的 toast 停留更久；普通 toast 2.5s
+    const ttl = duration ?? (action ? 5000 : 2500)
+    const timer = setTimeout(() => {
+      toastTimers.delete(id)
+      dismissToast(id)
+    }, ttl)
+    toastTimers.set(id, timer)
   }
 
   function connectWebSocket() {
@@ -123,7 +143,7 @@ export const useAppStore = defineStore('app', () => {
 
   return {
     babies, currentBabyId, toasts, wsConnected, theme,
-    currentBaby, loadBabies, setCurrentBaby, showToast,
+    currentBaby, loadBabies, setCurrentBaby, showToast, dismissToast,
     connectWebSocket, disconnectWebSocket, defaultAvatarColor,
   }
 })

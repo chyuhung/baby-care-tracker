@@ -24,7 +24,7 @@
             {{ opt }}
           </button>
         </div>
-        <input v-if="form.name === '其他'" v-model="customName" type="text" maxlength="20" placeholder="输入补剂名称"
+        <input v-if="form.name === '其他'" v-model="customName" type="text" maxlength="20" placeholder="输入补剂名称" enterkeyhint="done" autocomplete="off"
           class="mt-2 w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
       </div>
 
@@ -46,8 +46,7 @@
       <!-- 时间 -->
       <div>
         <label class="text-sm text-text-secondary block mb-2">记录时间</label>
-        <input v-model="form.occurred_at" type="datetime-local"
-          class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
+        <DateTimeField v-model="form.occurred_at" title="记录时间" aria-label="选择记录时间" />
       </div>
 
       <!-- 备注 -->
@@ -89,6 +88,7 @@ import { useAppStore } from '@/stores/app'
 import { babyAPI, recordAPI } from '@/api'
 import { nowLocalDatetime, toLocalDatetime } from '@/utils'
 import Segmented from '@/components/Segmented.vue'
+import DateTimeField from '@/components/DateTimeField.vue'
 import FormBar from '@/components/FormBar.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
