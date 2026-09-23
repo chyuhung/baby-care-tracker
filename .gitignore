@@ -1,7 +1,7 @@
 node_modules/
 frontend/dist/
 backend/dist/
-data/
+/data/
 *.exe
 *.exe~
 *~
