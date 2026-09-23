@@ -20,6 +20,10 @@ Family group sharing, timezone fix, record performance optimization
 - iOS three-zone chrome: sticky frosted-glass headers + 0.5px hairline on tab bar/FormBar (`hairline-top`/`hairline-bottom`); page transition simplified to opacity-fade-only (transform layer eats first tap)
 - iOS tap/gesture fixes: removed `user-scalable=no`/`maximum-scale` from viewport (PWA standalone keyboard focus) and global `overscroll-behavior: none` (double-tap needed); then replaced PullRefresh with Pointer Events state machine (UIRefreshControl-equivalent): single pointerId + capture, live `container.scrollTop` check (no snapshot/`lockedUp` lock), 10px tap slop, `overflow-y-auto + overscroll-contain + touch-pan-y` on container, iOS-style indicator (content stays put, no whole-page transform)
 - Single scroll container architecture: 6 PullRefresh pages (Home/Timeline/Trend/Profile/Supplement/Temperature) now `h-dvh` flex col with PullRefresh as the inner scroller; page headers moved into PullRefresh `#header` slot (sticky inside scroller, glass blur passes under)
+- Growth standard WS/T 423-2022: embedded percentile tables (`backend/data/wst423_2022.json` + `growthstd.go`, weight/height 0–81月, head 0–36月, male/female, P3–P97); `growthPercentile` percentile lookup with segment-linear interpolation + endpoint extrapolation (replaced WHO LMS/z-scores); new `GET /babies/:id/growth/reference` endpoint returns P3/P25/P50/P75/P97 reference curves
+- GrowthPage chart: age-in-months X axis (not dates), hospital-style red/yellow/green reference zones (green P25–P75, yellow P3–P25/P75–P97, red <P3/>P97) + legend + WS/T 423-2022 footnote; `pctClass` thresholds aligned to the standard's 5-grade evaluation (<3/>97 danger, <25/>75 warning)
+- LargeTitleNav iOS behavior: two-root fragment — sticky compact bar (h-11 glass, inline title fades in past `COLLAPSE_AT=30`/out below `EXPAND_AT=8`, `#actions` + `#filters` always pinned) + flowing large-title block (`<h1>` 34px + `#sub`, in normal flow, scrolls under the opaque bar); `large=false` renders compact-only; PullRefresh `measureHeader` now sums header-slot children before content ref (supports multi-root fragments, replaces `querySelector('header')`)
+- Birth date as calendar date: `babies.birth_date` now stored/sent as pure local `YYYY-MM-DD` (frontend stops `toISOString()`, backend `normalizeBirthDate` converts legacy RFC3339 via `X-Timezone-Offset`); readers use new `parseLocalDate` util — date-only string kept local, RFC3339 (legacy rows) converted to viewer-local; growth CSV export keeps 成长 rows date-only instead of `In(user zone)`
 
 ### Known Issues
 - `vue-tsc` typecheck fails on Node.js v24 — not a code issue
@@ -32,4 +36,5 @@ Family group sharing, timezone fix, record performance optimization
 
 ## Key Decisions
 - Timezone: client offset header, not server TZ; stored times are UTC
+- Calendar dates (birth date, growth measured date) are pure local `YYYY-MM-DD`, never instants — no timezone conversion on store/read
 - Record events: `record-created` and `record-deleted` CustomEvents on `window` — WebSocket broadcasts trigger these; delete handlers dispatch directly for instant UI

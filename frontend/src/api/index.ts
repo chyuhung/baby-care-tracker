@@ -206,9 +206,28 @@ export interface GrowthStats {
   weight_pct?: number
   height_pct?: number
   head_pct?: number
-  weight_z?: number
-  height_z?: number
-  head_z?: number
+}
+
+export interface GrowthReferencePoint {
+  month: number
+  p3: number
+  p25: number
+  p50: number
+  p75: number
+  p97: number
+}
+
+export interface GrowthReferenceMetric {
+  unit: string
+  max_months: number
+  points: GrowthReferencePoint[]
+}
+
+export interface GrowthReference {
+  gender: string
+  weight: GrowthReferenceMetric
+  height: GrowthReferenceMetric
+  head: GrowthReferenceMetric
 }
 
 export interface CreateGrowthData {
@@ -270,6 +289,7 @@ export const babyAPI = {
   latestSupplement: (id: number) => api.get<{ name: string; dosage_value: number; dosage_unit: string; note: string }>(`/babies/${id}/latest-supplement`),
   growth: (id: number) => api.get<GrowthRecord[]>(`/babies/${id}/growth`),
   growthStats: (id: number) => api.get<GrowthStats>(`/babies/${id}/growth/stats`),
+  growthReference: (id: number) => api.get<GrowthReference>(`/babies/${id}/growth/reference`),
   createGrowth: (id: number, data: CreateGrowthData) => api.post<{ id: number }>(`/babies/${id}/growth`, data),
   deleteGrowth: (id: number) => api.delete(`/growth/${id}`),
   exportUrl: (id: number, days?: number) => {

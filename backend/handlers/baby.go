@@ -100,6 +100,7 @@ func CreateBaby(c *gin.Context) {
 	if req.AvatarColor == "" {
 		req.AvatarColor = "#F25C8C"
 	}
+	req.BirthDate = normalizeBirthDate(req.BirthDate, getTzOffset(c))
 
 	result, err := database.DB.Exec(
 		"INSERT INTO babies (user_id, name, birth_date, gender, avatar_color) VALUES (?, ?, ?, ?, ?)",
@@ -153,6 +154,7 @@ func UpdateBaby(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限操作"})
 		return
 	}
+	req.BirthDate = normalizeBirthDate(req.BirthDate, getTzOffset(c))
 
 	_, err = database.DB.Exec(
 		"UPDATE babies SET name = COALESCE(NULLIF(?, ''), name), birth_date = COALESCE(NULLIF(?, ''), birth_date), gender = COALESCE(NULLIF(?, ''), gender), avatar_color = COALESCE(NULLIF(?, ''), avatar_color) WHERE id = ?",

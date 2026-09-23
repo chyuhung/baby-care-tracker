@@ -102,7 +102,7 @@
           </span>
           <div class="flex-1 min-w-0">
             <div class="font-medium text-text-primary">成长记录</div>
-            <div class="text-xs text-text-secondary mt-0.5">身高 · 体重 · 头围与 WHO 百分位</div>
+            <div class="text-xs text-text-secondary mt-0.5">身高 · 体重 · 头围与生长标准百分位</div>
           </div>
           <svg class="w-5 h-5 text-text-secondary/50 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </div>
@@ -189,6 +189,7 @@ import LargeTitleNav from '@/components/LargeTitleNav.vue'
 import RemindersCard from '@/components/RemindersCard.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
 import { isHapticsEnabled, setHapticsEnabled, hapticSelection } from '@/utils/haptic'
+import { parseLocalDate } from '@/utils'
 
 interface FamilyMember {
   id: number
@@ -352,14 +353,10 @@ function copyCode() {
 
 function formatBirthDate(bd: string) {
   if (!bd) return ''
-  const d = new Date(bd)
-  if (isNaN(d.getTime())) return bd
+  const d = parseLocalDate(bd)
+  if (!d) return bd
   const p2 = (n: number) => String(n).padStart(2, '0')
-  const base = `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`
-  const h = d.getHours()
-  const mi = d.getMinutes()
-  if (h || mi) return `${base} ${p2(h)}:${p2(mi)}`
-  return base
+  return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`
 }
 
 onMounted(() => {

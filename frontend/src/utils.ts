@@ -8,10 +8,25 @@ function toDate(v: string | Date): Date {
   return v instanceof Date ? v : new Date(v)
 }
 
-/** 转为 <input type="datetime-local"> 所需的本地时间 YYYY-MM-DDTHH:mm */
+/** 转为 <input type="datetime-local"> 所需的本地时间 YYYY-MM-DDTHH:mm；
+    date-only（如出生日期）原样保留并补齐 00:00，避免经 UTC 解析跨日偏移 */
 export function toLocalDatetime(iso: string) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return `${iso}T00:00`
   const d = new Date(iso)
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`
+}
+
+/** 解析日历日：date-only（YYYY-MM-DD）直接按本地日历日构造，不做时区换算；
+    RFC3339（旧数据/时刻）按本地时区转回本地时刻 */
+export function parseLocalDate(s: string): Date | null {
+  if (!s) return null
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const [y, m, d] = s.split('-').map(Number)
+    const t = new Date(y, m - 1, d)
+    return isNaN(t.getTime()) ? null : t
+  }
+  const t = new Date(s)
+  return isNaN(t.getTime()) ? null : t
 }
 
 /** 当前本地时间 YYYY-MM-DDTHH:mm（datetime-local 默认值） */

@@ -268,7 +268,7 @@ import ContextMenu from '@/components/ContextMenu.vue'
 import { recordDisplay, CONTEXT_ICONS } from '@/utils/recordDisplay'
 import EmptyState from '@/components/EmptyState.vue'
 import LargeTitleNav from '@/components/LargeTitleNav.vue'
-import { durationCompactParts, formatDurationCN, WEEKDAY_SHORT } from '@/utils'
+import { durationCompactParts, formatDurationCN, WEEKDAY_SHORT, parseLocalDate } from '@/utils'
 
 const tick = ref(0)
 let tickTimer: number | null = null
@@ -343,8 +343,8 @@ const displayRecords = computed(() => {
 const ageText = computed(() => {
   const baby = app.currentBaby
   if (!baby?.birth_date) return ''
-  const bd = new Date(baby.birth_date)
-  if (isNaN(bd.getTime())) return ''
+  const bd = parseLocalDate(baby.birth_date)
+  if (!bd) return ''
   const birthYear = bd.getFullYear()
   const birthMonth = bd.getMonth()
   const birthDay = bd.getDate()

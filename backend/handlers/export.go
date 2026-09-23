@@ -216,12 +216,13 @@ func ExportRecords(c *gin.Context) {
 	w := csv.NewWriter(c.Writer)
 	w.Write([]string{"时间", "类型", "详情", "备注"})
 	for _, r := range rows {
-		w.Write([]string{
-			r.t.In(loc).Format("2006-01-02 15:04"),
-			r.kind,
-			r.detail,
-			r.note,
-		})
+		// 成长记录的测量日期是纯日历日（YYYY-MM-DD），不做时区换算；
+		// 其余记录为时刻，转用户时区显示
+		val := r.t.Format("2006-01-02")
+		if r.kind != "成长" {
+			val = r.t.In(loc).Format("2006-01-02 15:04")
+		}
+		w.Write([]string{val, r.kind, r.detail, r.note})
 	}
 	w.Flush()
 }

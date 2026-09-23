@@ -1,33 +1,25 @@
 <template>
-  <!-- iOS 风格导航栏：Large Title 与 inline 标题共用一行（不额外占高），随滚动交叉淡入 -->
+  <!-- 吸顶紧凑栏：inline 标题随滚动淡入，操作按钮与筛选控件固定在顶部 -->
   <header class="sticky top-0 z-30 glass-surface hairline-bottom pt-safe">
-    <!-- 标题行：标题与右侧操作（如「同步」状态）同基线居中，避免大片留白 -->
     <div class="flex items-center justify-between gap-3 px-4 h-11">
-      <div class="relative flex-1 min-w-0 h-11">
-        <!-- Large Title（滚动后收起、淡出） -->
-        <span
-          class="absolute inset-0 flex items-center text-[34px] font-bold tracking-tight text-text-primary truncate transition-opacity duration-200"
-          :style="{ opacity: collapsed ? 0 : 1, pointerEvents: 'none' }"
-        >{{ title }}</span>
-        <!-- Inline 标题（滚动后淡入） -->
-        <span
-          class="absolute inset-0 flex items-center text-[17px] font-semibold text-text-primary truncate transition-opacity duration-200"
-          :style="{ opacity: collapsed ? 1 : 0 }"
-        >{{ inlineTitleText }}</span>
-      </div>
+      <div class="flex-1 min-w-0 text-[17px] font-semibold text-text-primary truncate transition-opacity duration-200"
+        :style="{ opacity: collapsed ? 1 : 0 }" :aria-hidden="large ? 'true' : null">{{ inlineTitleText }}</div>
       <div class="flex items-center gap-2 flex-shrink-0">
         <slot name="actions" />
       </div>
     </div>
-    <!-- 副标题（紧凑，不额外撑高标题行） -->
-    <div v-if="$slots.sub" class="px-4 pb-0.5">
-      <slot name="sub" />
-    </div>
-    <!-- 筛选控件（贴标题行下沿，压缩垂直间距） -->
+    <!-- 筛选控件（吸顶，始终可操作） -->
     <div v-if="$slots.filters" class="px-4 pb-2">
       <slot name="filters" />
     </div>
   </header>
+
+  <!-- 流动大标题：常规文档流，随内容上滑、划入吸顶栏下方消失（iOS 原生行为） -->
+  <div v-if="large || $slots.sub" class="px-4 pt-1.5 pb-1">
+    <h1 v-if="large"
+      class="text-[34px] font-bold leading-tight tracking-tight text-text-primary truncate">{{ title }}</h1>
+    <div v-if="$slots.sub"><slot name="sub" /></div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -42,8 +34,8 @@ const props = withDefaults(defineProps<{
   large?: boolean
 }>(), { inlineTitle: '', scrollTop: 0, large: true })
 
-const COLLAPSE_AT = 22
-const EXPAND_AT = 6
+const COLLAPSE_AT = 30
+const EXPAND_AT = 8
 
 // 本地状态 + 滞回，避免在阈值附近抖动
 const folded = ref(false)
@@ -51,7 +43,7 @@ watch(() => props.scrollTop, (v) => {
   if (!props.large) return
   if (!folded.value && v > COLLAPSE_AT) folded.value = true
   else if (folded.value && v < EXPAND_AT) folded.value = false
-})
+}, { immediate: true })
 
 const collapsed = computed(() => !props.large || folded.value)
 const inlineTitleText = computed(() => props.inlineTitle || props.title)

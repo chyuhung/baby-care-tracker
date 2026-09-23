@@ -4,7 +4,7 @@
     <slot name="header" />
 
     <!-- 内容区：下拉时整体下移，露出顶栏与内容之间的间隙 -->
-    <div :class="contentClass" :style="contentStyle">
+    <div ref="contentRef" :class="contentClass" :style="contentStyle">
       <slot />
     </div>
 
@@ -60,6 +60,7 @@ const refreshing = ref(false)
 const armed = ref(false)
 const animating = ref(false)
 const headerH = ref(0)
+const contentRef = ref<HTMLElement | null>(null)
 
 let startY = 0
 let tracking = false
@@ -91,11 +92,18 @@ function atTop() {
   const el = rootRef.value
   return el ? el.scrollTop <= 0 : true
 }
-/* 顶栏高度：用于把指示器定位在顶栏下方的露出间隙中央 */
+/* 顶栏高度：header 插槽内所有兄弟元素（吸顶栏 + 流动大标题等多根片段）
+ * 在内容区之前的高度之和，用于把指示器定位在整个顶栏区域下方的露出间隙中央 */
 function measureHeader() {
   const el = rootRef.value
-  const h = el ? el.querySelector('header') : null
-  headerH.value = h ? Math.round(h.getBoundingClientRect().height) : 0
+  const content = contentRef.value
+  if (!el || !content) { headerH.value = 0; return }
+  let h = 0
+  for (const child of Array.from(el.children)) {
+    if (child === content) break
+    h += child.getBoundingClientRect().height
+  }
+  headerH.value = Math.round(h)
 }
 
 /* ========== 下拉状态机（等价 iOS UIRefreshControl） ==========

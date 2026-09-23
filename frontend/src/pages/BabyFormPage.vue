@@ -132,7 +132,7 @@ async function save() {
   try {
     const payload = {
       name: form.name.trim(),
-      birth_date: new Date(form.birth_date).toISOString(),
+      birth_date: form.birth_date.slice(0, 10),
       gender: form.gender,
       avatar_color: form.avatar_color,
     }

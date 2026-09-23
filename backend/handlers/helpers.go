@@ -28,6 +28,26 @@ func parseTime(s string) time.Time {
 	return time.Time{}
 }
 
+// normalizeBirthDate 把出生日期规范为纯日历日（YYYY-MM-DD）。
+// 出生日期是日历日而非时刻：存本地日期才能在跨时区、跨零点后保持同一天；
+// 旧数据（RFC3339 UTC）按客户端时区换算回日历日。
+func normalizeBirthDate(s string, tzOffset int) string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return s
+	}
+	if len(s) >= 10 {
+		if _, err := time.Parse("2006-01-02", s[:10]); err == nil && len(s) <= 10 {
+			return s[:10]
+		}
+	}
+	t := parseTime(s)
+	if t.IsZero() {
+		return s
+	}
+	return t.In(time.FixedZone("user", tzOffset*60)).Format("2006-01-02")
+}
+
 // getTzOffset 从请求头中获取客户端时区偏移（分钟），默认0（UTC）
 func getTzOffset(c *gin.Context) int {
 	header := c.GetHeader("X-Timezone-Offset")
