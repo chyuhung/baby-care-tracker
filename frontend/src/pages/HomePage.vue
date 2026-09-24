@@ -222,28 +222,23 @@
         <!-- 最近记录 -->
         <div class="space-y-2">
           <h2 class="text-sm font-semibold text-text-secondary">最近记录</h2>
-          <div v-if="displayRecords.length === 0" class="bg-surface rounded-2xl shadow-card">
+          <div v-if="allRecords.length === 0" class="bg-surface rounded-2xl shadow-card">
             <EmptyState title="还没有记录" subtitle="从上方卡片快速记录喂奶、睡眠等" size="sm" icon="clock" />
           </div>
-          <SwipeToDelete v-for="(r, i) in displayRecords" :key="r.record_type + '-' + r.id"
+          <SwipeToDelete v-for="(r, i) in allRecords" :key="r.record_type + '-' + r.id"
             :style="{ animationDelay: `${i * 60}ms` }" class="card-in" @delete="softDelete(r)">
             <RecordCard :record="r" @edit="editRecord(r)" @delete="deleteRecord(r)" @context="openContext" />
           </SwipeToDelete>
 
-          <!-- 增量加载更多：每次点击一批，避免一次渲染全部卡死 -->
-          <button v-if="!showAllRecords && allRecords.length > displayRecords.length"
-            @click="showAllRecords = true; loadedCount = LOAD_BATCH"
-            class="w-full py-3 text-primary-deep text-sm font-medium btn-press mt-1">
-            加载更多（剩余 {{ loadMoreRemaining }}）
-          </button>
-          <template v-else-if="showAllRecords">
-            <button v-if="loadedCount < allRecords.length"
-              @click="loadedCount += LOAD_BATCH"
-              class="w-full py-3 text-primary-deep text-sm font-medium btn-press mt-1">
-              加载更多（剩余 {{ loadMoreRemaining }}）
+          <!-- 加载更多（真增量分页）：每次点击一页，避免一次渲染全部卡死 -->
+          <div class="h-14 flex items-center justify-center">
+            <button v-if="hasMore" @click="loadMore" :disabled="loadingMore"
+              class="px-6 py-2.5 rounded-xl shadow-card bg-surface text-sm font-medium text-primary-deep btn-press min-h-[44px] flex items-center gap-2">
+              <ActivityIndicator v-if="loadingMore" :size="16" class="text-primary-deep" />
+              {{ loadingMore ? '加载中…' : `加载更多（剩余 ${loadMoreRemaining}）` }}
             </button>
-            <div v-else class="w-full py-3 text-center text-xs text-text-secondary mt-1">没有更多了</div>
-          </template>
+            <span v-else class="text-xs text-text-secondary">没有更多了</span>
+          </div>
         </div>
       </template>
     </PullRefresh>
@@ -273,6 +268,7 @@ import { useUndoDelete } from '@/composables/useUndoDelete'
 import PullRefresh from '@/components/PullRefresh.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
 import ContextMenu from '@/components/ContextMenu.vue'
+import ActivityIndicator from '@/components/ActivityIndicator.vue'
 import { recordDisplay, CONTEXT_ICONS } from '@/utils/recordDisplay'
 import EmptyState from '@/components/EmptyState.vue'
 import LargeTitleNav from '@/components/LargeTitleNav.vue'
@@ -286,9 +282,15 @@ const navScroll = ref(0)
 const UNIT_CLASS = 'text-sm text-text-secondary'
 const stats = ref<BabyStats>({ feeding_count: 0, diaper_count: 0, total_ml_today: 0, last_feeding: '', last_diaper: '', sleep_count: 0, sleep_duration: 0, last_sleep_end: '', temperature_count: 0, latest_temperature: 0, last_temperature: '', outdoor_count: 0, outdoor_duration: 0, last_outdoor_end: '', supplement_count: 0, last_supplement: '' })
 const allRecords = ref<any[]>([])
-const showAllRecords = ref(false)
-const LOAD_BATCH = 20
+const PAGE = 20
+const nextOffset = ref(0)
+const totalCount = ref(0)
 const loadedCount = ref(0)
+const loadingMore = ref(false)
+const hasMore = computed(() => loadedCount.value < totalCount.value)
+const loadMoreRemaining = computed(() => Math.max(0, totalCount.value - loadedCount.value))
+// 今日测温记录（独立按 days=1 拉取，不依赖分页窗口；新→旧）
+const todayTempRecords = ref<any[]>([])
 const showDeleteConfirm = ref(false)
 const recordToDelete = ref<any>(null)
 const { softDelete } = useUndoDelete(allRecords, { onRestored: () => refreshStatsSoon() })
@@ -336,19 +338,6 @@ const loadingAction = ref<string | null>(null)
 const deleting = ref(false)
 const selectedBabyId = ref<number | null>(null)
 let loadGeneration = 0
-
-
-// 只显示今天和昨天；展开后按 20 条一批渐进渲染
-const displayRecords = computed(() => {
-  if (showAllRecords.value) return allRecords.value.slice(0, loadedCount.value)
-  const now = new Date()
-  const today = now.toDateString()
-  const yesterday = new Date(now.getTime() - 86400000).toDateString()
-  return allRecords.value.filter(r => {
-    const d = new Date(r.occurred_at)
-    return d.toDateString() === today || d.toDateString() === yesterday
-  })
-})
 
 const ageText = computed(() => {
   const baby = app.currentBaby
@@ -444,10 +433,6 @@ const sleepAvgDuration = computed(() => {
   return formatDurationCN(Math.round(recs.reduce((sum, x) => sum + x.t, 0) / recs.length))
 })
 
-// 剩余未展示条数（展开前按可见集、展开后按已加载批数）
-const loadMoreRemaining = computed(() =>
-  allRecords.value.length - (showAllRecords.value ? loadedCount.value : displayRecords.value.length))
-
 // 今日日期判定（按本地时区）
 function isToday(iso?: string | null) {
   if (!iso) return false
@@ -456,11 +441,7 @@ function isToday(iso?: string | null) {
   return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate()
 }
 
-// 今日测温记录（新→旧）；今日未测温时温度为 null，主数字显示 -- 占位符
-const todayTempRecords = computed(() =>
-  allRecords.value
-    .filter(r => r.record_type === 'temperature' && r.data?.temperature > 0 && isToday(r.occurred_at))
-    .sort((a, b) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime()))
+// 今日测温独立拉取（days=1 专用窗口），不随主列表分页；今日未测温时温度为 null，主数字显示 -- 占位符
 const todayTemp = computed<number | null>(() => todayTempRecords.value.length ? todayTempRecords.value[0].data.temperature : null)
 const todayTempHigh = computed<number | null>(() => todayTempRecords.value.length
   ? Math.max(...todayTempRecords.value.map((r: any) => r.data.temperature))
@@ -525,15 +506,23 @@ async function loadData() {
   selectedBabyId.value = baby.id
   const gen = ++loadGeneration
   try {
-    const [statsRes, recordsRes, sleepRes, outdoorRes] = await Promise.all([
+    const [statsRes, recordsRes, countRes, sleepRes, outdoorRes, tempTodayRes] = await Promise.all([
       babyAPI.stats(baby.id),
-      recordAPI.list(baby.id),
+      recordAPI.list(baby.id, { offset: 0, limit: PAGE }),
+      recordAPI.count(baby.id),
       recordAPI.getCurrentSleep(baby.id),
       recordAPI.getCurrentOutdoor(baby.id),
+      recordAPI.list(baby.id, { type: 'temperature', days: 1 }),
     ])
     if (gen !== loadGeneration) return
     stats.value = statsRes.data
     allRecords.value = recordsRes.data as any[]
+    totalCount.value = countRes.data.total
+    loadedCount.value = allRecords.value.length
+    nextOffset.value = allRecords.value.length
+    todayTempRecords.value = (tempTodayRes.data as any[])
+      .filter(r => r.data?.temperature > 0 && isToday(r.occurred_at))
+      .sort((a, b) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime())
     currentSleep.value = sleepRes.data?.id ? sleepRes.data : null
     currentOutdoor.value = outdoorRes.data?.id ? outdoorRes.data : null
   } catch {
@@ -541,10 +530,28 @@ async function loadData() {
   }
 }
 
+async function loadMore() {
+  const baby = app.currentBaby
+  if (!baby || loadingMore.value || !hasMore.value) return
+  loadingMore.value = true
+  try {
+    const res = await recordAPI.list(baby.id, { offset: nextOffset.value, limit: PAGE })
+    const seen = new Set(allRecords.value.map(r => r.record_type + '-' + r.id))
+    const added = (res.data as any[]).filter(r => !seen.has(r.record_type + '-' + r.id))
+    allRecords.value = allRecords.value.concat(added)
+    allRecords.value.sort((a, b) => (b.occurred_at || '').localeCompare(a.occurred_at || ''))
+    loadedCount.value += added.length
+    nextOffset.value += res.data.length
+  } catch {
+    app.showToast('数据加载失败', 'error')
+  } finally {
+    loadingMore.value = false
+  }
+}
+
 function switchBaby() {
   if (selectedBabyId.value) {
     app.setCurrentBaby(selectedBabyId.value)
-    showAllRecords.value = false
     loadData()
   }
 }
