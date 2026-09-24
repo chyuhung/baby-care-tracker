@@ -157,7 +157,7 @@ async function loadRecord() {
   const baby = app.currentBaby
   if (!baby) return
   try {
-    const res = await recordAPI.list(baby.id, 'supplement', 90)
+    const res = await recordAPI.list(baby.id, { type: 'supplement', days: 90 })
     const record = (res.data as any[]).find(r => r.id === Number(route.params.id))
     if (record) {
       form.occurred_at = toLocalDatetime(record.occurred_at)

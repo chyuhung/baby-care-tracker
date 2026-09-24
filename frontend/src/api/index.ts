@@ -295,14 +295,19 @@ export const babyAPI = {
 }
 
 export const recordAPI = {
-  list: (babyId: number, type?: string, days?: number) => {
+  list: (babyId: number, opts: { type?: string; days?: number; offset?: number; limit?: number } = {}) => {
     const params: Record<string, string | number> = {}
-    if (type) params.type = type
-    if (days) params.days = days
+    if (opts.type) params.type = opts.type
+    if (opts.days) params.days = opts.days
+    if (opts.offset !== undefined) params.offset = opts.offset
+    if (opts.limit) params.limit = opts.limit
     return api.get<Record[]>(`/babies/${babyId}/records`, { params })
   },
-  count: (babyId: number) =>
-    api.get<{ feeding_count: number; diaper_count: number; sleep_count: number; temperature_count: number; outdoor_count: number; supplement_count: number; total: number }>(`/babies/${babyId}/records/count`),
+  count: (babyId: number, type?: string) => {
+    const params: Record<string, string> = {}
+    if (type) params.type = type
+    return api.get<{ feeding_count: number; diaper_count: number; sleep_count: number; temperature_count: number; outdoor_count: number; supplement_count: number; total: number }>(`/babies/${babyId}/records/count`, { params })
+  },
   createFeeding: (babyId: number, data: CreateFeedingData) =>
     api.post<Record>(`/babies/${babyId}/feeding`, data),
   createDiaper: (babyId: number, data: CreateDiaperData) =>

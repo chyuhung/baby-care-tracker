@@ -78,6 +78,28 @@ func GetRecords(c *gin.Context) {
 		}
 	}
 
+	// 分页：limit>0 时启用全局窗口分页 [offset, offset+limit)。
+	// 每类表一次性预取 offset+limit 条，合并排序后按窗口截断，
+	// 保证每页条数固定、跨页不重不漏（gap-free）。
+	limitStr := c.Query("limit")
+	offsetStr := c.Query("offset")
+	pageSQL := " LIMIT 500"
+	pageArgs := []interface{}{}
+	pageOffset := 0
+	pageLimit := 0
+	if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+		if l > 200 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "limit 不能超过 200"})
+			return
+		}
+		if oo, err := strconv.Atoi(offsetStr); err == nil && oo > 0 {
+			pageOffset = oo
+		}
+		pageLimit = l
+		pageSQL = " LIMIT ?"
+		pageArgs = append(pageArgs, pageOffset+pageLimit)
+	}
+
 	var feedingCount, diaperCount, sleepCount, temperatureCount, outdoorCount, supplementCount int
 	if recordType == "" || recordType == "feeding" {
 		fArgs := append([]interface{}{}, args...)
@@ -108,10 +130,10 @@ func GetRecords(c *gin.Context) {
 	var records []models.Record
 
 	if recordType == "" || recordType == "feeding" {
-		fArgs := append([]interface{}{}, args...)
+		fArgs := append(append([]interface{}{}, args...), pageArgs...)
 		rows, err := database.DB.Query(
 			`SELECT id, baby_id, user_id, type, duration_minutes, amount_ml, side, brand, note, occurred_at, created_at
-			FROM feeding_records WHERE baby_id = ?`+daysFilter+` ORDER BY occurred_at DESC LIMIT 500`,
+			FROM feeding_records WHERE baby_id = ?`+daysFilter+` ORDER BY occurred_at DESC`+pageSQL,
 			fArgs...,
 		)
 		if err == nil {
@@ -143,10 +165,10 @@ func GetRecords(c *gin.Context) {
 	}
 
 	if recordType == "" || recordType == "diaper" {
-		dArgs := append([]interface{}{}, args...)
+		dArgs := append(append([]interface{}{}, args...), pageArgs...)
 		rows, err := database.DB.Query(
 			`SELECT id, baby_id, user_id, type, note, occurred_at, created_at
-			FROM diaper_records WHERE baby_id = ?`+daysFilter+` ORDER BY occurred_at DESC LIMIT 500`,
+			FROM diaper_records WHERE baby_id = ?`+daysFilter+` ORDER BY occurred_at DESC`+pageSQL,
 			dArgs...,
 		)
 		if err == nil {
@@ -173,10 +195,10 @@ func GetRecords(c *gin.Context) {
 	}
 
 	if recordType == "" || recordType == "sleep" {
-		sArgs := append([]interface{}{}, args...)
+		sArgs := append(append([]interface{}{}, args...), pageArgs...)
 		rows, err := database.DB.Query(
 			`SELECT id, baby_id, user_id, started_at, ended_at, note, created_at
-			FROM sleep_records WHERE baby_id = ? AND ended_at IS NOT NULL`+sleepDaysFilter+` ORDER BY started_at DESC LIMIT 500`,
+			FROM sleep_records WHERE baby_id = ? AND ended_at IS NOT NULL`+sleepDaysFilter+` ORDER BY started_at DESC`+pageSQL,
 			sArgs...,
 		)
 		if err == nil {
@@ -207,10 +229,10 @@ func GetRecords(c *gin.Context) {
 	}
 
 	if recordType == "" || recordType == "temperature" {
-		tArgs := append([]interface{}{}, args...)
+		tArgs := append(append([]interface{}{}, args...), pageArgs...)
 		rows, err := database.DB.Query(
 			`SELECT id, baby_id, user_id, temperature, location, note, occurred_at, created_at
-			FROM temperature_records WHERE baby_id = ?`+daysFilter+` ORDER BY occurred_at DESC LIMIT 500`,
+			FROM temperature_records WHERE baby_id = ?`+daysFilter+` ORDER BY occurred_at DESC`+pageSQL,
 			tArgs...,
 		)
 		if err == nil {
@@ -240,10 +262,10 @@ func GetRecords(c *gin.Context) {
 	}
 
 	if recordType == "" || recordType == "outdoor" {
-		oArgs := append([]interface{}{}, args...)
+		oArgs := append(append([]interface{}{}, args...), pageArgs...)
 		rows, err := database.DB.Query(
 			`SELECT id, baby_id, user_id, started_at, ended_at, note, created_at
-			FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL`+outdoorDaysFilter+` ORDER BY started_at DESC LIMIT 500`,
+			FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL`+outdoorDaysFilter+` ORDER BY started_at DESC`+pageSQL,
 			oArgs...,
 		)
 		if err == nil {
@@ -274,10 +296,10 @@ func GetRecords(c *gin.Context) {
 	}
 
 	if recordType == "" || recordType == "supplement" {
-		sArgs := append([]interface{}{}, args...)
+		sArgs := append(append([]interface{}{}, args...), pageArgs...)
 		rows, err := database.DB.Query(
 			`SELECT id, baby_id, user_id, name, dosage_value, dosage_unit, note, occurred_at, created_at
-			FROM supplement_records WHERE baby_id = ?`+daysFilter+` ORDER BY occurred_at DESC LIMIT 500`,
+			FROM supplement_records WHERE baby_id = ?`+daysFilter+` ORDER BY occurred_at DESC`+pageSQL,
 			sArgs...,
 		)
 		if err == nil {
@@ -317,6 +339,18 @@ func GetRecords(c *gin.Context) {
 		})
 	}
 
+	if pageLimit > 0 {
+		start := pageOffset
+		if start > len(records) {
+			start = len(records)
+		}
+		end := pageOffset + pageLimit
+		if end > len(records) {
+			end = len(records)
+		}
+		records = records[start:end]
+	}
+
 	c.JSON(http.StatusOK, records)
 }
 
@@ -333,13 +367,32 @@ func GetRecordsCount(c *gin.Context) {
 		return
 	}
 
+	recordType := c.Query("type")
+	if recordType != "" && recordType != "feeding" && recordType != "diaper" && recordType != "sleep" && recordType != "temperature" && recordType != "outdoor" && recordType != "supplement" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "type 必须为 feeding, diaper, sleep, temperature, outdoor 或 supplement"})
+		return
+	}
+
+	countAll := recordType == ""
 	var feedingCount, diaperCount, sleepCount, temperatureCount, outdoorCount, supplementCount int
-	database.DB.QueryRow("SELECT COUNT(*) FROM feeding_records WHERE baby_id = ?", babyID).Scan(&feedingCount)
-	database.DB.QueryRow("SELECT COUNT(*) FROM diaper_records WHERE baby_id = ?", babyID).Scan(&diaperCount)
-	database.DB.QueryRow("SELECT COUNT(*) FROM sleep_records WHERE baby_id = ? AND ended_at IS NOT NULL", babyID).Scan(&sleepCount)
-	database.DB.QueryRow("SELECT COUNT(*) FROM temperature_records WHERE baby_id = ?", babyID).Scan(&temperatureCount)
-	database.DB.QueryRow("SELECT COUNT(*) FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL", babyID).Scan(&outdoorCount)
-	database.DB.QueryRow("SELECT COUNT(*) FROM supplement_records WHERE baby_id = ?", babyID).Scan(&supplementCount)
+	if countAll || recordType == "feeding" {
+		database.DB.QueryRow("SELECT COUNT(*) FROM feeding_records WHERE baby_id = ?", babyID).Scan(&feedingCount)
+	}
+	if countAll || recordType == "diaper" {
+		database.DB.QueryRow("SELECT COUNT(*) FROM diaper_records WHERE baby_id = ?", babyID).Scan(&diaperCount)
+	}
+	if countAll || recordType == "sleep" {
+		database.DB.QueryRow("SELECT COUNT(*) FROM sleep_records WHERE baby_id = ? AND ended_at IS NOT NULL", babyID).Scan(&sleepCount)
+	}
+	if countAll || recordType == "temperature" {
+		database.DB.QueryRow("SELECT COUNT(*) FROM temperature_records WHERE baby_id = ?", babyID).Scan(&temperatureCount)
+	}
+	if countAll || recordType == "outdoor" {
+		database.DB.QueryRow("SELECT COUNT(*) FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL", babyID).Scan(&outdoorCount)
+	}
+	if countAll || recordType == "supplement" {
+		database.DB.QueryRow("SELECT COUNT(*) FROM supplement_records WHERE baby_id = ?", babyID).Scan(&supplementCount)
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"feeding_count":     feedingCount,

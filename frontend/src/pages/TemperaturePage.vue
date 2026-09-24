@@ -114,7 +114,7 @@ async function loadLastTemperature() {
   const baby = app.currentBaby
   if (!baby) return
   try {
-    const res = await recordAPI.list(baby.id, 'temperature', 30)
+    const res = await recordAPI.list(baby.id, { type: 'temperature', days: 30 })
     const records = res.data as any[]
     if (records.length > 0) {
       const latest = records[0]
@@ -131,7 +131,7 @@ async function loadRecord() {
   const baby = app.currentBaby
   if (!baby) return
   try {
-    const res = await recordAPI.list(baby.id, 'temperature', 90)
+    const res = await recordAPI.list(baby.id, { type: 'temperature', days: 90 })
     const record = (res.data as any[]).find(r => r.id === Number(route.params.id))
     if (record) {
       form.occurred_at = toLocalDatetime(record.occurred_at)

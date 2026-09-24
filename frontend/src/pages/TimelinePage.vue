@@ -108,7 +108,8 @@ const loadingMore = ref(false)
 const activeFilter = ref('')
 const showDeleteConfirm = ref(false)
 const recordToDelete = ref<any>(null)
-const days = ref(7)
+const PAGE = 20
+const nextOffset = ref(0)
 const totalCount = ref(0)
 const loadedCount = ref(0)
 
@@ -133,7 +134,12 @@ watch(() => route.query.filter, (newFilter) => {
 // 当前宝宝就绪后重新加载：冷启动/刷新直达本页时 store 可能尚未恢复，
 // 此前只在 onMounted 调用一次导致数据存在却显示「暂无记录」
 watch(() => app.currentBaby?.id, (id) => {
-  if (id) { days.value = 7; loadRecords() }
+  if (id) loadRecords()
+})
+
+// 筛选变化：按类型从第一页重新加载（服务端过滤）
+watch(activeFilter, () => {
+  if (app.currentBaby?.id) loadRecords()
 })
 
 const groupedRecords = computed(() => {
@@ -171,14 +177,25 @@ async function loadRecords(reset: boolean = true, silent: boolean = false) {
   if (!baby) return
   if (reset) { if (!silent) loading.value = true }
   else loadingMore.value = true
+  const type = activeFilter.value || undefined
+  const offset = reset ? 0 : nextOffset.value
   try {
     const [res, countRes] = await Promise.all([
-      recordAPI.list(baby.id, undefined, days.value),
-      recordAPI.count(baby.id),
+      recordAPI.list(baby.id, { type, offset, limit: PAGE }),
+      recordAPI.count(baby.id, type),
     ])
-    records.value = res.data
+    if (reset) {
+      records.value = res.data
+      loadedCount.value = res.data.length
+    } else {
+      const seen = new Set(records.value.map(r => r.record_type + '-' + r.id))
+      const added = res.data.filter(r => !seen.has(r.record_type + '-' + r.id))
+      records.value = records.value.concat(added)
+      records.value.sort((a, b) => (b.occurred_at || '').localeCompare(a.occurred_at || ''))
+      loadedCount.value += added.length
+    }
+    nextOffset.value = offset + res.data.length
     totalCount.value = countRes.data.total
-    loadedCount.value = res.data.length
   } catch {
     app.showToast('数据加载失败', 'error')
   } finally {
@@ -189,7 +206,6 @@ async function loadRecords(reset: boolean = true, silent: boolean = false) {
 
 function loadMore() {
   if (loadingMore.value || !hasMore.value || loading.value) return
-  days.value += 7
   loadRecords(false)
 }
 
