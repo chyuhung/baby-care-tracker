@@ -230,12 +230,20 @@
             <RecordCard :record="r" @edit="editRecord(r)" @delete="deleteRecord(r)" @context="openContext" />
           </SwipeToDelete>
 
-          <!-- 展开全部记录（iOS 朴素文字行） -->
+          <!-- 增量查看更多：每次点击一批，避免一次渲染全部卡死 -->
           <button v-if="!showAllRecords && allRecords.length > displayRecords.length"
-            @click="showAllRecords = true"
+            @click="showAllRecords = true; loadedCount = LOAD_BATCH"
             class="w-full py-3 text-primary-deep text-sm font-medium btn-press mt-1">
-            展开全部记录（{{ allRecords.length - displayRecords.length }}）
+            查看更多（{{ allRecords.length - displayRecords.length }}）
           </button>
+          <template v-else-if="showAllRecords">
+            <button v-if="loadedCount < allRecords.length"
+              @click="loadedCount += LOAD_BATCH"
+              class="w-full py-3 text-primary-deep text-sm font-medium btn-press mt-1">
+              加载更多（剩余 {{ allRecords.length - loadedCount }}）
+            </button>
+            <div v-else class="w-full py-3 text-center text-xs text-text-secondary mt-1">没有更多了</div>
+          </template>
         </div>
       </template>
     </PullRefresh>
@@ -279,6 +287,8 @@ const UNIT_CLASS = 'text-sm text-text-secondary'
 const stats = ref<BabyStats>({ feeding_count: 0, diaper_count: 0, total_ml_today: 0, last_feeding: '', last_diaper: '', sleep_count: 0, sleep_duration: 0, last_sleep_end: '', temperature_count: 0, latest_temperature: 0, last_temperature: '', outdoor_count: 0, outdoor_duration: 0, last_outdoor_end: '', supplement_count: 0, last_supplement: '' })
 const allRecords = ref<any[]>([])
 const showAllRecords = ref(false)
+const LOAD_BATCH = 20
+const loadedCount = ref(0)
 const showDeleteConfirm = ref(false)
 const recordToDelete = ref<any>(null)
 const { softDelete } = useUndoDelete(allRecords, { onRestored: () => refreshStatsSoon() })
@@ -328,9 +338,9 @@ const selectedBabyId = ref<number | null>(null)
 let loadGeneration = 0
 
 
-// 只显示今天和昨天
+// 只显示今天和昨天；展开后按 20 条一批渐进渲染
 const displayRecords = computed(() => {
-  if (showAllRecords.value) return allRecords.value
+  if (showAllRecords.value) return allRecords.value.slice(0, loadedCount.value)
   const now = new Date()
   const today = now.toDateString()
   const yesterday = new Date(now.getTime() - 86400000).toDateString()

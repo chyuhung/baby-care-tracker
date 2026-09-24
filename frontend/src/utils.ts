@@ -40,31 +40,34 @@ export function formatClock(v: string | Date) {
   return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`
 }
 
-/** 日历日标签：今天 / 昨天 / M-D */
-export function formatDayTag(v: string | Date) {
+/** 日历日标签：今天 / 昨天 / M-D；markToday=false 时今天返回空串 */
+export function formatDayTag(v: string | Date, markToday = true) {
   const d = toDate(v)
   const now = new Date()
-  if (d.toDateString() === now.toDateString()) return '今天'
+  if (d.toDateString() === now.toDateString()) return markToday ? '今天' : ''
   const yesterday = new Date(now.getTime() - 86400000)
   if (d.toDateString() === yesterday.toDateString()) return '昨天'
   return `${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 }
 
-/** 列表时间标签：今天 HH:mm / 昨天 HH:mm / M-D HH:mm；withDate=false 时仅 HH:mm */
-export function formatDayTime(iso: string, withDate = true) {
+/** 列表时间标签：今天 HH:mm / 昨天 HH:mm / M-D HH:mm；withDate=false 时仅 HH:mm；
+    markToday=false（首页）时今天不标，仅 "HH:mm" */
+export function formatDayTime(iso: string, withDate = true, markToday = true) {
   const d = new Date(iso)
   const hhmm = formatClock(d)
   if (!withDate) return hhmm
-  return `${formatDayTag(d)} ${hhmm}`
+  const tag = formatDayTag(d, markToday)
+  return tag ? `${tag} ${hhmm}` : hhmm
 }
 
 /** 区间时间标签：
-    同日 + withDate → "昨天 12:00~13:00"；同日 + !withDate → "12:00~13:00"
-    跨天 → 结束端点必带日期："昨天 23:00~今天 08:00"（withDate 时起点也带）/"23:00~今天 08:00"
+    同日 + withDate → "12:00~13:00"（今天）/ "昨天 12:00~13:00"；同日 + !withDate → "12:00~13:00"
+    跨天 → 两端点日期必带（含今天），消除歧义："昨天 23:00~今天 08:00"/"23:00~今天 08:00"
     无结束 → 进行中，仅显示起点 */
 export function formatTimeRangeDay(startIso: string, endIso?: string | null, withDate = true) {
   const start = toDate(startIso)
-  const startLabel = withDate ? `${formatDayTag(start)} ${formatClock(start)}` : formatClock(start)
+  const tag = withDate ? formatDayTag(start, false) : ''
+  const startLabel = tag ? `${tag} ${formatClock(start)}` : formatClock(start)
   if (!endIso) return startLabel
   const end = toDate(endIso)
   const endLabel = `${formatDayTag(end)} ${formatClock(end)}`

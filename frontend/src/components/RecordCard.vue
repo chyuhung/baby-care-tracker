@@ -149,5 +149,5 @@ const outdoorDurationLabel = computed(() => {
   return mins === null ? '进行中' : formatDurationCompact(mins)
 })
 
-const timeAgo = computed(() => formatDayTime(props.record.occurred_at, props.showDate))
+const timeAgo = computed(() => formatDayTime(props.record.occurred_at, props.showDate, props.showDate))
 </script>

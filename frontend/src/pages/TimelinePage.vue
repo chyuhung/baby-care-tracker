@@ -36,10 +36,14 @@
           </div>
         </div>
 
-        <!-- 滚动到底自动加载 -->
-        <div ref="sentinelEl" class="h-16 flex items-center justify-center">
-          <ActivityIndicator v-if="loadingMore" :size="24" class="text-text-secondary" />
-          <span v-else-if="!hasMore" class="text-xs text-text-secondary">没有更多了</span>
+        <!-- 加载更多（手动点击，避免一次拉取全部卡死） -->
+        <div class="h-16 flex items-center justify-center">
+          <button v-if="hasMore" @click="loadMore" :disabled="loadingMore"
+            class="px-6 py-2.5 rounded-xl shadow-card bg-surface text-sm font-medium text-primary-deep btn-press min-h-[44px] flex items-center gap-2">
+            <ActivityIndicator v-if="loadingMore" :size="16" class="text-primary-deep" />
+            {{ loadingMore ? '加载中…' : '加载更多' }}
+          </button>
+          <span v-else class="text-xs text-text-secondary">没有更多了</span>
         </div>
       </div>
     </PullRefresh>
@@ -107,8 +111,6 @@ const recordToDelete = ref<any>(null)
 const days = ref(7)
 const totalCount = ref(0)
 const loadedCount = ref(0)
-const sentinelEl = ref<HTMLElement | null>(null)
-let io: IntersectionObserver | null = null
 
 const filters = [
   { label: '全部', emoji: '📋', value: '' },
@@ -231,15 +233,9 @@ onMounted(() => {
   loadRecords()
   window.addEventListener('record-created', onRecordCreated)
   window.addEventListener('record-deleted', onRecordDeleted)
-  // 哨兵进入视口（提前 300px）即自动加载更多
-  io = new IntersectionObserver((entries) => {
-    if (entries[0]?.isIntersecting) loadMore()
-  }, { rootMargin: '300px' })
-  if (sentinelEl.value) io.observe(sentinelEl.value)
 })
 onUnmounted(() => {
   window.removeEventListener('record-created', onRecordCreated)
   window.removeEventListener('record-deleted', onRecordDeleted)
-  io?.disconnect()
 })
 </script>
