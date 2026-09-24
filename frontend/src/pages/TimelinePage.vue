@@ -41,7 +41,7 @@
           <button v-if="hasMore" @click="loadMore" :disabled="loadingMore"
             class="px-6 py-2.5 rounded-xl shadow-card bg-surface text-sm font-medium text-primary-deep btn-press min-h-[44px] flex items-center gap-2">
             <ActivityIndicator v-if="loadingMore" :size="16" class="text-primary-deep" />
-            {{ loadingMore ? '加载中…' : '加载更多' }}
+            {{ loadingMore ? '加载中…' : `加载更多（剩余 ${totalCount - loadedCount}）` }}
           </button>
           <span v-else class="text-xs text-text-secondary">没有更多了</span>
         </div>

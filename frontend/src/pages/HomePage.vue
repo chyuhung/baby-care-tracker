@@ -230,17 +230,17 @@
             <RecordCard :record="r" @edit="editRecord(r)" @delete="deleteRecord(r)" @context="openContext" />
           </SwipeToDelete>
 
-          <!-- 增量查看更多：每次点击一批，避免一次渲染全部卡死 -->
+          <!-- 增量加载更多：每次点击一批，避免一次渲染全部卡死 -->
           <button v-if="!showAllRecords && allRecords.length > displayRecords.length"
             @click="showAllRecords = true; loadedCount = LOAD_BATCH"
             class="w-full py-3 text-primary-deep text-sm font-medium btn-press mt-1">
-            查看更多（{{ allRecords.length - displayRecords.length }}）
+            加载更多（剩余 {{ loadMoreRemaining }}）
           </button>
           <template v-else-if="showAllRecords">
             <button v-if="loadedCount < allRecords.length"
               @click="loadedCount += LOAD_BATCH"
               class="w-full py-3 text-primary-deep text-sm font-medium btn-press mt-1">
-              加载更多（剩余 {{ allRecords.length - loadedCount }}）
+              加载更多（剩余 {{ loadMoreRemaining }}）
             </button>
             <div v-else class="w-full py-3 text-center text-xs text-text-secondary mt-1">没有更多了</div>
           </template>
@@ -443,6 +443,10 @@ const sleepAvgDuration = computed(() => {
   if (!recs.length) return null
   return formatDurationCN(Math.round(recs.reduce((sum, x) => sum + x.t, 0) / recs.length))
 })
+
+// 剩余未展示条数（展开前按可见集、展开后按已加载批数）
+const loadMoreRemaining = computed(() =>
+  allRecords.value.length - (showAllRecords.value ? loadedCount.value : displayRecords.value.length))
 
 // 今日日期判定（按本地时区）
 function isToday(iso?: string | null) {
