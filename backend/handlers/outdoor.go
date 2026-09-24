@@ -133,7 +133,7 @@ func StopOutdoor(c *gin.Context) {
 		UserID:     record.UserID,
 		RecordType: "outdoor",
 		Data:       record,
-		OccurredAt: *record.EndedAt,
+		OccurredAt: record.StartedAt,
 		CreatedAt:  record.CreatedAt,
 	}
 

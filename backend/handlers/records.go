@@ -176,7 +176,7 @@ func GetRecords(c *gin.Context) {
 		sArgs := append([]interface{}{}, args...)
 		rows, err := database.DB.Query(
 			`SELECT id, baby_id, user_id, started_at, ended_at, note, created_at
-			FROM sleep_records WHERE baby_id = ? AND ended_at IS NOT NULL`+sleepDaysFilter+` ORDER BY ended_at DESC LIMIT 500`,
+			FROM sleep_records WHERE baby_id = ? AND ended_at IS NOT NULL`+sleepDaysFilter+` ORDER BY started_at DESC LIMIT 500`,
 			sArgs...,
 		)
 		if err == nil {
@@ -199,7 +199,7 @@ func GetRecords(c *gin.Context) {
 					UserID:     r.UserID,
 					RecordType: "sleep",
 					Data:       r,
-					OccurredAt: *r.EndedAt,
+					OccurredAt: r.StartedAt,
 					CreatedAt:  r.CreatedAt,
 				})
 			}
@@ -243,7 +243,7 @@ func GetRecords(c *gin.Context) {
 		oArgs := append([]interface{}{}, args...)
 		rows, err := database.DB.Query(
 			`SELECT id, baby_id, user_id, started_at, ended_at, note, created_at
-			FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL`+outdoorDaysFilter+` ORDER BY ended_at DESC LIMIT 500`,
+			FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL`+outdoorDaysFilter+` ORDER BY started_at DESC LIMIT 500`,
 			oArgs...,
 		)
 		if err == nil {
@@ -266,7 +266,7 @@ func GetRecords(c *gin.Context) {
 					UserID:     r.UserID,
 					RecordType: "outdoor",
 					Data:       r,
-					OccurredAt: *r.EndedAt,
+					OccurredAt: r.StartedAt,
 					CreatedAt:  r.CreatedAt,
 				})
 			}

@@ -106,7 +106,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { formatDurationCompact, formatTimeRange, formatDayTime } from '@/utils'
+import { formatDurationCompact, formatTimeRangeDay, formatDayTime } from '@/utils'
 import { useLongPress } from '@/composables/useLongPress'
 
 const props = withDefaults(defineProps<{ record: any; showDate?: boolean }>(), { showDate: true })
@@ -137,8 +137,8 @@ function rangeMinutes(startedAt: string, endedAt?: string | null) {
   return Math.round((new Date(endedAt).getTime() - new Date(startedAt).getTime()) / 60000)
 }
 
-const sleepTimeLabel = computed(() => formatTimeRange(rd.value.started_at, rd.value.ended_at))
-const outdoorTimeLabel = computed(() => formatTimeRange(rd.value.started_at, rd.value.ended_at))
+const sleepTimeLabel = computed(() => formatTimeRangeDay(rd.value.started_at, rd.value.ended_at, props.showDate))
+const outdoorTimeLabel = computed(() => formatTimeRangeDay(rd.value.started_at, rd.value.ended_at, props.showDate))
 
 const sleepDurationLabel = computed(() => {
   const mins = rangeMinutes(rd.value.started_at, rd.value.ended_at)

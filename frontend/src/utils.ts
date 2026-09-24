@@ -40,10 +40,14 @@ export function formatClock(v: string | Date) {
   return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`
 }
 
-/** 时间段：HH:mm~HH:mm；无结束时间时仅返回 HH:mm */
-export function formatTimeRange(startIso: string, endIso?: string | null) {
-  const start = formatClock(startIso)
-  return endIso ? `${start}~${formatClock(endIso)}` : start
+/** 日历日标签：今天 / 昨天 / M-D */
+export function formatDayTag(v: string | Date) {
+  const d = toDate(v)
+  const now = new Date()
+  if (d.toDateString() === now.toDateString()) return '今天'
+  const yesterday = new Date(now.getTime() - 86400000)
+  if (d.toDateString() === yesterday.toDateString()) return '昨天'
+  return `${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 }
 
 /** 列表时间标签：今天 HH:mm / 昨天 HH:mm / M-D HH:mm；withDate=false 时仅 HH:mm */
@@ -51,11 +55,21 @@ export function formatDayTime(iso: string, withDate = true) {
   const d = new Date(iso)
   const hhmm = formatClock(d)
   if (!withDate) return hhmm
-  const now = new Date()
-  if (d.toDateString() === now.toDateString()) return `今天 ${hhmm}`
-  const yesterday = new Date(now.getTime() - 86400000)
-  if (d.toDateString() === yesterday.toDateString()) return `昨天 ${hhmm}`
-  return `${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${hhmm}`
+  return `${formatDayTag(d)} ${hhmm}`
+}
+
+/** 区间时间标签：
+    同日 + withDate → "昨天 12:00~13:00"；同日 + !withDate → "12:00~13:00"
+    跨天 → 结束端点必带日期："昨天 23:00~今天 08:00"（withDate 时起点也带）/"23:00~今天 08:00"
+    无结束 → 进行中，仅显示起点 */
+export function formatTimeRangeDay(startIso: string, endIso?: string | null, withDate = true) {
+  const start = toDate(startIso)
+  const startLabel = withDate ? `${formatDayTag(start)} ${formatClock(start)}` : formatClock(start)
+  if (!endIso) return startLabel
+  const end = toDate(endIso)
+  const endLabel = `${formatDayTag(end)} ${formatClock(end)}`
+  if (start.toDateString() === end.toDateString()) return `${startLabel}~${formatClock(end)}`
+  return `${startLabel}~${endLabel}`
 }
 
 export const WEEKDAY_SHORT = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
