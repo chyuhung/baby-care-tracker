@@ -3,7 +3,6 @@
     <div class="flex items-center justify-around h-16">
       <router-link v-for="tab in tabs" :key="tab.to" :to="tab.to"
         :aria-current="isActive(tab.to) ? 'page' : undefined" :aria-label="tab.label"
-        @click="hapticTap()"
         :class="['flex flex-col items-center justify-center w-16 h-full transition-colors relative',
           isActive(tab.to) ? 'text-primary-deep' : 'text-text-secondary']">
         <svg class="w-6 h-6 transition-transform duration-[350ms] ease-[cubic-bezier(0.34,1.56,0.64,1)]"
@@ -23,7 +22,6 @@
 
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
-import { hapticTap } from '@/utils/haptic'
 
 const route = useRoute()
 

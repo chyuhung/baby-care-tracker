@@ -19,7 +19,6 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { hapticHeavy } from '@/utils/haptic'
 
 const emit = defineEmits<{ (e: 'delete'): void }>()
 
@@ -65,7 +64,6 @@ function onEnd() {
   if (offset.value <= -TRIGGER) {
     offset.value = 0
     revealed.value = false
-    hapticHeavy()
     emit('delete')
   } else {
     offset.value = 0

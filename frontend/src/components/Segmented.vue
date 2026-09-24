@@ -14,8 +14,6 @@
 </template>
 
 <script setup lang="ts">
-import { hapticSelection } from '@/utils/haptic'
-
 export interface SegOption {
   value: string
   label: string
@@ -31,7 +29,6 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{ (e: 'update:modelValue', v: string): void }>()
 
 function onPick(v: string) {
-  if (v !== props.modelValue) hapticSelection()
   emit('update:modelValue', v)
 }
 </script>

@@ -108,9 +108,6 @@
         </div>
       </router-link>
 
-      <!-- 提醒 -->
-      <RemindersCard />
-
       <!-- 数据导出 -->
       <div class="bg-surface rounded-2xl shadow-card overflow-hidden">
         <div class="px-4 pt-3 pb-1">
@@ -128,25 +125,6 @@
             <div class="text-xs text-text-secondary mt-0.5">Excel / 医生可直接打开，用于就诊或备份</div>
           </div>
           <ActivityIndicator v-if="exporting" :size="18" class="text-text-secondary" />
-        </button>
-      </div>
-
-      <!-- 偏好设置 -->
-      <div class="bg-surface rounded-2xl shadow-card overflow-hidden">
-        <div class="px-4 pt-3 pb-1">
-          <h2 class="text-sm font-semibold text-text-secondary">偏好设置</h2>
-        </div>
-        <button type="button" @click="toggleHaptics"
-          class="w-full px-4 py-3.5 flex items-center justify-between border-t border-border-color/60 min-h-[44px] text-left btn-press">
-          <span class="flex items-center gap-2 text-text-primary">
-            <svg class="w-5 h-5 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h6m-6 4h10M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z" />
-            </svg>
-            触感反馈
-          </span>
-          <span :class="['relative w-[51px] h-[31px] rounded-full transition-colors duration-200 shrink-0', hapticsOn ? 'bg-success' : 'bg-border-color']">
-            <span :class="['absolute top-[2px] w-[27px] h-[27px] rounded-full bg-white shadow transition-transform duration-200', hapticsOn ? 'translate-x-[22px]' : 'translate-x-[2px]']"></span>
-          </span>
         </button>
       </div>
 
@@ -181,14 +159,12 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
-import { familyAPI, babyAPI } from '@/api'
+import { familyAPI, recordAPI } from '@/api'
 import PullRefresh from '@/components/PullRefresh.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import LargeTitleNav from '@/components/LargeTitleNav.vue'
-import RemindersCard from '@/components/RemindersCard.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
-import { isHapticsEnabled, setHapticsEnabled, hapticSelection } from '@/utils/haptic'
 import { parseLocalDate } from '@/utils'
 
 interface FamilyMember {
@@ -206,7 +182,6 @@ const router = useRouter()
 const auth = useAuthStore()
 const app = useAppStore()
 const navScroll = ref(0)
-const hapticsOn = ref(isHapticsEnabled())
 const appVersion = '1.0.0'
 const exporting = ref(false)
 
@@ -215,7 +190,7 @@ async function exportData() {
   if (!baby) { app.showToast('请先添加宝宝', 'error'); return }
   exporting.value = true
   try {
-    const res = await babyAPI.exportRecords(baby.id)
+    const res = await recordAPI.exportRecords(baby.id)
     const blob = new Blob([res.data], { type: 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -233,12 +208,6 @@ async function exportData() {
   } finally {
     exporting.value = false
   }
-}
-
-function toggleHaptics() {
-  hapticsOn.value = !hapticsOn.value
-  setHapticsEnabled(hapticsOn.value)
-  if (hapticsOn.value) hapticSelection()
 }
 
 const family = ref<Family | null>(null)

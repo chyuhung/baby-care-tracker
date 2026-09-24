@@ -194,7 +194,6 @@ import EmptyState from '@/components/EmptyState.vue'
 import Segmented from '@/components/Segmented.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
-import { hapticSuccess, hapticError } from '@/utils/haptic'
 import { parseLocalDate } from '@/utils'
 
 const router = useRouter()
@@ -436,12 +435,10 @@ async function submit() {
       height_cm: form.value.height_cm || 0,
       head_cm: form.value.head_cm || 0,
     })
-    hapticSuccess()
     formOpen.value = false
     await load()
     app.showToast('已保存', 'success')
   } catch (e: any) {
-    hapticError()
     formError.value = e.response?.data?.error || '保存失败'
   } finally {
     submitting.value = false

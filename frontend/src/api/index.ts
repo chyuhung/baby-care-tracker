@@ -292,10 +292,6 @@ export const babyAPI = {
   growthReference: (id: number) => api.get<GrowthReference>(`/babies/${id}/growth/reference`),
   createGrowth: (id: number, data: CreateGrowthData) => api.post<{ id: number }>(`/babies/${id}/growth`, data),
   deleteGrowth: (id: number) => api.delete(`/growth/${id}`),
-  exportUrl: (id: number, days?: number) => {
-    const q = days ? `?days=${days}` : ''
-    return `/api/babies/${id}/export${q}`
-  },
 }
 
 export const recordAPI = {

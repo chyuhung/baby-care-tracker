@@ -1,11 +1,10 @@
 /* ============================================================
    useLongPress — 长按手势（iOS 上下文菜单触发）
    ------------------------------------------------------------
-   · 默认 480ms 触发，触发时给一次中等触觉
+   · 默认 480ms 触发
    · 手指移动超过 10px 视为滚动，取消
    · 返回 handlers 供元素 v-on 绑定
    ============================================================ */
-import { hapticMedium } from '@/utils/haptic'
 
 export interface LongPressOptions {
   delay?: number
@@ -38,7 +37,6 @@ export function useLongPress(
     clear()
     timer = window.setTimeout(() => {
       fired = true
-      hapticMedium()
       onLongPress({ x: startX, y: startY, target })
     }, delay)
   }

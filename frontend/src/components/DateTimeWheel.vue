@@ -47,7 +47,6 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onUnmounted } from 'vue'
-import { hapticTick } from '@/utils/haptic'
 
 const ITEM_H = 36
 
@@ -131,14 +130,13 @@ function onScroll(ci: number, e: Event) {
       const [y, mo, d] = item.value.split('-').map(Number)
       if (y !== draft.value.y || mo !== draft.value.mo || d !== draft.value.d) {
         draft.value = { ...draft.value, y, mo, d }
-        hapticTick()
       }
     } else if (col.key === 'hour') {
       const h = +item.value
-      if (h !== draft.value.h) { draft.value = { ...draft.value, h }; hapticTick() }
+      if (h !== draft.value.h) draft.value = { ...draft.value, h }
     } else {
       const mi = +item.value
-      if (mi !== draft.value.mi) { draft.value = { ...draft.value, mi }; hapticTick() }
+      if (mi !== draft.value.mi) draft.value = { ...draft.value, mi }
     }
   }, 90)
 }

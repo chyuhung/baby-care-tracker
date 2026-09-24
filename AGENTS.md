@@ -24,10 +24,11 @@ Family group sharing, timezone fix, record performance optimization
 - GrowthPage chart: age-in-months X axis (not dates), hospital-style red/yellow/green reference zones (green P25–P75, yellow P3–P25/P75–P97, red <P3/>P97) + legend + WS/T 423-2022 footnote; `pctClass` thresholds aligned to the standard's 5-grade evaluation (<3/>97 danger, <25/>75 warning)
 - LargeTitleNav whole-header scrolls out: entire header (34px `<h1>` + `#actions` + `#sub` + `#filters`) in normal flow, NOT sticky — scrolls away with content; once header fully out of view (`scrollTop >= header.offsetHeight + 8`, measured via ResizeObserver, hysteresis -8), a Teleport-to-body fixed glass mini bar (h-11, `17px` inline title only, `pointer-events-none`) fades in at top; `large=false` uses 17px flowing title; all pages pass `:scroll-top`; PullRefresh `measureHeader` sums header-slot children before content ref (supports multi-root fragments)
 - Birth date as calendar date: `babies.birth_date` now stored/sent as pure local `YYYY-MM-DD` (frontend stops `toISOString()`, backend `normalizeBirthDate` converts legacy RFC3339 via `X-Timezone-Offset`); readers use new `parseLocalDate` util — date-only string kept local, RFC3339 (legacy rows) converted to viewer-local; growth CSV export keeps 成长 rows date-only instead of `In(user zone)`
+- Removed reminders + haptics modules entirely: `utils/reminders.ts` / `components/RemindersCard.vue` (ProfilePage card + MainLayout scheduler) and `utils/haptic.ts` + all callers — iOS has no `Notification`/`navigator.vibrate`, and no HTTPS means no Web Push; export data fix: ProfilePage now calls `recordAPI.exportRecords` (was wrongly `babyAPI.exportRecords` → always TypeError→"导出失败"); removed dead `babyAPI.exportUrl`
 
 ### Known Issues
-- `vue-tsc` typecheck fails on Node.js v24 — not a code issue
-- No `.gitignore` exists; `baby-care-tracker.exe` binary is tracked in git
+- `vue-tsc` typecheck fails on Node.js v24 — not a code issue (needed to catch dead-method bugs like the export one above)
+- `.gitignore` root-anchors `/data/`; `baby-care-tracker.exe` binary is tracked in git
 
 ## Architecture
 - **Backend**: Go + gin on `:8080`, modernc.org/sqlite, WebSocket broadcast via Hub pattern

@@ -6,7 +6,6 @@
    ============================================================ */
 import { useAppStore } from '@/stores/app'
 import { recordAPI } from '@/api'
-import { hapticHeavy, hapticSuccess } from '@/utils/haptic'
 
 const UNDO_MS = 5000
 
@@ -28,7 +27,6 @@ export function useUndoDelete<T extends DeletableRecord>(
     // 1) 即时移除
     list.value.splice(index, 1)
     opts.onRemoved?.(r)
-    hapticHeavy()
 
     // 2) 延迟真正删除（撤销窗口内可取消）
     let cancelled = false
@@ -53,7 +51,6 @@ export function useUndoDelete<T extends DeletableRecord>(
         clearTimeout(timer)
         list.value.splice(Math.min(index, list.value.length), 0, r)
         opts.onRestored?.(r)
-        hapticSuccess()
       },
     }, UNDO_MS + 500)
   }

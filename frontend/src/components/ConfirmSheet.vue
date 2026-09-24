@@ -36,7 +36,6 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, onUnmounted } from 'vue'
 import ActivityIndicator from './ActivityIndicator.vue'
-import { hapticWarning, hapticTap } from '@/utils/haptic'
 
 const props = withDefaults(defineProps<{
   open: boolean
@@ -103,12 +102,10 @@ onUnmounted(() => {
 })
 
 function onConfirm() {
-  hapticWarning()
   emit('confirm')
 }
 
 function cancel() {
-  hapticTap()
   emit('cancel')
   emit('update:open', false)
 }

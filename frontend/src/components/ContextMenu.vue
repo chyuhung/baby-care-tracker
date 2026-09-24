@@ -40,7 +40,6 @@
 
 <script setup lang="ts">
 import { ref, watch, onUnmounted } from 'vue'
-import { hapticTap } from '@/utils/haptic'
 
 export interface ContextAction {
   key: string
@@ -62,7 +61,7 @@ const emit = defineEmits<{
   (e: 'select', key: string): void
 }>()
 
-const close = () => { hapticTap(); emit('update:open', false) }
+const close = () => { emit('update:open', false) }
 
 // 长按触发时，touchend 后紧跟的合成 click 会落在刚出现的遮罩上；
 // 用极短的开启宽限期忽略这一击，避免菜单瞬开瞬关。

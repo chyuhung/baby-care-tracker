@@ -12,19 +12,12 @@
 <script setup lang="ts">
 import BottomNav from '@/components/BottomNav.vue'
 import { useAppStore } from '@/stores/app'
-import { onMounted, onUnmounted } from 'vue'
-import { loadReminders, startReminderScheduler } from '@/utils/reminders'
+import { onMounted } from 'vue'
 
 const app = useAppStore()
-let stopScheduler: (() => void) | null = null
 
 onMounted(async () => {
   await app.loadBabies()
   app.connectWebSocket()
-  stopScheduler = startReminderScheduler(() => loadReminders())
-})
-
-onUnmounted(() => {
-  stopScheduler?.()
 })
 </script>

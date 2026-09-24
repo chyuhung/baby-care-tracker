@@ -41,14 +41,12 @@
 import { computed } from 'vue'
 import { useAppStore } from '@/stores/app'
 import type { ToastMessage } from '@/stores/app'
-import { hapticSuccess } from '@/utils/haptic'
 const app = useAppStore()
 
 const plainToasts = computed(() => app.toasts.filter(t => !t.action))
 const actionToasts = computed(() => app.toasts.filter(t => t.action))
 
 function runAction(toast: ToastMessage) {
-  hapticSuccess()
   const fn = toast.action?.handler
   app.dismissToast(toast.id)
   fn?.()
