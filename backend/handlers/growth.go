@@ -262,6 +262,37 @@ func CreateGrowthRecord(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"id": id})
 }
 
+// UpdateGrowthRecord 更新成长记录
+func UpdateGrowthRecord(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	id, err := parseInt64(c.Param("id"))
+	if err != nil || id <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return
+	}
+	var babyID int64
+	database.DB.QueryRow("SELECT baby_id FROM growth_records WHERE id = ?", id).Scan(&babyID)
+	if babyID == 0 || !checkBabyFamily(babyID, userID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
+		return
+	}
+	var req models.CreateGrowthRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "测量日期必填"})
+		return
+	}
+	if req.WeightKg < 0 || req.HeightCm < 0 || req.HeadCm < 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "数值不能为负"})
+		return
+	}
+	database.DB.Exec(
+		"UPDATE growth_records SET measured_at = ?, weight_kg = ?, height_cm = ?, head_cm = ?, note = ? WHERE id = ?",
+		req.MeasuredAt, req.WeightKg, req.HeightCm, req.HeadCm, req.Note, id,
+	)
+	BroadcastMessage(models.WebSocketMessage{Type: "record_updated", Payload: gin.H{"id": id, "record_type": "growth"}})
+	c.JSON(http.StatusOK, gin.H{"ok": true})
+}
+
 // DeleteGrowthRecord 删除成长记录
 func DeleteGrowthRecord(c *gin.Context) {
 	userID := c.GetInt64("user_id")

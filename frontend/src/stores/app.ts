@@ -115,6 +115,8 @@ export const useAppStore = defineStore('app', () => {
           window.dispatchEvent(new CustomEvent('record-created', { detail: msg.payload }))
         } else if (msg.type === 'record_deleted') {
           window.dispatchEvent(new CustomEvent('record-deleted', { detail: msg.payload }))
+        } else if (msg.type === 'record_updated') {
+          window.dispatchEvent(new CustomEvent('record-updated', { detail: msg.payload }))
         }
       } catch (e) {
         console.error('WebSocket 消息解析失败:', e)

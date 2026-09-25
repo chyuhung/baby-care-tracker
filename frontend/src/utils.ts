@@ -29,6 +29,39 @@ export function parseLocalDate(s: string): Date | null {
   return isNaN(t.getTime()) ? null : t
 }
 
+/** 日历日 → 中文：2026年9月1日（无前导零；仅取本地年/月/日） */
+export function formatDateCN(s: string): string {
+  const d = parseLocalDate(s)
+  if (!d) return ''
+  return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
+}
+
+/** 出生到某日的年龄（精确到天）：20天 / 3月5天 / 1年3月5天 / 1年 / 0天
+    仅年月日计算，不做时区换算；任意一端为空或该日早于出生日 → 空串 */
+export function measureAgeText(birthDate: string, measuredAt: string): string {
+  const birth = parseLocalDate(birthDate)
+  const at = parseLocalDate(measuredAt)
+  if (!birth || !at) return ''
+  if (at.getTime() < birth.getTime()) return ''
+  let y = at.getFullYear() - birth.getFullYear()
+  let m = at.getMonth() - birth.getMonth()
+  let d = at.getDate() - birth.getDate()
+  if (d < 0) {
+    const prev = new Date(at.getFullYear(), at.getMonth(), 0)
+    d += prev.getDate()
+    m--
+  }
+  if (m < 0) {
+    m += 12
+    y--
+  }
+  const parts: string[] = []
+  if (y > 0) parts.push(`${y}年`)
+  if (m > 0) parts.push(`${m}月`)
+  if (d > 0) parts.push(`${d}天`)
+  return parts.length ? parts.join('') : '0天'
+}
+
 /** 当前本地时间 YYYY-MM-DDTHH:mm（datetime-local 默认值） */
 export function nowLocalDatetime() {
   return toLocalDatetime(new Date().toISOString())

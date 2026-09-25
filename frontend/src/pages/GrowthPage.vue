@@ -106,8 +106,9 @@
         <div class="bg-surface rounded-2xl shadow-card overflow-hidden">
           <h2 class="text-sm font-semibold text-text-secondary px-4 pt-3 pb-1">历史记录</h2>
           <div v-for="g in listDesc" :key="g.id" class="px-4 py-3 border-t border-border-color/60 flex items-center gap-3">
-            <div class="flex-1 min-w-0">
-              <div class="text-sm font-medium text-text-primary">{{ g.measured_at }}</div>
+            <div class="flex-1 min-w-0 btn-press rounded-lg -mx-1 px-1 py-1" role="button" tabindex="0"
+              aria-label="编辑此记录" @click="openEdit(g)" @keydown.enter="openEdit(g)">
+              <div class="text-sm font-medium text-text-primary">{{ dateLabelOf(g) }}</div>
               <div class="text-xs text-text-secondary mt-0.5">{{ detailOf(g) }}</div>
             </div>
             <button type="button" aria-label="删除此记录" @click="askDelete(g)"
@@ -130,12 +131,12 @@
     <!-- 新增测量弹层 -->
     <Teleport to="body">
       <transition name="sheet-mask">
-        <div v-if="formOpen" class="fixed inset-0 z-[90] flex items-end justify-center bg-black/35" @click.self="formOpen = false">
+        <div v-if="formOpen" class="fixed inset-0 z-[90] flex items-end justify-center bg-black/35" @click.self="closeForm">
           <transition name="sheet-panel" appear>
             <div v-if="formOpen" ref="panelRef" tabindex="-1" role="dialog" aria-modal="true" aria-label="新增测量"
               class="w-full max-w-[480px] bg-surface rounded-t-2xl px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] outline-none">
               <div class="flex justify-center mb-2"><span class="w-9 h-1 rounded-full bg-border-color"></span></div>
-              <h2 class="text-center text-[17px] font-semibold text-text-primary mb-3">新增测量</h2>
+              <h2 class="text-center text-[17px] font-semibold text-text-primary mb-3">{{ editingId ? '编辑测量' : '新增测量' }}</h2>
 
               <div class="space-y-3">
                 <div>
@@ -164,7 +165,7 @@
               </div>
 
               <div class="flex gap-2 mt-4">
-                <button type="button" @click="formOpen = false"
+                <button type="button" @click="closeForm"
                   class="flex-1 py-3 bg-bg-secondary text-text-primary font-medium rounded-xl btn-press">取消</button>
                 <button type="button" @click="submit" :disabled="submitting"
                   class="flex-1 py-3 bg-primary-fill text-white font-semibold rounded-xl btn-press disabled:opacity-50 flex items-center justify-center gap-2">
@@ -184,7 +185,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { babyAPI, GrowthRecord, GrowthStats, GrowthReference } from '@/api'
@@ -194,7 +195,7 @@ import EmptyState from '@/components/EmptyState.vue'
 import Segmented from '@/components/Segmented.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
-import { parseLocalDate } from '@/utils'
+import { parseLocalDate, formatDateCN, measureAgeText } from '@/utils'
 
 const router = useRouter()
 const app = useAppStore()
@@ -214,6 +215,7 @@ const metricOptions = [
 const formOpen = ref(false)
 const submitting = ref(false)
 const formError = ref('')
+const editingId = ref<number | null>(null)
 const panelRef = ref<HTMLElement | null>(null)
 const toDelete = ref<GrowthRecord | null>(null)
 const deleting = ref(false)
@@ -249,6 +251,13 @@ function detailOf(g: GrowthRecord) {
   if (g.height_cm > 0) parts.push(`身高 ${fmt(g.height_cm)}cm`)
   if (g.head_cm > 0) parts.push(`头围 ${fmt(g.head_cm)}cm`)
   return parts.join(' · ') || '—'
+}
+
+// 历史记录日期：2026年9月1日（3月5天）；宝宝无出生日期或测量早于出生时只显示日期
+function dateLabelOf(g: GrowthRecord) {
+  const date = formatDateCN(g.measured_at)
+  const age = measureAgeText(app.currentBaby?.birth_date || '', g.measured_at)
+  return age ? `${date}（${age}）` : date
 }
 
 // ── 图表（月龄轴 + WS/T 423-2022 参考曲线，医院图三色风格）──
@@ -414,9 +423,28 @@ function openForm() {
     measured_at: `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`,
     weight_kg: 0, height_cm: 0, head_cm: 0,
   }
+  editingId.value = null
   formError.value = ''
   formOpen.value = true
   nextTick(() => panelRef.value?.focus())
+}
+
+function openEdit(g: GrowthRecord) {
+  form.value = {
+    measured_at: g.measured_at,
+    weight_kg: g.weight_kg || 0,
+    height_cm: g.height_cm || 0,
+    head_cm: g.head_cm || 0,
+  }
+  editingId.value = g.id
+  formError.value = ''
+  formOpen.value = true
+  nextTick(() => panelRef.value?.focus())
+}
+
+function closeForm() {
+  formOpen.value = false
+  editingId.value = null
 }
 
 async function submit() {
@@ -425,17 +453,23 @@ async function submit() {
   if (form.value.weight_kg <= 0 && form.value.height_cm <= 0 && form.value.head_cm <= 0) {
     formError.value = '至少填写一项测量值'; return
   }
-  const baby = app.currentBaby
-  if (!baby) return
+  const data = {
+    measured_at: form.value.measured_at,
+    weight_kg: form.value.weight_kg || 0,
+    height_cm: form.value.height_cm || 0,
+    head_cm: form.value.head_cm || 0,
+  }
   submitting.value = true
   try {
-    await babyAPI.createGrowth(baby.id, {
-      measured_at: form.value.measured_at,
-      weight_kg: form.value.weight_kg || 0,
-      height_cm: form.value.height_cm || 0,
-      head_cm: form.value.head_cm || 0,
-    })
+    if (editingId.value) {
+      await babyAPI.updateGrowth(editingId.value, data)
+    } else {
+      const baby = app.currentBaby
+      if (!baby) return
+      await babyAPI.createGrowth(baby.id, data)
+    }
     formOpen.value = false
+    editingId.value = null
     await load()
     app.showToast('已保存', 'success')
   } catch (e: any) {
@@ -464,5 +498,15 @@ async function doDelete() {
   }
 }
 
-onMounted(load)
+function onGrowthUpdated() {
+  load()
+}
+
+onMounted(() => {
+  load()
+  window.addEventListener('record-updated', onGrowthUpdated)
+})
+onUnmounted(() => {
+  window.removeEventListener('record-updated', onGrowthUpdated)
+})
 </script>

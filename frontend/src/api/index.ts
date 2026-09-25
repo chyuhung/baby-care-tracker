@@ -291,6 +291,7 @@ export const babyAPI = {
   growthStats: (id: number) => api.get<GrowthStats>(`/babies/${id}/growth/stats`),
   growthReference: (id: number) => api.get<GrowthReference>(`/babies/${id}/growth/reference`),
   createGrowth: (id: number, data: CreateGrowthData) => api.post<{ id: number }>(`/babies/${id}/growth`, data),
+  updateGrowth: (id: number, data: CreateGrowthData) => api.put<{ id: number }>(`/growth/${id}`, data),
   deleteGrowth: (id: number) => api.delete(`/growth/${id}`),
 }
 
