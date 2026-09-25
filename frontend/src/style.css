@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* 禁止双击两次快速点击缩放（user-scalable=no 会毁掉 PWA 键盘聚焦，改用 touch-action）；
+   manipulation = pan + pinch，保留原生滚动与双指缩放的余量 */
+* {
+  touch-action: manipulation;
+}
+
 /* ============================================================
    主题变量（清透 iOS 风 · 明亮大留白）
    - 粉色系（默认 / 保密 / 女宝）：樱花粉，与贝壳图标同色系
