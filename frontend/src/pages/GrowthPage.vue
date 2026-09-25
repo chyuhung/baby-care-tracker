@@ -416,11 +416,15 @@ async function load() {
   }
 }
 
+// Date → YYYY-MM-DD（本地日历日，补零）
+function ymd(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+}
+
 function openForm() {
-  const d = new Date()
-  const p2 = (n: number) => String(n).padStart(2, '0')
   form.value = {
-    measured_at: `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`,
+    measured_at: ymd(new Date()),
     weight_kg: '', height_cm: '', head_cm: '',
   }
   editingId.value = null
@@ -430,8 +434,9 @@ function openForm() {
 }
 
 function openEdit(g: GrowthRecord) {
+  const d = parseLocalDate(g.measured_at)
   form.value = {
-    measured_at: g.measured_at,
+    measured_at: d ? ymd(d) : '',
     weight_kg: g.weight_kg > 0 ? g.weight_kg : '',
     height_cm: g.height_cm > 0 ? g.height_cm : '',
     head_cm: g.head_cm > 0 ? g.head_cm : '',
