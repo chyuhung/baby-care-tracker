@@ -180,19 +180,19 @@ func ExportRecords(c *gin.Context) {
 
 	// 成长（身高/体重/头围）
 	if rs, err := database.DB.Query(
-		"SELECT measured_at, weight_kg, height_cm, head_cm, note FROM growth_records WHERE baby_id = ? ORDER BY measured_at DESC",
+		"SELECT measured_at, height_cm, weight_kg, head_cm, note FROM growth_records WHERE baby_id = ? ORDER BY measured_at DESC",
 		babyID,
 	); err == nil {
 		for rs.Next() {
 			var occ, note string
-			var w, h, hd float64
-			rs.Scan(&occ, &w, &h, &hd, &note)
+			var h, w, hd float64
+			rs.Scan(&occ, &h, &w, &hd, &note)
 			var parts []string
-			if w > 0 {
-				parts = append(parts, fmt.Sprintf("体重 %.2fkg", w))
-			}
 			if h > 0 {
 				parts = append(parts, fmt.Sprintf("身高 %.1fcm", h))
+			}
+			if w > 0 {
+				parts = append(parts, fmt.Sprintf("体重 %.2fkg", w))
 			}
 			if hd > 0 {
 				parts = append(parts, fmt.Sprintf("头围 %.1fcm", hd))

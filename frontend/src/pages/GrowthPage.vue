@@ -146,13 +146,13 @@
                 </div>
                 <div class="grid grid-cols-3 gap-2.5">
                   <div>
-                    <label class="text-xs text-text-secondary block mb-1.5">体重 kg</label>
-                    <input v-model.number="form.weight_kg" type="number" inputmode="decimal" step="0.01" min="0"
+                    <label class="text-xs text-text-secondary block mb-1.5">身高 cm</label>
+                    <input v-model.number="form.height_cm" type="number" inputmode="decimal" step="0.1" min="0"
                       class="w-full px-3 py-2.5 bg-bg-secondary border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none" />
                   </div>
                   <div>
-                    <label class="text-xs text-text-secondary block mb-1.5">身高 cm</label>
-                    <input v-model.number="form.height_cm" type="number" inputmode="decimal" step="0.1" min="0"
+                    <label class="text-xs text-text-secondary block mb-1.5">体重 kg</label>
+                    <input v-model.number="form.weight_kg" type="number" inputmode="decimal" step="0.01" min="0"
                       class="w-full px-3 py-2.5 bg-bg-secondary border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none" />
                   </div>
                   <div>
@@ -207,8 +207,8 @@ const reference = ref<GrowthReference | null>(null)
 
 const metric = ref<'weight' | 'height' | 'head'>('weight')
 const metricOptions = [
-  { label: '体重', value: 'weight' },
   { label: '身高', value: 'height' },
+  { label: '体重', value: 'weight' },
   { label: '头围', value: 'head' },
 ]
 
@@ -219,7 +219,7 @@ const editingId = ref<number | null>(null)
 const panelRef = ref<HTMLElement | null>(null)
 const toDelete = ref<GrowthRecord | null>(null)
 const deleting = ref(false)
-const form = ref({ measured_at: '', weight_kg: 0, height_cm: 0, head_cm: 0 })
+const form = ref({ measured_at: '', weight_kg: '' as number | '', height_cm: '' as number | '', head_cm: '' as number | '' })
 
 const listDesc = computed(() => [...list.value].reverse())
 
@@ -231,8 +231,8 @@ const metrics = computed(() => {
   const s = stats.value
   if (!s) return []
   return [
-    { key: 'weight', label: '体重 kg', value: fmt(s.weight_kg || 0), pct: s.weight_pct || 0 },
     { key: 'height', label: '身高 cm', value: fmt(s.height_cm || 0), pct: s.height_pct || 0 },
+    { key: 'weight', label: '体重 kg', value: fmt(s.weight_kg || 0), pct: s.weight_pct || 0 },
     { key: 'head', label: '头围 cm', value: fmt(s.head_cm || 0), pct: s.head_pct || 0 },
   ]
 })
@@ -247,8 +247,8 @@ function pctClass(p: number) {
 
 function detailOf(g: GrowthRecord) {
   const parts: string[] = []
-  if (g.weight_kg > 0) parts.push(`体重 ${fmt(g.weight_kg)}kg`)
   if (g.height_cm > 0) parts.push(`身高 ${fmt(g.height_cm)}cm`)
+  if (g.weight_kg > 0) parts.push(`体重 ${fmt(g.weight_kg)}kg`)
   if (g.head_cm > 0) parts.push(`头围 ${fmt(g.head_cm)}cm`)
   return parts.join(' · ') || '—'
 }
@@ -421,7 +421,7 @@ function openForm() {
   const p2 = (n: number) => String(n).padStart(2, '0')
   form.value = {
     measured_at: `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`,
-    weight_kg: 0, height_cm: 0, head_cm: 0,
+    weight_kg: '', height_cm: '', head_cm: '',
   }
   editingId.value = null
   formError.value = ''
@@ -432,9 +432,9 @@ function openForm() {
 function openEdit(g: GrowthRecord) {
   form.value = {
     measured_at: g.measured_at,
-    weight_kg: g.weight_kg || 0,
-    height_cm: g.height_cm || 0,
-    head_cm: g.head_cm || 0,
+    weight_kg: g.weight_kg > 0 ? g.weight_kg : '',
+    height_cm: g.height_cm > 0 ? g.height_cm : '',
+    head_cm: g.head_cm > 0 ? g.head_cm : '',
   }
   editingId.value = g.id
   formError.value = ''
@@ -447,17 +447,25 @@ function closeForm() {
   editingId.value = null
 }
 
+// 空串/NaN → 0（0 表示该项未测），数字原样返回
+function numOf(v: number | ''): number {
+  return typeof v === 'number' && isFinite(v) ? v : 0
+}
+
 async function submit() {
   formError.value = ''
   if (!form.value.measured_at) { formError.value = '请选择测量日期'; return }
-  if (form.value.weight_kg <= 0 && form.value.height_cm <= 0 && form.value.head_cm <= 0) {
+  const w = numOf(form.value.weight_kg)
+  const h = numOf(form.value.height_cm)
+  const hd = numOf(form.value.head_cm)
+  if (w <= 0 && h <= 0 && hd <= 0) {
     formError.value = '至少填写一项测量值'; return
   }
   const data = {
     measured_at: form.value.measured_at,
-    weight_kg: form.value.weight_kg || 0,
-    height_cm: form.value.height_cm || 0,
-    head_cm: form.value.head_cm || 0,
+    weight_kg: w,
+    height_cm: h,
+    head_cm: hd,
   }
   submitting.value = true
   try {
