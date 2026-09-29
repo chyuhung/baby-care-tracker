@@ -56,7 +56,12 @@
   --chart-sleep: rgb(var(--sleep));
   --chart-outdoor: rgb(var(--outdoor));
   --chart-supplement: rgb(var(--supplement));
-  --chart-primary-count: #5F6672; /* 喂奶次数第二色：中性石墨（与奶量线/主题色彻底拉开，iOS 双序列次级色惯例） */
+  /* 喂奶图第二序列「次数」：同色相淡调（iOS Health 双序列惯例）。
+     不占用 --text-secondary 的墨色，避免与轴/数值标签撞色；不引入新色相，自动跟随男女主题。
+     与奶量的区分靠形状（实心 vs 描边空心、实线 vs 虚线），不靠色相差——
+     因为两条序列共用柱状压暗 alpha，同色相的深浅差会被乘性压暗压缩掉。 */
+  --chart-primary-count: rgb(var(--primary) / 0.55);        /* 描边 / 虚线 / 空心点 */
+  --chart-primary-count-fill: rgb(var(--primary) / 0.20);  /* 空心柱内填充 */
   --chart-line: #E7EAF0;           /* 图表基线/网格线 */
   --hairline: 60 60 67;            /* 发丝线 RGB（配合 .hairline-* 的 alpha） */
 }
@@ -68,8 +73,7 @@
   --primary-fill: 29 111 209;    /* #1D6FD1 实心按钮底（白字 4.95） */
   --bg-main: 244 249 255;        /* #F4F9FF 极淡蓝页面背景 */
 
-  --chart-primary: rgb(var(--primary)); /* 跟随男宝主题蓝 */
-  --chart-primary-count: #5F6672;       /* 次数第二色：中性石墨（男女主题一致） */
+  --chart-primary: rgb(var(--primary)); /* 跟随男宝主题蓝（次数色由 --primary 派生，无需覆写） */
 }
 
 /* ============================================================
@@ -102,8 +106,10 @@
     --success-deep: 48 209 88;    /* #30D158 */
     --danger-light: 58 26 26;     /* 危险提示深红底 */
 
-    /* 图表色：统一引用关键词 token，随主题自动一致（仅次数第二色用深底灰色） */
-    --chart-primary-count: #A0A6B0;
+    /* 图表色：统一引用关键词 token，随主题自动一致。
+       次数第二色在深底上需提高 alpha —— 低 alpha 叠近黑会糊成暗红泥而不是淡粉。 */
+    --chart-primary-count: rgb(var(--primary) / 0.72);
+    --chart-primary-count-fill: rgb(var(--primary) / 0.28);
     --chart-line: #38383C;
   }
 
@@ -111,7 +117,6 @@
     --bg-main: 0 0 4;             /* #000004 深色蓝底 */
     --primary: 90 162 245;        /* #5AA2F5 */
     --primary-deep: 130 186 250;  /* #82BAFA */
-    --chart-primary-count: #A0A6B0;
   }
 }
 
@@ -342,11 +347,9 @@ input, select, textarea {
 /* 趋势图 SVG 线条颜色（清透冷净灰 + 跟随主题） */
 .chart-grid { stroke: var(--chart-line); stroke-width: 0.8; stroke-dasharray: 4,3; }
 .chart-guide { stroke: var(--chart-line); stroke-width: 0.8; stroke-dasharray: 3,3; }
-.chart-line-temperature { stroke: var(--chart-temperature); }
 
 /* 趋势图 SVG 文字颜色（变量驱动，替代硬编码 fill） */
 .chart-axis-label  { fill: rgb(var(--text-secondary)); }
-.chart-title-label { fill: rgb(var(--text-secondary)); }
 .chart-value-label { fill: rgb(var(--text-secondary)); }
 
 /* 下拉刷新 / 加载 圆弧活动指示器旋转 */

@@ -15,8 +15,6 @@
         </div>
         <div class="flex items-center gap-3 px-4 pb-2">
           <div class="flex min-w-0 items-center gap-2">
-            <span v-if="app.currentBaby" class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white"
-              :style="{ background: app.currentBaby.avatar_color }">{{ app.currentBaby.name[0] }}</span>
             <span class="min-w-0 truncate text-[13px] font-medium text-text-primary">{{ app.currentBaby?.name || '未添加宝宝' }}</span>
             <span v-if="ageText" class="shrink-0 whitespace-nowrap text-[13px] text-text-secondary">{{ ageText }}</span>
           </div>
