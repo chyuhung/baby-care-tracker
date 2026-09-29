@@ -7,9 +7,9 @@
         <span class="text-xs text-text-secondary font-num">{{ timeAgo }}</span>
       </div>
       <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
-        <span v-if="rd.type !== 'breast' && rd.amount_ml > 0" class="bg-primary/10 text-primary-deep px-2 py-0.5 rounded-full font-num">{{ rd.amount_ml }}ml</span>
-        <span v-if="rd.type === 'breast' && rd.duration_minutes > 0" class="bg-primary/10 text-primary-deep px-2 py-0.5 rounded-full">{{ rd.duration_minutes }}分钟</span>
-        <span v-if="rd.type === 'breast' && rd.side" class="bg-primary/10 text-primary-deep px-2 py-0.5 rounded-full">{{ sideLabel }}</span>
+        <span v-if="rd.type !== 'breast' && rd.amount_ml > 0" class="bg-muted text-text-secondary px-2 py-0.5 rounded-full font-num">{{ rd.amount_ml }}ml</span>
+        <span v-if="rd.type === 'breast' && rd.duration_minutes > 0" class="bg-muted text-text-secondary px-2 py-0.5 rounded-full">{{ rd.duration_minutes }}分钟</span>
+        <span v-if="rd.type === 'breast' && rd.side" class="bg-muted text-text-secondary px-2 py-0.5 rounded-full">{{ sideLabel }}</span>
         <span v-if="rd.brand" class="bg-muted text-text-secondary px-2 py-0.5 rounded-full">{{ rd.brand }}</span>
       </div>
       <div v-if="rd.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ rd.note }}</div>
@@ -45,7 +45,7 @@
         <span class="text-xs text-text-secondary font-num">{{ sleepTimeLabel }}</span>
       </div>
       <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
-        <span class="bg-sleep/10 text-sleep-deep px-2 py-0.5 rounded-full font-num">{{ sleepDurationLabel }}</span>
+        <span class="bg-muted text-text-secondary px-2 py-0.5 rounded-full font-num">{{ sleepDurationLabel }}</span>
       </div>
       <div v-if="rd.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ rd.note }}</div>
     </div>
@@ -64,9 +64,11 @@
         <span class="text-xs text-text-secondary font-num">{{ timeAgo }}</span>
       </div>
       <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
-        <span v-if="rd.temperature" class="bg-temperature/10 text-temperature-deep px-2 py-0.5 rounded-full font-num">{{ rd.temperature }}°C</span>
+        <span v-if="rd.temperature" class="bg-muted text-text-secondary px-2 py-0.5 rounded-full font-num">{{ rd.temperature }}°C</span>
         <span v-if="rd.location" class="bg-muted text-text-secondary px-2 py-0.5 rounded-full">{{ rd.location }}</span>
-        <span v-if="rd.temperature >= 37.5" class="text-danger px-1">🔥</span>
+        <span v-if="rd.temperature >= 37.5" class="inline-flex items-center gap-1 text-[11px] font-medium text-danger">
+          <span class="inline-block h-1.5 w-1.5 rounded-full bg-danger"></span>发热
+        </span>
       </div>
       <div v-if="rd.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ rd.note }}</div>
     </div>
@@ -85,7 +87,7 @@
         <span class="text-xs text-text-secondary font-num">{{ timeAgo }}</span>
       </div>
       <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
-        <span v-if="rd.dosage_value > 0" class="bg-supplement/10 text-supplement-deep px-2 py-0.5 rounded-full font-num">{{ rd.dosage_value }}{{ rd.dosage_unit }}</span>
+        <span v-if="rd.dosage_value > 0" class="bg-muted text-text-secondary px-2 py-0.5 rounded-full font-num">{{ rd.dosage_value }}{{ rd.dosage_unit }}</span>
       </div>
       <div v-if="rd.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ rd.note }}</div>
     </div>
@@ -104,7 +106,7 @@
         <span class="text-xs text-text-secondary font-num">{{ outdoorTimeLabel }}</span>
       </div>
       <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
-        <span class="bg-outdoor/10 text-outdoor-deep px-2 py-0.5 rounded-full font-num">{{ outdoorDurationLabel }}</span>
+        <span class="bg-muted text-text-secondary px-2 py-0.5 rounded-full font-num">{{ outdoorDurationLabel }}</span>
       </div>
       <div v-if="rd.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ rd.note }}</div>
     </div>

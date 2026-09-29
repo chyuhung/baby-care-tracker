@@ -4,26 +4,26 @@
       :refresh="loadData" @scroll="navScroll = $event">
       <!-- iOS 大标题导航：整块吸顶，大标题随滚动原地 morph（34px→17px），信息条（宝贝/日期/同步）常驻其下 -->
       <template #header>
-        <div ref="chromeRef" class="sticky top-0 z-30 glass-surface hairline-bottom" role="button"
+        <div ref="chromeRef" class="sticky top-0 z-30 hairline-bottom" role="button"
           aria-label="返回顶部" @click="scrollToTop" :style="chromeStyle">
           <div ref="innerRef" class="pt-safe">
             <div ref="titleRowRef" class="flex h-11 items-center px-4">
               <h1 class="min-w-0 truncate font-bold text-text-primary"
                 :style="{ fontSize: `${34 - 17 * morphP}px`, lineHeight: '1', letterSpacing: '-0.02em' }">记录</h1>
             </div>
-            <div class="flex items-center gap-2 px-4 pb-2">
-              <div class="flex min-w-0 items-center gap-1.5">
-                <span v-if="app.currentBaby" class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+            <div class="flex items-center gap-3 px-4 pb-2">
+              <div class="flex min-w-0 items-center gap-2">
+                <span v-if="app.currentBaby" class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white"
                   :style="{ background: app.currentBaby.avatar_color }">{{ app.currentBaby.name[0] }}</span>
                 <span class="min-w-0 truncate text-[13px] font-medium text-text-primary">{{ app.currentBaby?.name || '未添加宝宝' }}</span>
-                <span v-if="ageText" class="shrink-0 text-[11px] font-medium text-text-secondary">{{ ageText }}</span>
+                <span v-if="ageText" class="shrink-0 whitespace-nowrap text-[13px] text-text-secondary">{{ ageText }}</span>
               </div>
-              <span class="flex-1 truncate text-center text-[13px] font-medium text-text-secondary">{{ todayDateText }}</span>
+              <span class="flex-1 truncate text-center text-[13px] text-text-secondary">{{ todayDateText }}</span>
               <div class="flex shrink-0 justify-end">
-                <span v-if="app.wsConnected" class="flex items-center gap-1 text-[11px] text-success">
-                  <span class="inline-block h-2 w-2 rounded-full bg-success"></span>同步
+                <span v-if="app.wsConnected" class="inline-flex items-center gap-1.5 text-[13px] font-medium text-success">
+                  <span class="inline-block h-1.5 w-1.5 rounded-full bg-success"></span>同步
                 </span>
-                <span v-else class="text-[11px] text-text-secondary">离线</span>
+                <span v-else class="text-[13px] text-text-secondary">离线</span>
               </div>
             </div>
           </div>
@@ -299,11 +299,20 @@ const morphP = computed(() => {
   return e > 0 ? Math.min(1, Math.max(0, navScroll.value / e)) : 0
 })
 
-// 玻璃背景与 hairline 透明度随滚动进度渐变（0=透明），文字层不受影响
-const chromeStyle = computed(() => ({
-  background: `rgb(var(--surface) / ${morphP.value})`,
-  '--hairline-alpha': `${0.26 * morphP.value}`,
-}))
+// 玻璃背景与 hairline 透明度随滚动进度渐变（初始 0 = 严格 flat，滚动后渐入采样玻璃），文字层不受影响
+const chromeStyle = computed(() => {
+  const p = morphP.value
+  return {
+    background: `rgb(var(--surface) / ${0.72 * p})`,
+    '--hairline-alpha': `${0.26 * p}`,
+    ...(p > 0
+      ? {
+          backdropFilter: 'saturate(180%) blur(20px)',
+          WebkitBackdropFilter: 'saturate(180%) blur(20px)',
+        }
+      : {}),
+  }
+})
 
 function scrollToTop() {
   window.dispatchEvent(new CustomEvent('app:scroll-to-top'))

@@ -245,9 +245,10 @@ body {
   transform: translateY(100%);
 }
 
-/* 三段式 chrome（顶部标题栏 / 底部 Tab / 表单操作栏）：苹果常规白色主打，与内容区粉底形成明度分层 */
+/* 三段式 chrome（顶部标题栏 / 底部 Tab / 表单操作栏）：半透明采样玻璃——
+   blur+saturate 采纳背后内容：滚到粉底显粉、滚到白卡显白，与内容同色相连（iOS 大标题滚动吸附材质） */
 .glass-surface {
-  background: rgb(var(--surface));
+  background: rgb(var(--surface) / 0.72);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
 }

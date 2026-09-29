@@ -26,7 +26,7 @@
             <span class="text-xs text-text-secondary">{{ stats.age_months }} 月龄 · {{ stats.gender === 'male' ? '男宝' : '女宝' }}</span>
           </div>
           <div class="grid grid-cols-3 gap-2.5">
-            <div v-for="m in metrics" :key="m.key" class="bg-bg-main rounded-xl p-3 text-center">
+            <div v-for="m in metrics" :key="m.key" class="bg-muted rounded-xl p-3 text-center">
               <div class="text-xs text-text-secondary">{{ m.label }}</div>
               <div class="font-num text-lg font-bold text-text-primary mt-0.5">{{ m.value }}</div>
               <div class="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"

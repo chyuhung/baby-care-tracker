@@ -212,7 +212,7 @@
             <span class="text-[11px] text-text-secondary truncate">不含今日 · 当前 vs 上一周期</span>
           </div>
           <div v-if="periodLabel && !summary.empty" class="text-[11px] text-text-secondary">{{ periodLabel }}</div>
-          <div v-if="summary.empty" class="bg-bg-main rounded-xl">
+          <div v-if="summary.empty" class="bg-muted rounded-xl">
             <EmptyState size="sm" icon="chart" :title="`近 ${days} 天暂无记录`" subtitle="记录几天后，这里会生成周期对比">
               <router-link to="/"
                 class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-primary-fill text-white rounded-xl font-medium text-sm btn-press shadow-card">
@@ -221,7 +221,7 @@
             </EmptyState>
           </div>
           <div v-else class="grid grid-cols-2 gap-2.5">
-            <div v-for="c in summary.cards" :key="c.label" class="bg-bg-main rounded-xl p-3">
+            <div v-for="c in summary.cards" :key="c.label" class="bg-muted rounded-xl p-3">
               <div class="text-xs text-text-secondary">{{ c.label }}</div>
               <div class="flex items-baseline gap-1 mt-1">
                 <span class="text-xl font-bold font-num text-text-primary">{{ c.value }}</span>
