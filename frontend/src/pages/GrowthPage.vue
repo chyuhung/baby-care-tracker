@@ -3,7 +3,7 @@
     <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
       :refresh="refresh">
       <template #header>
-        <ThinNavBar title="成长记录">
+        <NavBar title="成长记录">
           <template #actions>
             <button type="button" @click="openForm"
               class="inline-flex items-center gap-1 h-9 px-3.5 rounded-full bg-primary-fill text-white text-sm font-semibold btn-press">
@@ -11,7 +11,7 @@
               记录
             </button>
           </template>
-        </ThinNavBar>
+        </NavBar>
       </template>
 
       <div v-if="loading && !stats" class="py-16 flex justify-center">
@@ -190,7 +190,7 @@ import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { babyAPI, GrowthRecord, GrowthStats, GrowthReference } from '@/api'
 import PullRefresh from '@/components/PullRefresh.vue'
-import ThinNavBar from '@/components/ThinNavBar.vue'
+import NavBar from '@/components/NavBar.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import Segmented from '@/components/Segmented.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'

@@ -1,18 +1,9 @@
 <template>
   <div class="flex flex-col h-dvh">
     <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
-      :refresh="loadData" @scroll="navScroll = $event">
-      <!-- iOS 大标题导航：标题栏吸顶，大标题随滚动原地 morph（34px→17px）；信息条（宝贝/日期/同步）在其下跟随内容滑走 -->
+      :refresh="loadData">
       <template #header>
-        <div ref="chromeRef" class="sticky top-0 z-30 nav-surface hairline-bottom" role="button"
-          aria-label="返回顶部" @click="scrollToTop">
-          <div class="pt-safe">
-            <div ref="titleRowRef" class="flex h-11 items-center px-4">
-              <h1 class="min-w-0 truncate font-bold text-text-primary"
-                :style="{ fontSize: `${34 - 17 * morphP}px`, lineHeight: '1', letterSpacing: '-0.02em' }">记录</h1>
-            </div>
-          </div>
-        </div>
+        <NavBar title="记录" />
         <div class="flex items-center gap-3 px-4 pb-2">
           <div class="flex min-w-0 items-center gap-2">
             <span class="min-w-0 truncate text-[13px] font-medium text-text-primary">{{ app.currentBaby?.name || '未添加宝宝' }}</span>
@@ -272,37 +263,14 @@ import ContextMenu from '@/components/ContextMenu.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
 import { recordDisplay, CONTEXT_ICONS } from '@/utils/recordDisplay'
 import EmptyState from '@/components/EmptyState.vue'
+import NavBar from '@/components/NavBar.vue'
 import { durationCompactParts, formatDurationCN, WEEKDAY_SHORT, parseLocalDate } from '@/utils'
 
 const tick = ref(0)
 let tickTimer: number | null = null
 const router = useRouter()
 const app = useAppStore()
-const navScroll = ref(0)
 
-// ── iOS 大标题 morph：滚动进度驱动标题从 34px 缩到 17px ──
-const chromeRef = ref<HTMLElement | null>(null)
-const titleRowRef = ref<HTMLElement | null>(null)
-const morphEnd = ref(0)
-let chromeRO: ResizeObserver | undefined
-
-function updateMorphEnd() {
-  const chrome = chromeRef.value
-  const row = titleRowRef.value
-  if (!chrome || !row) return
-  const cb = chrome.getBoundingClientRect()
-  const rb = row.getBoundingClientRect()
-  morphEnd.value = Math.max(1, rb.top - cb.top + rb.height)
-}
-
-const morphP = computed(() => {
-  const e = morphEnd.value
-  return e > 0 ? Math.min(1, Math.max(0, navScroll.value / e)) : 0
-})
-
-function scrollToTop() {
-  window.dispatchEvent(new CustomEvent('app:scroll-to-top'))
-}
 const UNIT_CLASS = 'text-sm text-text-secondary'
 const stats = ref<BabyStats>({ feeding_count: 0, diaper_count: 0, total_ml_today: 0, last_feeding: '', last_diaper: '', sleep_count: 0, sleep_duration: 0, last_sleep_end: '', temperature_count: 0, latest_temperature: 0, last_temperature: '', outdoor_count: 0, outdoor_duration: 0, last_outdoor_end: '', supplement_count: 0, last_supplement: '' })
 const allRecords = ref<any[]>([])
@@ -720,16 +688,10 @@ onMounted(() => {
   window.addEventListener('record-created', onRecordCreated)
   window.addEventListener('record-deleted', onRecordDeleted)
   tickTimer = window.setInterval(() => { tick.value++ }, 10000)
-  updateMorphEnd()
-  if (typeof ResizeObserver !== 'undefined' && chromeRef.value) {
-    chromeRO = new ResizeObserver(updateMorphEnd)
-    chromeRO.observe(chromeRef.value)
-  }
 })
 onUnmounted(() => {
   window.removeEventListener('record-created', onRecordCreated)
   window.removeEventListener('record-deleted', onRecordDeleted)
   if (tickTimer !== null) clearInterval(tickTimer)
-  chromeRO?.disconnect()
 })
 </script>

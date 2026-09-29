@@ -223,7 +223,7 @@ function onScroll() {
   if (el) emit('scroll', el.scrollTop)
 }
 
-/* 顶部导航栏点击回顶（MorphNavBar / 首页 chrome 派发全局事件，各页 PullRefresh 自动生效） */
+/* 顶部导航栏点击回顶（NavBar 派发全局事件，各页 PullRefresh 自动生效） */
 function onScrollToTop() {
   rootRef.value?.scrollTo({ top: 0, behavior: 'smooth' })
 }

@@ -1,9 +1,9 @@
 <template>
   <div class="flex flex-col h-dvh">
     <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] space-y-6"
-      :refresh="() => loadTrend(true)" @scroll="navScroll = $event">
+      :refresh="() => loadTrend(true)">
     <template #header>
-      <MorphNavBar title="趋势" :scroll-top="navScroll" />
+      <NavBar title="趋势" />
     </template>
 
       <div class="flex items-center gap-2">
@@ -251,11 +251,10 @@ import PullRefresh from '@/components/PullRefresh.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import Segmented from '@/components/Segmented.vue'
 import MenuSelect from '@/components/MenuSelect.vue'
-import MorphNavBar from '@/components/MorphNavBar.vue'
+import NavBar from '@/components/NavBar.vue'
 import SkeletonCard from '@/components/SkeletonCard.vue'
 
 const app = useAppStore()
-const navScroll = ref(0)
 const trendData = ref<any[]>([])
 const trendCur = ref<any[]>([])
 const trendPrev = ref<any[]>([])
