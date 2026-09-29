@@ -242,6 +242,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
+
+// 显式命名：MainLayout 内层 <keep-alive include="TrendPage,..."> 命中缓存
+defineOptions({ name: 'TrendPage' })
+
 import { babyAPI } from '@/api'
 import PullRefresh from '@/components/PullRefresh.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'

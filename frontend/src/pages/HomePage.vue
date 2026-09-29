@@ -259,6 +259,10 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
+
+// 显式命名：MainLayout 内层 <keep-alive include="HomePage,..."> 命中缓存
+defineOptions({ name: 'HomePage' })
+
 import { babyAPI, recordAPI } from '@/api'
 import type { BabyStats, SleepRecord, OutdoorRecord } from '@/api'
 import RecordCard from '@/components/RecordCard.vue'

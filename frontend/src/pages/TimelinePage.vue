@@ -61,6 +61,10 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
+
+// 显式命名：MainLayout 内层 <keep-alive include="TimelinePage,..."> 命中缓存
+defineOptions({ name: 'TimelinePage' })
+
 import { recordAPI } from '@/api'
 import { recordDisplay, CONTEXT_ICONS } from '@/utils/recordDisplay'
 import RecordCard from '@/components/RecordCard.vue'

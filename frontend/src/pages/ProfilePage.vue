@@ -183,6 +183,10 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
+
+// 显式命名：MainLayout 内层 <keep-alive include="ProfilePage,..."> 命中缓存
+defineOptions({ name: 'ProfilePage' })
+
 import { familyAPI, recordAPI } from '@/api'
 import PullRefresh from '@/components/PullRefresh.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'

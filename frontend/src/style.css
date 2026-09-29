@@ -56,7 +56,7 @@
   --chart-sleep: rgb(var(--sleep));
   --chart-outdoor: rgb(var(--outdoor));
   --chart-supplement: rgb(var(--supplement));
-  --chart-primary-count: #FA6B9D; /* 喂奶次数第二色：主色浅档（与奶量深粉同族区分，紫独留给补剂） */
+  --chart-primary-count: #5F6672; /* 喂奶次数第二色：中性石墨（与奶量线/主题色彻底拉开，iOS 双序列次级色惯例） */
   --chart-line: #E7EAF0;           /* 图表基线/网格线 */
   --hairline: 60 60 67;            /* 发丝线 RGB（配合 .hairline-* 的 alpha） */
 }
@@ -69,7 +69,7 @@
   --bg-main: 244 249 255;        /* #F4F9FF 极淡蓝页面背景 */
 
   --chart-primary: rgb(var(--primary)); /* 跟随男宝主题蓝 */
-  --chart-primary-count: #7FB5FF;       /* 次数第二色：主色浅档浅蓝 */
+  --chart-primary-count: #5F6672;       /* 次数第二色：中性石墨（男女主题一致） */
 }
 
 /* ============================================================
@@ -102,8 +102,8 @@
     --success-deep: 48 209 88;    /* #30D158 */
     --danger-light: 58 26 26;     /* 危险提示深红底 */
 
-    /* 图表色：统一引用关键词 token，随主题自动一致（仅次数浅档在深底提亮） */
-    --chart-primary-count: #F79FC4;
+    /* 图表色：统一引用关键词 token，随主题自动一致（仅次数第二色用深底灰色） */
+    --chart-primary-count: #A0A6B0;
     --chart-line: #38383C;
   }
 
@@ -111,7 +111,7 @@
     --bg-main: 0 0 4;             /* #000004 深色蓝底 */
     --primary: 90 162 245;        /* #5AA2F5 */
     --primary-deep: 130 186 250;  /* #82BAFA */
-    --chart-primary-count: #8FC3FF;
+    --chart-primary-count: #A0A6B0;
   }
 }
 
