@@ -56,7 +56,7 @@
   --chart-sleep: rgb(var(--sleep));
   --chart-outdoor: rgb(var(--outdoor));
   --chart-supplement: rgb(var(--supplement));
-  --chart-primary-count: #AF52DE; /* 喂奶次数第二色：清透紫，与奶量粉区分 */
+  --chart-primary-count: #FA6B9D; /* 喂奶次数第二色：主色浅档（与奶量深粉同族区分，紫独留给补剂） */
   --chart-line: #E7EAF0;           /* 图表基线/网格线 */
   --hairline: 60 60 67;            /* 发丝线 RGB（配合 .hairline-* 的 alpha） */
 }
@@ -69,7 +69,7 @@
   --bg-main: 244 249 255;        /* #F4F9FF 极淡蓝页面背景 */
 
   --chart-primary: rgb(var(--primary)); /* 跟随男宝主题蓝 */
-  --chart-primary-count: #AF52DE;
+  --chart-primary-count: #7FB5FF;       /* 次数第二色：主色浅档浅蓝 */
 }
 
 /* ============================================================
@@ -102,8 +102,8 @@
     --success-deep: 48 209 88;    /* #30D158 */
     --danger-light: 58 26 26;     /* 危险提示深红底 */
 
-    /* 图表色：统一引用关键词 token，随主题自动一致（仅次数紫在深底提亮） */
-    --chart-primary-count: #C084FC;
+    /* 图表色：统一引用关键词 token，随主题自动一致（仅次数浅档在深底提亮） */
+    --chart-primary-count: #F79FC4;
     --chart-line: #38383C;
   }
 
@@ -111,7 +111,7 @@
     --bg-main: 0 0 4;             /* #000004 深色蓝底 */
     --primary: 90 162 245;        /* #5AA2F5 */
     --primary-deep: 130 186 250;  /* #82BAFA */
-    --chart-primary-count: #C084FC;
+    --chart-primary-count: #8FC3FF;
   }
 }
 
@@ -165,6 +165,15 @@ body {
 }
 .btn-press:active {
   transform: scale(0.96);
+}
+
+/* 卡片按压反馈：缩小 + 阴影加深（iOS 3D 提起感）。值对齐 tailwind shadow-card-hover */
+.press-card {
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease, background-color 0.3s ease;
+}
+.press-card:active {
+  transform: scale(0.975);
+  box-shadow: 0 8px 22px rgba(24, 34, 58, 0.09);
 }
 
 /* 键盘焦点环（a11y，苹果风格） */
@@ -290,6 +299,23 @@ header.glass-surface {
 input, select, textarea {
   font-size: 16px;
 }
+
+/* ============================================================
+   字号尺规（对齐 iOS HIG 文本样式）
+   命名优先用 Tailwind 预设，不再新增任意值：
+   Caption2 11 = text-[11px]（时间戳辅助位，仅个别）
+   Caption1 12 = text-xs（记录卡时间/角标，全站主流）
+   Footnote 13 = text-[13px]（弹层副文案/说明，个别）
+   Callout  16 = text-base（输入值/空态标题未设字号的默认）
+   Subhead  15 = text-[15px]（卡内标题，仅个别）
+   Body     17 = text-[17px] / text-sm 升级目标（页标题/导航标题 600）
+   Headline 17 = 页标题 font-semibold（表单页/表单头部）
+   Title3   20 = text-xl（图表大数）
+   Title2   22 = text-2xl（登录品牌）
+   Title1   28 = text-3xl（统计大数字，仅个别）
+   规则：全站字号只允许来自上表；标题一律 font-semibold(600)，
+   不用 font-bold(700)；正文为默认 400。
+   ============================================================ */
 
 /* ============================================================
    iOS 辅助功能适配

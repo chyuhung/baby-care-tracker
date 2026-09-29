@@ -45,7 +45,7 @@
         <!-- 统计卡片（可点击跳转） -->
         <div class="grid grid-cols-2 gap-3">
           <!-- 喂奶卡片 -->
-          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('feeding')" @click="goToTimeline('feeding')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('feeding')" @click="goToTimeline('feeding')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer press-card">
             <div class="text-xs text-text-secondary mb-1">今日喂奶</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-0.5">
@@ -72,7 +72,7 @@
           </div>
 
           <!-- 尿布卡片 -->
-          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('diaper')" @click="goToTimeline('diaper')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('diaper')" @click="goToTimeline('diaper')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer press-card">
             <div class="text-xs text-text-secondary mb-1">今日尿布</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-1">
@@ -99,7 +99,7 @@
           </div>
 
           <!-- 睡眠卡片 -->
-          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('sleep')" @click="goToTimeline('sleep')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('sleep')" @click="goToTimeline('sleep')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer press-card">
             <div class="text-xs text-text-secondary mb-1">今日睡眠</div>
             <div class="flex items-end justify-between">
               <div class="flex items-center gap-1 min-w-0">
@@ -134,7 +134,7 @@
           </div>
 
           <!-- 体温卡片 -->
-          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('temperature')" @click="goToTimeline('temperature')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('temperature')" @click="goToTimeline('temperature')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer press-card">
             <div class="text-xs text-text-secondary mb-1">今日体温</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-1">
@@ -159,7 +159,7 @@
           </div>
 
           <!-- 户外活动卡片 -->
-          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('outdoor')" @click="goToTimeline('outdoor')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('outdoor')" @click="goToTimeline('outdoor')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer press-card">
             <div class="text-xs text-text-secondary mb-1">今日户外活动</div>
             <div class="flex items-end justify-between">
               <div class="flex items-center gap-1 min-w-0">
@@ -194,7 +194,7 @@
           </div>
 
           <!-- 补剂卡片 -->
-          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('supplement')" @click="goToTimeline('supplement')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer btn-press">
+          <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('supplement')" @click="goToTimeline('supplement')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer press-card">
             <div class="text-xs text-text-secondary mb-1">今日补剂</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-1">

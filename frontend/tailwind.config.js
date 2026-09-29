@@ -32,7 +32,6 @@ export default {
         surface: 'rgb(var(--surface) / <alpha-value>)',
         muted: 'rgb(var(--muted) / <alpha-value>)',
         'bg-main': 'rgb(var(--bg-main) / <alpha-value>)',
-        'bg-secondary': 'rgb(var(--muted) / <alpha-value>)',
         'text-primary': 'rgb(var(--text-primary) / <alpha-value>)',
         'text-secondary': 'rgb(var(--text-secondary) / <alpha-value>)',
         'border-color': 'rgb(var(--border-color) / <alpha-value>)',

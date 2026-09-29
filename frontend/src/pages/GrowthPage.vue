@@ -142,23 +142,23 @@
                 <div>
                   <label class="text-sm text-text-secondary block mb-1.5">测量日期</label>
                   <input v-model="form.measured_at" type="date"
-                    class="w-full px-4 py-3 bg-bg-secondary border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none" />
+                    class="w-full px-4 py-3 bg-muted border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none" />
                 </div>
                 <div class="grid grid-cols-3 gap-2.5">
                   <div>
                     <label class="text-xs text-text-secondary block mb-1.5">身高 cm</label>
                     <input v-model.number="form.height_cm" type="number" inputmode="decimal" step="0.1" min="0"
-                      class="w-full px-3 py-2.5 bg-bg-secondary border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none" />
+                      class="w-full px-3 py-2.5 bg-muted border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none" />
                   </div>
                   <div>
                     <label class="text-xs text-text-secondary block mb-1.5">体重 kg</label>
                     <input v-model.number="form.weight_kg" type="number" inputmode="decimal" step="0.01" min="0"
-                      class="w-full px-3 py-2.5 bg-bg-secondary border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none" />
+                      class="w-full px-3 py-2.5 bg-muted border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none" />
                   </div>
                   <div>
                     <label class="text-xs text-text-secondary block mb-1.5">头围 cm</label>
                     <input v-model.number="form.head_cm" type="number" inputmode="decimal" step="0.1" min="0"
-                      class="w-full px-3 py-2.5 bg-bg-secondary border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none" />
+                      class="w-full px-3 py-2.5 bg-muted border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none" />
                   </div>
                 </div>
                 <div v-if="formError" class="bg-danger-light text-danger text-sm px-4 py-2 rounded-xl text-center">{{ formError }}</div>
@@ -166,7 +166,7 @@
 
               <div class="flex gap-2 mt-4">
                 <button type="button" @click="closeForm"
-                  class="flex-1 py-3 bg-bg-secondary text-text-primary font-medium rounded-xl btn-press">取消</button>
+                  class="flex-1 py-3 bg-muted text-text-primary font-medium rounded-xl btn-press">取消</button>
                 <button type="button" @click="submit" :disabled="submitting"
                   class="flex-1 py-3 bg-primary-fill text-white font-semibold rounded-xl btn-press disabled:opacity-50 flex items-center justify-center gap-2">
                   <ActivityIndicator v-if="submitting" :size="18" class="text-white" />

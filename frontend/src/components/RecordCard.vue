@@ -1,5 +1,5 @@
 <template>
-  <div v-if="record.record_type === 'feeding'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
+  <div v-if="record.record_type === 'feeding'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer press-card" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
     <div class="w-1.5 h-12 rounded-full bg-primary flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -14,12 +14,14 @@
       </div>
       <div v-if="rd.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ rd.note }}</div>
     </div>
-    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-danger/70 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="group p-2 min-w-[44px] min-h-[44px] flex items-center justify-center btn-press">
+      <span class="w-7 h-7 rounded-full bg-muted/70 text-text-secondary/60 flex items-center justify-center transition-colors group-hover:bg-danger-light group-hover:text-danger">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </span>
     </button>
   </div>
 
-  <div v-else-if="record.record_type === 'diaper'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
+  <div v-else-if="record.record_type === 'diaper'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer press-card" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
     <div class="w-1.5 h-12 rounded-full bg-diaper flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -28,12 +30,14 @@
       </div>
       <div v-if="rd.note" class="text-xs text-text-secondary mt-1 truncate">{{ rd.note }}</div>
     </div>
-    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-danger/70 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="group p-2 min-w-[44px] min-h-[44px] flex items-center justify-center btn-press">
+      <span class="w-7 h-7 rounded-full bg-muted/70 text-text-secondary/60 flex items-center justify-center transition-colors group-hover:bg-danger-light group-hover:text-danger">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </span>
     </button>
   </div>
 
-  <div v-else-if="record.record_type === 'sleep'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
+  <div v-else-if="record.record_type === 'sleep'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer press-card" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
     <div class="w-1.5 h-12 rounded-full bg-sleep flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -45,12 +49,14 @@
       </div>
       <div v-if="rd.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ rd.note }}</div>
     </div>
-    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-danger/70 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="group p-2 min-w-[44px] min-h-[44px] flex items-center justify-center btn-press">
+      <span class="w-7 h-7 rounded-full bg-muted/70 text-text-secondary/60 flex items-center justify-center transition-colors group-hover:bg-danger-light group-hover:text-danger">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </span>
     </button>
   </div>
 
-  <div v-else-if="record.record_type === 'temperature'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
+  <div v-else-if="record.record_type === 'temperature'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer press-card" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
     <div class="w-1.5 h-12 rounded-full bg-temperature flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -64,12 +70,14 @@
       </div>
       <div v-if="rd.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ rd.note }}</div>
     </div>
-    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-danger/70 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="group p-2 min-w-[44px] min-h-[44px] flex items-center justify-center btn-press">
+      <span class="w-7 h-7 rounded-full bg-muted/70 text-text-secondary/60 flex items-center justify-center transition-colors group-hover:bg-danger-light group-hover:text-danger">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </span>
     </button>
   </div>
 
-  <div v-else-if="record.record_type === 'supplement'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
+  <div v-else-if="record.record_type === 'supplement'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer press-card" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
     <div class="w-1.5 h-12 rounded-full bg-supplement flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -81,12 +89,14 @@
       </div>
       <div v-if="rd.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ rd.note }}</div>
     </div>
-    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-danger/70 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="group p-2 min-w-[44px] min-h-[44px] flex items-center justify-center btn-press">
+      <span class="w-7 h-7 rounded-full bg-muted/70 text-text-secondary/60 flex items-center justify-center transition-colors group-hover:bg-danger-light group-hover:text-danger">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </span>
     </button>
   </div>
 
-  <div v-else role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer btn-press" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
+  <div v-else role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer press-card" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
     <div class="w-1.5 h-12 rounded-full bg-outdoor flex-shrink-0"></div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
@@ -98,8 +108,10 @@
       </div>
       <div v-if="rd.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ rd.note }}</div>
     </div>
-    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="p-2 text-text-secondary/50 hover:text-danger/70 btn-press min-w-[44px] min-h-[44px] flex items-center justify-center">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="group p-2 min-w-[44px] min-h-[44px] flex items-center justify-center btn-press">
+      <span class="w-7 h-7 rounded-full bg-muted/70 text-text-secondary/60 flex items-center justify-center transition-colors group-hover:bg-danger-light group-hover:text-danger">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </span>
     </button>
   </div>
 </template>

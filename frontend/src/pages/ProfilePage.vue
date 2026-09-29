@@ -48,7 +48,7 @@
 
         <!-- 当前家庭信息 -->
         <div v-if="family" class="space-y-3">
-          <div class="bg-bg-secondary rounded-xl p-3">
+          <div class="bg-muted rounded-xl p-3">
             <div class="text-xs text-text-secondary mb-1">邀请码</div>
             <div class="flex items-center justify-between">
               <span class="text-lg font-bold tracking-widest text-primary-deep select-all">{{ family.invite_code }}</span>
@@ -59,7 +59,7 @@
           <div>
             <div class="text-xs text-text-secondary mb-2">家庭成员 ({{ family.members.length }}人)</div>
             <div class="flex flex-wrap gap-2">
-              <div v-for="m in family.members" :key="m.id" class="flex items-center gap-1.5 bg-bg-secondary rounded-full px-3 py-1.5 text-sm">
+              <div v-for="m in family.members" :key="m.id" class="flex items-center gap-1.5 bg-muted rounded-full px-3 py-1.5 text-sm">
                 <span>👤</span>
                 <span>{{ m.username }}</span>
                 <span v-if="m.id === auth.user?.id" class="text-xs text-text-secondary">(我)</span>
@@ -80,7 +80,7 @@
         <div class="flex gap-2 pt-1">
           <input v-model="joinCode" placeholder="输入对方的邀请码" maxlength="6"
             aria-label="邀请码" inputmode="text" autocapitalize="characters" autocomplete="off" enterkeyhint="done"
-            class="flex-1 min-h-[44px] px-3 py-2.5 bg-bg-secondary border border-border-color rounded-xl text-base focus:border-primary focus:outline-none transition-colors uppercase" />
+            class="flex-1 min-h-[44px] px-3 py-2.5 bg-muted border border-border-color rounded-xl text-base focus:border-primary focus:outline-none transition-colors uppercase" />
           <button @click="joinFamily" :disabled="!joinCode.trim()"
             class="px-4 py-3 bg-primary-fill text-white text-sm font-medium rounded-xl btn-press min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed">加入</button>
         </div>

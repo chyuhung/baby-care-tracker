@@ -9,16 +9,16 @@
             <!-- 顶部工具条 -->
             <div class="flex items-center justify-between px-1 pb-1">
               <button type="button" @click="close(false)"
-                class="px-2 py-1.5 text-[16px] text-primary-deep btn-press">取消</button>
+                class="min-w-[44px] min-h-[44px] px-3 flex items-center justify-center text-[16px] text-primary-deep btn-press">取消</button>
               <span class="text-[14px] font-semibold text-text-primary">{{ title }}</span>
               <button type="button" @click="close(true)"
-                class="px-2 py-1.5 text-[16px] font-semibold text-primary-deep btn-press">完成</button>
+                class="min-w-[44px] min-h-[44px] px-3 flex items-center justify-center text-[16px] font-semibold text-primary-deep btn-press">完成</button>
             </div>
 
             <!-- 滚轮区 -->
             <div class="relative select-none">
               <!-- 选中高亮带 -->
-              <div class="pointer-events-none absolute left-0 right-0 top-1/2 -translate-y-1/2 h-9 rounded-lg bg-muted"
+              <div class="pointer-events-none absolute left-0 right-0 top-1/2 -translate-y-1/2 h-9 rounded-[10px] bg-muted"
                 aria-hidden="true"></div>
               <!-- 上下渐隐 -->
               <div class="pointer-events-none absolute inset-0 rounded-xl" aria-hidden="true"

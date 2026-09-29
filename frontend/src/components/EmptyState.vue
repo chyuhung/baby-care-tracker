@@ -9,7 +9,7 @@
         <path :d="glyph" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
     </div>
-    <p class="text-text-primary font-medium">{{ title }}</p>
+    <p class="text-[17px] font-semibold text-text-primary">{{ title }}</p>
     <p v-if="subtitle" class="text-text-secondary text-sm mt-1.5 leading-relaxed">{{ subtitle }}</p>
     <div v-if="$slots.default" class="mt-5">
       <slot />

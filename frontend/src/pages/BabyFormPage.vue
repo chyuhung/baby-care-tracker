@@ -4,7 +4,7 @@
       <button aria-label="返回" @click="router.back()" class="p-2 -ml-2 flex items-center justify-center min-w-[44px] min-h-[44px] btn-press">
         <svg class="w-6 h-6 text-text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
       </button>
-      <h1 class="text-lg font-bold text-text-primary">{{ isEdit ? '编辑宝宝' : '添加宝宝' }}</h1>
+      <h1 class="text-[17px] font-semibold text-text-primary">{{ isEdit ? '编辑宝宝' : '添加宝宝' }}</h1>
     </header>
 
     <main class="flex-1 px-4 py-6 space-y-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))]">

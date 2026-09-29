@@ -9,6 +9,7 @@
         <div v-for="toast in plainToasts" :key="toast.id" role="status" aria-live="polite"
           class="pointer-events-auto inline-flex items-center gap-2 max-w-full pl-3 pr-4 py-2.5 rounded-full bg-[rgba(28,28,30,0.84)] backdrop-blur-xl shadow-lg text-white text-[13px] font-medium">
           <svg v-if="toast.type === 'success'" width="17" height="17" viewBox="0 0 24 24" fill="none" class="shrink-0">
+            <!-- HUD 深底亮符号：绿/红在明暗两模式恒定为 iOS 原生亮色（套 --success-deep 会在浅色模式压暗于深底） -->
             <circle cx="12" cy="12" r="9.2" stroke="#30D158" stroke-width="1.8" />
             <path d="M8.2 12.4l2.5 2.5L16 9.4" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
@@ -28,7 +29,7 @@
           class="pointer-events-auto flex items-center gap-2 pl-4 pr-2 py-2.5 rounded-2xl bg-[rgba(28,28,30,0.9)] backdrop-blur-xl shadow-lg text-white text-[14px] font-medium">
           <span class="flex-1 min-w-0 truncate">{{ clean(toast.message) }}</span>
           <button type="button" @click="runAction(toast)"
-            class="shrink-0 px-3 py-1.5 rounded-full text-[14px] font-semibold text-[#5AC8FA] active:opacity-60">
+            class="shrink-0 px-3 py-1.5 rounded-full text-[14px] font-semibold text-[rgb(var(--primary))] active:opacity-60">
             {{ toast.action?.label }}
           </button>
         </div>
