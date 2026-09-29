@@ -1,9 +1,9 @@
 <template>
   <div class="flex flex-col h-dvh">
     <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
-      :refresh="refreshAll">
+      :refresh="refreshAll" @scroll="navScroll = $event">
     <template #header>
-      <ThinNavBar title="我的" />
+      <MorphNavBar title="我的" :scroll-top="navScroll" />
     </template>
 
       <!-- 用户信息 -->
@@ -187,7 +187,7 @@ import { familyAPI, recordAPI } from '@/api'
 import PullRefresh from '@/components/PullRefresh.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
 import EmptyState from '@/components/EmptyState.vue'
-import ThinNavBar from '@/components/ThinNavBar.vue'
+import MorphNavBar from '@/components/MorphNavBar.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
 import { parseLocalDate } from '@/utils'
 
@@ -205,6 +205,7 @@ interface Family {
 const router = useRouter()
 const auth = useAuthStore()
 const app = useAppStore()
+const navScroll = ref(0)
 const appVersion = '1.0.0'
 const exporting = ref(false)
 

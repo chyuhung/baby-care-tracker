@@ -1,9 +1,9 @@
 <template>
   <div class="flex flex-col h-dvh">
     <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
-      :refresh="() => loadRecords(true, true)">
+      :refresh="() => loadRecords(true, true)" @scroll="navScroll = $event">
     <template #header>
-      <ThinNavBar title="时间线" />
+      <MorphNavBar title="时间线" :scroll-top="navScroll" />
     </template>
 
       <div class="flex items-center gap-2">
@@ -69,7 +69,7 @@ import ConfirmSheet from '@/components/ConfirmSheet.vue'
 import ContextMenu from '@/components/ContextMenu.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
 import EmptyState from '@/components/EmptyState.vue'
-import ThinNavBar from '@/components/ThinNavBar.vue'
+import MorphNavBar from '@/components/MorphNavBar.vue'
 import SkeletonCard from '@/components/SkeletonCard.vue'
 import MenuSelect from '@/components/MenuSelect.vue'
 import SwipeToDelete from '@/components/SwipeToDelete.vue'
@@ -80,6 +80,7 @@ const app = useAppStore()
 const router = useRouter()
 const route = useRoute()
 const records = ref<any[]>([])
+const navScroll = ref(0)
 const { softDelete } = useUndoDelete(records)
 
 // ── 长按上下文菜单 ─────────────────────────────────────────
