@@ -4,9 +4,9 @@
       :refresh="loadData" @scroll="navScroll = $event">
       <!-- iOS 大标题导航：标题栏吸顶，大标题随滚动原地 morph（34px→17px）；信息条（宝贝/日期/同步）在其下跟随内容滑走 -->
       <template #header>
-        <div ref="chromeRef" class="sticky top-0 z-30 hairline-bottom" role="button"
-          aria-label="返回顶部" @click="scrollToTop" :style="chromeStyle">
-          <div ref="innerRef" class="pt-safe">
+        <div ref="chromeRef" class="sticky top-0 z-30 nav-surface hairline-bottom" role="button"
+          aria-label="返回顶部" @click="scrollToTop">
+          <div class="pt-safe">
             <div ref="titleRowRef" class="flex h-11 items-center px-4">
               <h1 class="min-w-0 truncate font-bold text-text-primary"
                 :style="{ fontSize: `${34 - 17 * morphP}px`, lineHeight: '1', letterSpacing: '-0.02em' }">记录</h1>
@@ -280,9 +280,8 @@ const router = useRouter()
 const app = useAppStore()
 const navScroll = ref(0)
 
-// ── iOS 大标题 morph：滚动进度驱动标题从 34px 缩到 17px，玻璃随进度淡入 ──
+// ── iOS 大标题 morph：滚动进度驱动标题从 34px 缩到 17px ──
 const chromeRef = ref<HTMLElement | null>(null)
-const innerRef = ref<HTMLElement | null>(null)
 const titleRowRef = ref<HTMLElement | null>(null)
 const morphEnd = ref(0)
 let chromeRO: ResizeObserver | undefined
@@ -299,21 +298,6 @@ function updateMorphEnd() {
 const morphP = computed(() => {
   const e = morphEnd.value
   return e > 0 ? Math.min(1, Math.max(0, navScroll.value / e)) : 0
-})
-
-// 玻璃背景与 hairline 透明度随滚动进度渐变（初始 0 = 严格 flat，滚动后渐入采样玻璃），文字层不受影响
-const chromeStyle = computed(() => {
-  const p = morphP.value
-  return {
-    background: `rgb(var(--surface) / ${0.72 * p})`,
-    '--hairline-alpha': `${0.26 * p}`,
-    ...(p > 0
-      ? {
-          backdropFilter: 'saturate(180%) blur(20px)',
-          WebkitBackdropFilter: 'saturate(180%) blur(20px)',
-        }
-      : {}),
-  }
 })
 
 function scrollToTop() {

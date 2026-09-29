@@ -1,4 +1,4 @@
-const CACHE = 'baby-care-v12'
+const CACHE = 'baby-care-v13'
 const API_PREFIX = '/api/'
 
 self.addEventListener('install', () => {

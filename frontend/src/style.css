@@ -250,19 +250,31 @@ body {
   transform: translateY(100%);
 }
 
-/* 三段式 chrome（顶部标题栏 / 底部 Tab / 表单操作栏）：半透明采样玻璃——
-   blur+saturate 采纳背后内容：滚到粉底显粉、滚到白卡显白，与内容同色相连（iOS 大标题滚动吸附材质） */
+/* 采样玻璃（仅底部两处：Tab 栏 / 表单操作栏）：blur+saturate 采纳背后内容，
+   滚到白卡显白、与内容同色相连。
+   顶部标题栏不再用它 —— 顶栏固定不透明，见 .nav-surface。 */
 .glass-surface {
   background: rgb(var(--surface) / 0.72);
   backdrop-filter: saturate(180%) blur(20px);
   -webkit-backdrop-filter: saturate(180%) blur(20px);
 }
 
+/* 顶部标题栏（8 处：Morph 标签页 / ThinNavBar / 各记录表单页）：不透明 --surface，无 blur。
+   刻意放弃采样玻璃以换取顶部颜色恒定 —— 且与 iOS 状态栏同色（theme-color 已对齐
+   --surface），使「状态栏 + 标题栏」在视觉上成为一整块，无接缝、无渐变过渡。
+   与 .glass-surface 同形的实底效果另见下方 prefers-reduced-transparency 分支。 */
+.nav-surface {
+  background: rgb(var(--surface));
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 /* chrome 轻微投影，强化顶/底栏「浮起」的层级感 */
 nav.glass-surface {
   box-shadow: 0 -0.5px 16px rgba(24, 34, 52, 0.05);
 }
-header.glass-surface {
+header.glass-surface,
+header.nav-surface {
   box-shadow: 0 0.5px 16px rgba(24, 34, 52, 0.045);
 }
 
