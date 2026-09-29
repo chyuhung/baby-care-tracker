@@ -1,17 +1,15 @@
 <template>
   <div class="flex flex-col h-dvh">
     <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
-      :refresh="() => loadRecords(true, true)" @scroll="navScroll = $event">
+      :refresh="() => loadRecords(true, true)">
     <template #header>
-    <LargeTitleNav title="时间线" :scroll-top="navScroll">
-      <template #filters>
-        <div class="flex items-center gap-2 mt-2">
-          <MenuSelect :model-value="activeFilter" :options="filterOptions" title="筛选记录"
-            aria-label="筛选记录类型" @update:model-value="(v: string | number) => activeFilter = String(v)" />
-        </div>
-      </template>
-    </LargeTitleNav>
+      <ThinNavBar title="时间线" />
     </template>
+
+      <div class="flex items-center gap-2">
+        <MenuSelect :model-value="activeFilter" :options="filterOptions" title="筛选记录"
+          aria-label="筛选记录类型" @update:model-value="(v: string | number) => activeFilter = String(v)" />
+      </div>
 
       <SkeletonCard v-if="loading" :count="6" />
       <EmptyState v-else-if="groupedRecords.length === 0" title="暂无记录" icon="clock"
@@ -71,7 +69,7 @@ import ConfirmSheet from '@/components/ConfirmSheet.vue'
 import ContextMenu from '@/components/ContextMenu.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
 import EmptyState from '@/components/EmptyState.vue'
-import LargeTitleNav from '@/components/LargeTitleNav.vue'
+import ThinNavBar from '@/components/ThinNavBar.vue'
 import SkeletonCard from '@/components/SkeletonCard.vue'
 import MenuSelect from '@/components/MenuSelect.vue'
 import SwipeToDelete from '@/components/SwipeToDelete.vue'
@@ -81,7 +79,6 @@ import { WEEKDAY_LONG } from '@/utils'
 const app = useAppStore()
 const router = useRouter()
 const route = useRoute()
-const navScroll = ref(0)
 const records = ref<any[]>([])
 const { softDelete } = useUndoDelete(records)
 

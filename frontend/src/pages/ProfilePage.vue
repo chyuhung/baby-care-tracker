@@ -1,9 +1,9 @@
 <template>
   <div class="flex flex-col h-dvh">
     <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
-      :refresh="refreshAll" @scroll="navScroll = $event">
+      :refresh="refreshAll">
     <template #header>
-    <LargeTitleNav title="我的" :scroll-top="navScroll" />
+      <ThinNavBar title="我的" />
     </template>
 
       <!-- 用户信息 -->
@@ -12,6 +12,30 @@
         <div>
           <div class="font-semibold text-text-primary">{{ auth.user?.username }}</div>
           <div class="text-sm text-text-secondary mt-0.5">家庭成员</div>
+        </div>
+      </div>
+
+      <!-- 当前宝宝（切换入口，已在首页标题栏等全局生效） -->
+      <div class="bg-surface rounded-2xl shadow-card overflow-hidden">
+        <div class="px-4 pt-3 pb-1">
+          <h2 class="text-sm font-semibold text-text-secondary">当前宝宝</h2>
+        </div>
+        <div class="border-t border-border-color/60 py-1">
+          <div v-for="baby in app.babies" :key="baby.id" role="button" tabindex="0"
+            :aria-current="isCurrentBaby(baby) ? 'true' : undefined"
+            class="w-full px-4 py-2.5 flex items-center gap-3 min-h-[44px] text-left btn-press"
+            @click="switchBaby(baby)">
+            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+              :style="{ background: baby.avatar_color }">{{ baby.name[0] }}</span>
+            <span class="flex-1 min-w-0">
+              <span class="block font-medium text-text-primary">{{ baby.name }}</span>
+              <span class="block text-xs text-text-secondary mt-0.5">{{ formatBirthDate(baby.birth_date) }}</span>
+            </span>
+            <svg v-if="isCurrentBaby(baby)" class="h-5 w-5 shrink-0 text-primary-deep" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <p v-if="app.babies.length === 0" class="px-4 py-4 text-sm text-text-secondary">还没有宝宝档案，请先在下方添加</p>
         </div>
       </div>
 
@@ -163,7 +187,7 @@ import { familyAPI, recordAPI } from '@/api'
 import PullRefresh from '@/components/PullRefresh.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
 import EmptyState from '@/components/EmptyState.vue'
-import LargeTitleNav from '@/components/LargeTitleNav.vue'
+import ThinNavBar from '@/components/ThinNavBar.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
 import { parseLocalDate } from '@/utils'
 
@@ -181,7 +205,6 @@ interface Family {
 const router = useRouter()
 const auth = useAuthStore()
 const app = useAppStore()
-const navScroll = ref(0)
 const appVersion = '1.0.0'
 const exporting = ref(false)
 
@@ -326,6 +349,15 @@ function formatBirthDate(bd: string) {
   if (!d) return bd
   const p2 = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`
+}
+
+function isCurrentBaby(baby: { id: number }) {
+  return app.currentBaby?.id === baby.id
+}
+
+function switchBaby(baby: { id: number, name: string }) {
+  app.setCurrentBaby(baby.id)
+  app.showToast(`已切换为 ${baby.name}`, 'success')
 }
 
 onMounted(() => {

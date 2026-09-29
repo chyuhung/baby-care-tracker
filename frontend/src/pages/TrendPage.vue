@@ -1,20 +1,18 @@
 <template>
   <div class="flex flex-col h-dvh">
     <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] space-y-6"
-      :refresh="() => loadTrend(true)" @scroll="navScroll = $event">
+      :refresh="() => loadTrend(true)">
     <template #header>
-    <LargeTitleNav title="趋势" :scroll-top="navScroll">
-      <template #filters>
-        <div class="flex items-center gap-2 mt-2">
-          <MenuSelect v-model="category" :options="categoryOptions" title="选择类别" aria-label="选择类别" />
-          <div class="flex-1 min-w-0">
-            <Segmented :model-value="String(days)" :options="dayOptions" compact
-              @update:model-value="(v: string) => { days = Number(v); loadTrend() }" />
-          </div>
-        </div>
-      </template>
-    </LargeTitleNav>
+      <ThinNavBar title="趋势" />
     </template>
+
+      <div class="flex items-center gap-2">
+        <MenuSelect v-model="category" :options="categoryOptions" title="选择类别" aria-label="选择类别" />
+        <div class="flex-1 min-w-0">
+          <Segmented :model-value="String(days)" :options="dayOptions" compact
+            @update:model-value="(v: string) => { days = Number(v); loadTrend() }" />
+        </div>
+      </div>
 
       <SkeletonCard v-if="loading" :count="4" />
       <EmptyState v-else-if="trendData.length === 0" title="暂无趋势数据"
@@ -250,7 +248,7 @@ import ActivityIndicator from '@/components/ActivityIndicator.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import Segmented from '@/components/Segmented.vue'
 import MenuSelect from '@/components/MenuSelect.vue'
-import LargeTitleNav from '@/components/LargeTitleNav.vue'
+import ThinNavBar from '@/components/ThinNavBar.vue'
 import SkeletonCard from '@/components/SkeletonCard.vue'
 
 const app = useAppStore()
@@ -260,7 +258,6 @@ const trendPrev = ref<any[]>([])
 const loading = ref(false)
 const days = ref(7)
 const category = ref('feeding')
-const navScroll = ref(0)
 
 const categoryOptions = [
   { label: '喂奶', emoji: '🍼', value: 'feeding' },

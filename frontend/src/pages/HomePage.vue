@@ -2,34 +2,33 @@
   <div class="flex flex-col h-dvh">
     <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
       :refresh="loadData" @scroll="navScroll = $event">
-      <!-- Header -->
+      <!-- iOS 大标题导航：整块吸顶，大标题随滚动原地 morph（34px→17px），信息条（宝贝/日期/同步）常驻其下 -->
       <template #header>
-      <LargeTitleNav :title="app.currentBaby?.name ? `${app.currentBaby?.name} 的记录` : '宝宝护理'"
-        inline-title="记录" :scroll-top="navScroll">
-        <template #actions>
-          <span v-if="app.wsConnected" class="text-xs text-success flex items-center gap-1">
-            <span class="w-2 h-2 bg-success rounded-full inline-block"></span>同步
-          </span>
-          <span v-else class="text-xs text-text-secondary">离线</span>
-        </template>
-        <template #sub>
-          <p v-if="app.currentBaby?.birth_date" class="text-xs text-text-secondary truncate mt-0.5">
-            {{ ageText }} · {{ todayDateText }}
-          </p>
-        </template>
-        <template #filters>
-          <div v-if="app.currentBaby" class="flex items-center gap-2 mt-2">
-            <div class="relative flex-1">
-              <select v-model="selectedBabyId" @change="switchBaby"
-                class="w-full min-h-[44px] px-3 py-2.5 bg-surface border border-border-color rounded-xl text-base text-text-primary appearance-none cursor-pointer focus:border-primary focus:outline-none transition-colors pr-8">
-                <option v-for="b in app.babies" :key="b.id" :value="b.id">{{ b.name }}</option>
-              </select>
-              <svg class="w-4 h-4 text-text-secondary pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        <div ref="chromeRef" class="sticky top-0 z-30 glass-surface hairline-bottom" role="button"
+          aria-label="返回顶部" @click="scrollToTop" :style="chromeStyle">
+          <div ref="innerRef" class="pt-safe">
+            <div ref="titleRowRef" class="flex h-11 items-center px-4">
+              <h1 class="min-w-0 truncate font-bold text-text-primary"
+                :style="{ fontSize: `${34 - 17 * morphP}px`, lineHeight: '1', letterSpacing: '-0.02em' }">记录</h1>
+            </div>
+            <div class="flex items-center gap-2 px-4 pb-2">
+              <div class="flex min-w-0 items-center gap-1.5">
+                <span v-if="app.currentBaby" class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                  :style="{ background: app.currentBaby.avatar_color }">{{ app.currentBaby.name[0] }}</span>
+                <span class="min-w-0 truncate text-[13px] font-medium text-text-primary">{{ app.currentBaby?.name || '未添加宝宝' }}</span>
+                <span v-if="ageText" class="shrink-0 text-[11px] font-medium text-text-secondary">{{ ageText }}</span>
+              </div>
+              <span class="flex-1 truncate text-center text-[13px] font-medium text-text-secondary">{{ todayDateText }}</span>
+              <div class="flex shrink-0 justify-end">
+                <span v-if="app.wsConnected" class="flex items-center gap-1 text-[11px] text-success">
+                  <span class="inline-block h-2 w-2 rounded-full bg-success"></span>同步
+                </span>
+                <span v-else class="text-[11px] text-text-secondary">离线</span>
+              </div>
             </div>
           </div>
-        </template>
-      </LargeTitleNav>
-    </template>
+        </div>
+      </template>
 
       <!-- 空状态：无宝宝 -->
       <EmptyState v-if="app.babies.length === 0" title="还没有添加宝宝" icon="folder"
@@ -271,7 +270,6 @@ import ContextMenu from '@/components/ContextMenu.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
 import { recordDisplay, CONTEXT_ICONS } from '@/utils/recordDisplay'
 import EmptyState from '@/components/EmptyState.vue'
-import LargeTitleNav from '@/components/LargeTitleNav.vue'
 import { durationCompactParts, formatDurationCN, WEEKDAY_SHORT, parseLocalDate } from '@/utils'
 
 const tick = ref(0)
@@ -279,6 +277,37 @@ let tickTimer: number | null = null
 const router = useRouter()
 const app = useAppStore()
 const navScroll = ref(0)
+
+// ── iOS 大标题 morph：滚动进度驱动标题从 34px 缩到 17px，玻璃随进度淡入 ──
+const chromeRef = ref<HTMLElement | null>(null)
+const innerRef = ref<HTMLElement | null>(null)
+const titleRowRef = ref<HTMLElement | null>(null)
+const morphEnd = ref(0)
+let chromeRO: ResizeObserver | undefined
+
+function updateMorphEnd() {
+  const chrome = chromeRef.value
+  const row = titleRowRef.value
+  if (!chrome || !row) return
+  const cb = chrome.getBoundingClientRect()
+  const rb = row.getBoundingClientRect()
+  morphEnd.value = Math.max(1, rb.top - cb.top + rb.height)
+}
+
+const morphP = computed(() => {
+  const e = morphEnd.value
+  return e > 0 ? Math.min(1, Math.max(0, navScroll.value / e)) : 0
+})
+
+// 玻璃背景与 hairline 透明度随滚动进度渐变（0=透明），文字层不受影响
+const chromeStyle = computed(() => ({
+  background: `rgb(var(--surface) / ${morphP.value})`,
+  '--hairline-alpha': `${0.26 * morphP.value}`,
+}))
+
+function scrollToTop() {
+  window.dispatchEvent(new CustomEvent('app:scroll-to-top'))
+}
 const UNIT_CLASS = 'text-sm text-text-secondary'
 const stats = ref<BabyStats>({ feeding_count: 0, diaper_count: 0, total_ml_today: 0, last_feeding: '', last_diaper: '', sleep_count: 0, sleep_duration: 0, last_sleep_end: '', temperature_count: 0, latest_temperature: 0, last_temperature: '', outdoor_count: 0, outdoor_duration: 0, last_outdoor_end: '', supplement_count: 0, last_supplement: '' })
 const allRecords = ref<any[]>([])
@@ -336,7 +365,6 @@ const currentSleep = ref<SleepRecord | null>(null)
 const currentOutdoor = ref<OutdoorRecord | null>(null)
 const loadingAction = ref<string | null>(null)
 const deleting = ref(false)
-const selectedBabyId = ref<number | null>(null)
 let loadGeneration = 0
 
 const ageText = computed(() => {
@@ -503,7 +531,6 @@ async function loadData() {
   }
   const baby = app.currentBaby
   if (!baby) return
-  selectedBabyId.value = baby.id
   const gen = ++loadGeneration
   try {
     const [statsRes, recordsRes, countRes, sleepRes, outdoorRes, tempTodayRes] = await Promise.all([
@@ -546,13 +573,6 @@ async function loadMore() {
     app.showToast('数据加载失败', 'error')
   } finally {
     loadingMore.value = false
-  }
-}
-
-function switchBaby() {
-  if (selectedBabyId.value) {
-    app.setCurrentBaby(selectedBabyId.value)
-    loadData()
   }
 }
 
@@ -705,10 +725,16 @@ onMounted(() => {
   window.addEventListener('record-created', onRecordCreated)
   window.addEventListener('record-deleted', onRecordDeleted)
   tickTimer = window.setInterval(() => { tick.value++ }, 10000)
+  updateMorphEnd()
+  if (typeof ResizeObserver !== 'undefined' && chromeRef.value) {
+    chromeRO = new ResizeObserver(updateMorphEnd)
+    chromeRO.observe(chromeRef.value)
+  }
 })
 onUnmounted(() => {
   window.removeEventListener('record-created', onRecordCreated)
   window.removeEventListener('record-deleted', onRecordDeleted)
   if (tickTimer !== null) clearInterval(tickTimer)
+  chromeRO?.disconnect()
 })
 </script>
