@@ -223,6 +223,11 @@ function onScroll() {
   if (el) emit('scroll', el.scrollTop)
 }
 
+/* 小标题条点击回顶（LargeTitleNav 派发全局事件，各页 PullRefresh 自动生效） */
+function onScrollToTop() {
+  rootRef.value?.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
 onMounted(() => {
   const el = rootRef.value
   if (!el) return
@@ -232,6 +237,7 @@ onMounted(() => {
   el.addEventListener('touchcancel', onCancel)
   el.addEventListener('scroll', onScroll, { passive: true })
   document.addEventListener('click', onDocumentClick, { capture: true })
+  window.addEventListener('app:scroll-to-top', onScrollToTop)
 })
 
 onUnmounted(() => {
@@ -244,6 +250,7 @@ onUnmounted(() => {
     el.removeEventListener('scroll', onScroll)
   }
   document.removeEventListener('click', onDocumentClick, { capture: true })
+  window.removeEventListener('app:scroll-to-top', onScrollToTop)
   if (refreshTimer !== null) { window.clearTimeout(refreshTimer); refreshTimer = null }
   suppressUntil = 0
 })

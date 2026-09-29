@@ -17,10 +17,13 @@
     </div>
   </header>
 
-  <!-- 页头滚出屏幕后浮出的毛玻璃小标题条（仅展示，不拦截指针事件） -->
+  <!-- 页头滚出屏幕后浮出的毛玻璃小标题条：浮出后可点击回顶（未浮出不拦截指针） -->
   <Teleport to="body">
-    <div class="pointer-events-none fixed top-0 left-1/2 z-40 w-full max-w-[480px] -translate-x-1/2 glass-surface hairline-bottom pt-safe transition-opacity duration-200"
-      :class="collapsed ? 'opacity-100' : 'opacity-0'">
+    <div
+      :class="collapsed ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'"
+      class="fixed top-0 left-1/2 z-40 w-full max-w-[480px] -translate-x-1/2 glass-surface hairline-bottom pt-safe transition-opacity duration-200 cursor-pointer"
+      @click="scrollToTop"
+      role="button" aria-label="返回顶部">
       <div class="flex h-11 items-center px-4">
         <span class="truncate text-[17px] font-semibold text-text-primary">{{ inlineTitleText }}</span>
       </div>
@@ -64,4 +67,9 @@ watch(() => props.scrollTop, (v) => {
 }, { immediate: true })
 
 const inlineTitleText = computed(() => props.inlineTitle || props.title)
+
+// 单击浮出的小标题条 → 各页 PullRefresh 容器回顶
+function scrollToTop() {
+  window.dispatchEvent(new CustomEvent('app:scroll-to-top'))
+}
 </script>
