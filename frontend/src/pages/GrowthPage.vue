@@ -27,7 +27,7 @@
           <div class="grid grid-cols-3 divide-x divide-border-color/60">
             <div v-for="m in metrics" :key="m.key" class="px-3 py-1 text-center">
               <div class="text-xs text-text-secondary">{{ m.label }}</div>
-              <div class="font-num text-lg font-bold text-text-primary mt-0.5">{{ m.value }}</div>
+              <div class="font-num text-xl font-bold text-text-primary mt-0.5">{{ m.value }}</div>
               <div class="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
                 :class="pctClass(m.pct)">
                 {{ m.pct > 0 ? 'P' + m.pct.toFixed(0) : '--' }}
@@ -46,7 +46,7 @@
             <Segmented v-model="metric" :options="metricOptions" compact />
           </div>
           <!-- 参考区间图例 -->
-          <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-1 mb-1.5 text-[10px] text-text-secondary">
+          <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-1 mb-1.5 text-[11px] text-text-secondary">
             <span class="inline-flex items-center gap-1">
               <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--danger-deep) / 0.3)"></i>落后 &lt;P25
             </span>

@@ -34,7 +34,7 @@
                 <span class="text-3xl font-bold text-text-primary font-num">{{ stats.total_ml_today }}<sup v-if="stats.feeding_count > 0" class="text-[0.55em] font-bold text-text-secondary font-num leading-none">{{ stats.feeding_count }}</sup></span>
                 <span :class="UNIT_CLASS">ml</span>
               </div>
-              <div class="text-3xl">🍼</div>
+              <div class="w-9 h-9 shrink-0 flex items-center justify-center rounded-xl bg-primary/10 text-lg leading-none">🍼</div>
             </div>
             <div class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
@@ -62,7 +62,7 @@
                 <span class="text-3xl font-bold font-num text-text-primary">{{ stats.diaper_count }}</span>
                 <span class="text-sm text-text-secondary">次</span>
               </div>
-              <div class="text-3xl">🩲</div>
+              <div class="w-9 h-9 shrink-0 flex items-center justify-center rounded-xl bg-diaper/10 text-lg leading-none">🩲</div>
             </div>
             <div class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
@@ -95,7 +95,7 @@
                   </template>
                 </div>
               </div>
-              <div class="text-3xl">😴</div>
+              <div class="w-9 h-9 shrink-0 flex items-center justify-center rounded-xl bg-sleep/10 text-lg leading-none">😴</div>
             </div>
             <div class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
@@ -126,7 +126,7 @@
                 <span v-else class="text-3xl font-bold font-num text-text-secondary">--</span>
                 <span class="text-sm text-text-secondary">°C</span>
               </div>
-              <div class="text-3xl">🌡️</div>
+              <div class="w-9 h-9 shrink-0 flex items-center justify-center rounded-xl bg-temperature/10 text-lg leading-none">🌡️</div>
             </div>
             <div class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
@@ -156,7 +156,7 @@
                   </template>
                 </div>
               </div>
-              <div class="text-3xl">🌳</div>
+              <div class="w-9 h-9 shrink-0 flex items-center justify-center rounded-xl bg-outdoor/10 text-lg leading-none">🌳</div>
             </div>
             <div class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>
@@ -186,7 +186,7 @@
                 <span class="text-3xl font-bold font-num text-text-primary">{{ stats.supplement_count }}</span>
                 <span class="text-sm text-text-secondary">次</span>
               </div>
-              <div class="text-3xl">💊</div>
+              <div class="w-9 h-9 shrink-0 flex items-center justify-center rounded-xl bg-supplement/10 text-lg leading-none">💊</div>
             </div>
             <div class="mt-2 flex items-center justify-between">
               <span class="text-xs text-text-secondary">距上次</span>

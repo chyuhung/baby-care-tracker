@@ -8,7 +8,11 @@
 
       <!-- 用户信息（微信「我」页：头像+昵称直接落在页面底色上，不套白卡） -->
       <div class="flex items-center gap-4">
-        <div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-2xl">👤</div>
+        <div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+          <svg class="w-7 h-7 text-primary-deep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" />
+          </svg>
+        </div>
         <div>
           <div class="font-semibold text-text-primary">{{ auth.user?.username }}</div>
           <div class="text-sm text-text-secondary mt-0.5">家庭成员</div>
@@ -125,8 +129,8 @@
         <h2 class="pb-1.5 text-[13px] text-text-secondary">数据</h2>
         <div class="bg-surface rounded-2xl shadow-card overflow-hidden divide-y divide-border-color/60">
           <router-link to="/growth" class="px-4 py-3.5 flex items-center gap-3 min-h-[44px] btn-press block">
-            <span class="w-9 h-9 rounded-full bg-sleep/15 flex items-center justify-center shrink-0">
-              <svg class="w-5 h-5 text-sleep-deep" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <span class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <svg class="w-5 h-5 text-primary-deep" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 20V10M10 20V4M16 20v-8M4 20h16" />
               </svg>
             </span>
