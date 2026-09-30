@@ -59,7 +59,7 @@
                 aria-label="邀请码" inputmode="text" autocapitalize="characters" autocomplete="off" enterkeyhint="done"
                 class="flex-1 min-h-[44px] px-3 py-2.5 bg-muted border border-border-color rounded-xl text-base focus:border-primary focus:outline-none transition-colors uppercase" />
               <button @click="joinFamily" :disabled="!joinCode.trim()"
-                class="px-4 py-3 bg-primary-fill text-white text-sm font-medium rounded-xl btn-press min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed">加入</button>
+                class="px-4 py-3 bg-primary/10 text-primary-deep text-sm font-medium rounded-xl btn-press min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed">加入</button>
             </div>
           </div>
 
@@ -107,7 +107,7 @@
                   aria-label="邀请码" inputmode="text" autocapitalize="characters" autocomplete="off" enterkeyhint="done"
                   class="flex-1 min-w-0 min-h-[44px] px-3 py-2.5 bg-muted border border-border-color rounded-xl text-base focus:border-primary focus:outline-none transition-colors uppercase" />
                 <button @click="joinFamily" :disabled="!joinCode.trim()"
-                  class="shrink-0 px-4 py-3 bg-primary-fill text-white text-sm font-medium rounded-xl btn-press min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed">加入</button>
+                  class="shrink-0 px-4 py-3 bg-primary/10 text-primary-deep text-sm font-medium rounded-xl btn-press min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed">加入</button>
               </div>
 
               <!-- 退出家庭（仅多人家庭） -->

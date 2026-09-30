@@ -216,7 +216,7 @@
           <div v-if="summary.empty" class="bg-muted rounded-xl">
             <EmptyState size="sm" icon="chart" :title="`近 ${days} 天暂无记录`" subtitle="记录几天后，这里会生成周期对比">
               <router-link to="/"
-                class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-primary-fill text-white rounded-xl font-medium text-sm btn-press">
+                class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-primary/10 text-primary-deep rounded-xl font-medium text-sm btn-press">
                 去记录
               </router-link>
             </EmptyState>

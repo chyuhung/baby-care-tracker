@@ -6,7 +6,7 @@
         <NavBar title="成长记录">
           <template #actions>
             <button type="button" @click="openForm"
-              class="inline-flex items-center gap-1 h-9 px-3.5 rounded-full bg-primary-fill text-white text-sm font-semibold btn-press">
+              class="inline-flex items-center gap-1 h-9 px-3.5 rounded-full bg-primary/10 text-primary-deep text-sm font-semibold btn-press">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 5v14m7-7H5"/></svg>
               记录
             </button>
@@ -119,7 +119,7 @@
       <EmptyState v-else icon="chart" title="还没有成长记录"
         subtitle="记录身高、体重、头围，自动生成百分位与成长曲线">
         <button type="button" @click="openForm"
-          class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-primary-fill text-white text-sm font-semibold rounded-xl btn-press">
+          class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-primary/10 text-primary-deep text-sm font-semibold rounded-xl btn-press">
           添加测量
         </button>
       </EmptyState>
@@ -164,8 +164,8 @@
                 <button type="button" @click="closeForm"
                   class="flex-1 py-3 bg-muted text-text-primary font-medium rounded-xl btn-press">取消</button>
                 <button type="button" @click="submit" :disabled="submitting"
-                  class="flex-1 py-3 bg-primary-fill text-white font-semibold rounded-xl btn-press disabled:opacity-50 flex items-center justify-center gap-2">
-                  <ActivityIndicator v-if="submitting" :size="18" class="text-white" />
+                  class="flex-1 py-3 bg-primary/10 text-primary-deep font-semibold rounded-xl btn-press disabled:opacity-50 flex items-center justify-center gap-2">
+                  <ActivityIndicator v-if="submitting" :size="18" class="text-primary-deep" />
                   <span>{{ submitting ? '保存中...' : '保存' }}</span>
                 </button>
               </div>
