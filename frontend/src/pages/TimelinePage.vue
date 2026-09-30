@@ -3,13 +3,13 @@
     <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
       :refresh="() => loadRecords(true, true)">
     <template #header>
-      <NavBar title="时间线" />
+      <NavBar title="时间线">
+        <template #actions>
+          <MenuSelect :model-value="activeFilter" :options="filterOptions" title="筛选记录" trigger="icon"
+            aria-label="筛选记录类型" @update:model-value="(v: string | number) => activeFilter = String(v)" />
+        </template>
+      </NavBar>
     </template>
-
-      <div class="flex items-center gap-2">
-        <MenuSelect :model-value="activeFilter" :options="filterOptions" title="筛选记录"
-          aria-label="筛选记录类型" @update:model-value="(v: string | number) => activeFilter = String(v)" />
-      </div>
 
       <SkeletonCard v-if="loading" :count="6" />
       <EmptyState v-else-if="groupedRecords.length === 0" title="暂无记录" icon="clock"

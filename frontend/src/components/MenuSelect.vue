@@ -1,6 +1,6 @@
 <template>
-  <!-- 触发按钮（iOS 胶囊 + 下拉箭头） -->
-  <button type="button" @click="open = true"
+  <!-- 触发按钮 · pill 模式（iOS 胶囊 + 下拉箭头） -->
+  <button v-if="trigger === 'pill'" type="button" @click="open = true"
     class="inline-flex items-center gap-1.5 h-11 pl-3.5 pr-3 rounded-full bg-surface border border-border-color text-text-primary text-sm font-semibold btn-press shadow-sm whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
     :aria-haspopup="true" :aria-expanded="open" :aria-label="ariaLabel">
     <span v-if="current?.emoji" class="text-base leading-none">{{ current.emoji }}</span>
@@ -8,6 +8,19 @@
     <svg class="w-3 h-3 text-text-secondary transition-transform duration-200" :class="open ? 'rotate-180' : ''"
       viewBox="0 0 10 6" fill="none">
       <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </button>
+
+  <!-- 触发按钮 · icon 模式（微信式标题栏右侧精简图标，选中非默认项时主题色高亮） -->
+  <button v-else type="button" @click="open = true"
+    class="flex h-11 items-center justify-center -mr-1 px-2 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    :aria-haspopup="true" :aria-expanded="open" :aria-label="ariaLabel">
+    <svg class="w-5 h-5" :class="isNonDefault ? 'text-primary-deep' : 'text-text-secondary'" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d="M4 7h8M17 7h3M4 12h4M13 12h7M4 17h12M19 17h1" />
+      <circle cx="14" cy="7" r="2" />
+      <circle cx="10" cy="12" r="2" />
+      <circle cx="17" cy="17" r="2" />
     </svg>
   </button>
 
@@ -60,10 +73,12 @@ const props = withDefaults(defineProps<{
   title?: string
   placeholder?: string
   ariaLabel?: string
+  trigger?: 'pill' | 'icon'
 }>(), {
   title: '',
   placeholder: '请选择',
   ariaLabel: '选择',
+  trigger: 'pill',
 })
 
 const emit = defineEmits<{ (e: 'update:modelValue', v: string | number): void }>()
@@ -71,6 +86,7 @@ const emit = defineEmits<{ (e: 'update:modelValue', v: string | number): void }>
 const open = ref(false)
 const panelRef = ref<HTMLElement | null>(null)
 const current = computed(() => props.options.find(o => o.value === props.modelValue))
+const isNonDefault = computed(() => props.options[0] !== undefined && props.modelValue !== props.options[0].value)
 
 function select(v: string | number) {
   emit('update:modelValue', v)

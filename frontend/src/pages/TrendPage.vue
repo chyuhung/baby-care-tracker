@@ -3,15 +3,16 @@
     <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] space-y-6"
       :refresh="() => loadTrend(true)">
     <template #header>
-      <NavBar title="趋势" />
+      <NavBar title="趋势">
+        <template #actions>
+          <MenuSelect v-model="category" :options="categoryOptions" title="选择类别" trigger="icon" aria-label="选择类别" />
+        </template>
+      </NavBar>
     </template>
 
-      <div class="flex items-center gap-2">
-        <MenuSelect v-model="category" :options="categoryOptions" title="选择类别" aria-label="选择类别" />
-        <div class="flex-1 min-w-0">
-          <Segmented :model-value="String(days)" :options="dayOptions" compact
-            @update:model-value="(v: string) => { days = Number(v); loadTrend() }" />
-        </div>
+      <div class="flex justify-end">
+        <Segmented :model-value="String(days)" :options="dayOptions" compact
+          @update:model-value="(v: string) => { days = Number(v); loadTrend() }" />
       </div>
 
       <SkeletonCard v-if="loading" :count="4" />
