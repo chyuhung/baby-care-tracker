@@ -50,7 +50,7 @@
 
   /* 中性面：白卡 / 灰 chip / 主文字 / 次文字 / 发丝线（暗色模式仅改这些） */
   --surface: 255 255 255;        /* #FFFFFF 卡片/输入框/弹层底 */
-  --muted: 222 224 230;          /* #DEE0E6 灰 chip / 分段底（iOS tertiaryFill，灰底上可见） */
+  --muted: 238 241 245;          /* #EEF1F5 清透浅灰 chip / 分段底/输入框底（提亮后的 iOS tertiaryFill，白卡上不突兀） */
   --text-primary: 28 28 30;      /* #1C1C1E 主文字 */
   --text-secondary: 95 102 114;  /* #5F6672 次要文字（白底 5.79 / 灰底 5.20） */
   --border-color: 232 234 240;   /* #E8EAF0 分隔线/边框 */

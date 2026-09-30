@@ -62,6 +62,8 @@ Family group sharing, timezone fix, record performance optimization
 
 - GrowthPage 精简统一（用户确认）：**(1)** 标题栏「记录」胶囊 → 纯图标圆钮（44px 触控 `rounded-full bg-primary/10 text-primary-deep` 内联 `＋` SVG `-mr-1`，对齐 Home 卡片加号/tinted 主按钮语言）；**(2)** 最新测量 3 灰块 → 白卡内 `grid grid-cols-3 divide-x divide-border-color/60` hairline 分隔（对齐趋势期间对比，`pctClass` 胶囊保留）；**(3)** 成长曲线图简化——删 P3/P25/P75/P97 四灰线、只留 P50 中位虚线（`text-secondary/0.7`、1.3、`dasharray 4,3`，与趋势虚线语言一致；区间语义由色带承担），参考区间填色 `0.14-0.16→0.1`（图例同色块），新增 X 轴月龄纵向辅助虚线（`dasharray 2,3`、`text-secondary/0.18`）+ 左/右/下 `--chart-line` 轴边框（对齐 TrendPage 画法），图例 P50 条改虚线样例「P50 中位」
 
+- 成长记录分区色语义纠正 + 全站浅灰（用户确认三选）：**(1)** 图内三色改为**一眼可懂语义**——红=落后/偏低 `<P25`（原 redLow+yellowLow 两带合并填 danger）、黄=正常 `P25-P75`（原 green 带改填 warning）、绿=优秀/偏高 `≥P75`（原 yellowHigh+redHigh 合并填 success）；图例/脚注/`pctClass` 胶囊全部同步（`<25→bg-danger/10`、`25-75→bg-warning/15`、`≥75→bg-success/10`），P50 中位虚线不受影响；**(2)** 导航「记录测量」按钮 tinted 圆底填充钮 → **描边 `+` 图标**（透明底 `h-11 w-11 rounded-lg text-primary-deep`，与趋势日历/sliders 同一套轮廓语言）；**(3)** `--muted` 提亮 `#DEE0E6 → #EEF1F5`（238 241 245，一处 token 通吃 Segmented 轨道/全部输入框底/日期滚轮选中带/Skeleton/EmptyState 图标圆/离线条/sheet 高亮 18 处；暗色 `#2C2C2E` 不动）
+
 ### Known Issues
 - `vue-tsc` typecheck fails on Node.js v24 — not a code issue (needed to catch dead-method bugs like the export one above)
 - `.gitignore` root-anchors `/data/`; `baby-care-tracker.exe` binary is tracked in git

@@ -6,8 +6,8 @@
         <NavBar title="成长记录">
           <template #actions>
             <button type="button" @click="openForm" aria-label="记录测量"
-              class="-mr-1 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary-deep btn-press">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 5v14m7-7H5"/></svg>
+              class="-mr-1 flex h-11 w-11 items-center justify-center rounded-lg text-primary-deep btn-press">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5"/></svg>
             </button>
           </template>
         </NavBar>
@@ -48,13 +48,13 @@
           <!-- 参考区间图例 -->
           <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-1 mb-1.5 text-[10px] text-text-secondary">
             <span class="inline-flex items-center gap-1">
-              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--success-deep) / 0.1)"></i>正常 P25–P75
+              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--danger-deep) / 0.3)"></i>落后 &lt;P25
             </span>
             <span class="inline-flex items-center gap-1">
-              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--warning-deep) / 0.1)"></i>中下/中上
+              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--warning-deep) / 0.3)"></i>正常 P25–P75
             </span>
             <span class="inline-flex items-center gap-1">
-              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--danger-deep) / 0.1)"></i>&lt;P3 / &gt;P97
+              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--success-deep) / 0.3)"></i>优秀 ≥P75
             </span>
             <span class="inline-flex items-center gap-1">
               <i class="w-3 h-0 border-t border-dashed" style="border-color: rgb(var(--text-secondary) / 0.7)"></i>P50 中位
@@ -67,13 +67,13 @@
             <EmptyState size="sm" icon="chart" title="暂无数据" subtitle="记录几次测量后即可看到趋势" />
           </div>
           <svg v-else :viewBox="`0 0 ${W} ${H}`" class="w-full" role="img" aria-label="成长曲线图">
-            <!-- 参考区间（医院图三色，浅淡底） -->
+            <!-- 参考区间三色（落后红<25 / 正常黄 25-75 / 优秀绿≥75） -->
             <template v-if="zonePaths">
-              <path :d="zonePaths.redLow" style="fill: rgb(var(--danger-deep) / 0.1)" />
-              <path :d="zonePaths.redHigh" style="fill: rgb(var(--danger-deep) / 0.1)" />
-              <path :d="zonePaths.yellowLow" style="fill: rgb(var(--warning-deep) / 0.1)" />
-              <path :d="zonePaths.yellowHigh" style="fill: rgb(var(--warning-deep) / 0.1)" />
-              <path :d="zonePaths.green" style="fill: rgb(var(--success-deep) / 0.1)" />
+              <path :d="zonePaths.redLow" style="fill: rgb(var(--danger-deep) / 0.12)" />
+              <path :d="zonePaths.yellowLow" style="fill: rgb(var(--danger-deep) / 0.12)" />
+              <path :d="zonePaths.green" style="fill: rgb(var(--warning-deep) / 0.12)" />
+              <path :d="zonePaths.yellowHigh" style="fill: rgb(var(--success-deep) / 0.12)" />
+              <path :d="zonePaths.redHigh" style="fill: rgb(var(--success-deep) / 0.12)" />
             </template>
             <!-- 网格（横向实线 + 纵向辅助虚线） -->
             <line v-for="(t, i) in yTicks" :key="'g' + i" :x1="PAD_L" :x2="W - PAD_R" :y1="t.y" :y2="t.y"
@@ -98,8 +98,8 @@
               class="chart-axis-label" font-size="9">{{ t.label }}</text>
           </svg>
           <p class="text-[11px] text-text-secondary mt-2 leading-relaxed px-1">
-            参考区间依据《7岁以下儿童生长标准》(WS/T 423-2022)：绿区 P25–P75 中等，黄区中下/中上，红区 &lt;P3 或
-            &gt;P97。横轴为月龄；2 岁前为身长、2 岁后为身高，头围参考至 3 岁。仅供参考，不能替代儿科医生评估。
+            参考区间依据《7岁以下儿童生长标准》(WS/T 423-2022)：红区 &lt;P25 落后/偏低，黄区 P25–P75 正常，绿区
+            ≥P75 优秀/偏高。横轴为月龄；2 岁前为身长、2 岁后为身高，头围参考至 3 岁。仅供参考，不能替代儿科医生评估。
           </p>
         </div>
 
@@ -246,11 +246,11 @@ const metrics = computed(() => {
 })
 
 function pctClass(p: number) {
-  // 与标准表1五级评价一致：<P3 下、P3-P25 中下、P25-P75 中、P75-P97 中上、≥P97 上
+  // 与图内三色分区一致：<P25 落后/偏低（红）、P25-P75 正常（黄）、≥P75 优秀/偏高（绿）
   if (p <= 0) return 'bg-muted text-text-secondary'
-  if (p < 3 || p > 97) return 'bg-danger/10 text-danger'
-  if (p < 25 || p > 75) return 'bg-warning/15 text-warning-deep'
-  return 'bg-success/15 text-success'
+  if (p < 25) return 'bg-danger/10 text-danger'
+  if (p > 75) return 'bg-success/10 text-success'
+  return 'bg-warning/15 text-warning-deep'
 }
 
 function detailOf(g: GrowthRecord) {
@@ -371,7 +371,7 @@ const refPaths = computed<Record<string, string> | null>(() => {
   return out
 })
 
-// 参考区间（医院图三色：绿 P25-P75 / 黄 P3-P25、P75-P97 / 红 <P3、>P97）
+// 参考区间三色语义（一眼读懂，未按五级细分）：红=滞后/偏低 <P25、黄=正常 P25-P75、绿=优秀/偏高 ≥P75
 const zonePaths = computed(() => {
   const vis = visibleRef.value
   if (!vis) return null
