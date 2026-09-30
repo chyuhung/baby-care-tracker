@@ -245,13 +245,9 @@ body {
   -webkit-backdrop-filter: none;
 }
 
-/* chrome 轻微投影，强化顶/底栏「浮起」的层级感 */
+/* chrome 轻微投影，强化顶/底栏「浮起」的层级感（顶栏无投影，下缘仅一条 hairline，同微信） */
 nav.glass-surface {
   box-shadow: 0 -0.5px 16px rgba(24, 34, 52, 0.05);
-}
-header.glass-surface,
-header.nav-surface {
-  box-shadow: 0 0.5px 16px rgba(24, 34, 52, 0.045);
 }
 
 /* iOS 0.5px hairline 细线：三段式 chrome（顶部标题栏 / 底部 Tab）与内容区的分割 */
@@ -280,9 +276,11 @@ header.nav-surface {
   }
 }
 
-/* 安全区适配：刘海/灵动岛避开状态栏与 Home 指示条 */
+/* 安全区适配：刘海/灵动岛避开状态栏与 Home 指示条。
+   default 状态栏下 iOS 已把状态栏区域划给系统、env(inset-top)=0，页面从状态栏下方开始，
+   故顶栏不再设 0.75rem 兜底 —— 顶部总高（状态栏 47/54 + 标题栏 44px）严格对齐微信原生导航栏 */
 .pt-safe {
-  padding-top: max(env(safe-area-inset-top), 0.75rem);
+  padding-top: env(safe-area-inset-top);
 }
 .pb-safe {
   padding-bottom: max(env(safe-area-inset-bottom), 0.75rem);
