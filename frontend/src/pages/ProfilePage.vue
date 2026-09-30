@@ -100,25 +100,14 @@
                 </span>
               </div>
 
-              <!-- 加入其他家庭（二级展开输入） -->
-              <div>
-                <button type="button" :aria-expanded="joinOpen" @keydown.enter.prevent="joinOpen = !joinOpen"
-                  class="w-full px-4 py-3 flex items-center justify-between min-h-[44px] text-left btn-press"
-                  @click="joinOpen = !joinOpen">
-                  <span class="text-sm text-text-primary">加入其他家庭</span>
-                  <svg class="w-5 h-5 shrink-0 text-text-secondary/50 transition-transform" :class="joinOpen ? 'rotate-180' : ''"
-                    fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-                </button>
-                <div v-if="joinOpen" class="p-4 border-t border-border-color/60">
-                  <div class="flex gap-2">
-                    <input v-model="joinCode" placeholder="输入对方的邀请码" maxlength="6"
-                      aria-label="邀请码" inputmode="text" autocapitalize="characters" autocomplete="off" enterkeyhint="done"
-                      class="flex-1 min-h-[44px] px-3 py-2.5 bg-muted border border-border-color rounded-xl text-base focus:border-primary focus:outline-none transition-colors uppercase" />
-                    <button @click="joinFamily" :disabled="!joinCode.trim()"
-                      class="px-4 py-3 bg-primary-fill text-white text-sm font-medium rounded-xl btn-press min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed">加入</button>
-                  </div>
-                  <p class="text-xs text-text-secondary mt-2">加入后你的宝宝数据将切换到新家庭</p>
-                </div>
+              <!-- 加入其他家庭（单行：标签 + 邀请码 + 加入，不再折叠） -->
+              <div class="px-4 py-3 flex items-center gap-3 min-h-[44px]">
+                <span class="text-sm text-text-secondary shrink-0">加入其他家庭</span>
+                <input v-model="joinCode" placeholder="输入对方邀请码" maxlength="6"
+                  aria-label="邀请码" inputmode="text" autocapitalize="characters" autocomplete="off" enterkeyhint="done"
+                  class="flex-1 min-w-0 min-h-[44px] px-3 py-2.5 bg-muted border border-border-color rounded-xl text-base focus:border-primary focus:outline-none transition-colors uppercase" />
+                <button @click="joinFamily" :disabled="!joinCode.trim()"
+                  class="shrink-0 px-4 py-3 bg-primary-fill text-white text-sm font-medium rounded-xl btn-press min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed">加入</button>
               </div>
 
               <!-- 退出家庭（仅多人家庭） -->
@@ -240,7 +229,6 @@ const sheetMode = ref<'' | 'join' | 'leave'>('')
 
 // 我的家庭折叠展开状态
 const famOpen = ref(false)
-const joinOpen = ref(false)
 
 const memberText = computed(() =>
   family.value
