@@ -125,7 +125,13 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
+html {
+  /* 画布色 = --surface（= theme-color = NavBar）：浏览器下拉橡皮筋/加载 flash 露出的区域与顶栏一体，
+     不露 --bg-main 粉色底；页面本体粉色由 body 提供 */
+  background-color: rgb(var(--surface));
+}
+
+body {
   margin: 0;
   padding: 0;
   background-color: rgb(var(--bg-main));

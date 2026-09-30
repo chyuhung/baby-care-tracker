@@ -26,7 +26,8 @@ const app = useAppStore()
 const cacheInclude = computed(() => (auth.isLoggedIn ? 'MainLayout' : ''))
 
 // 状态栏/chrome 颜色由 index.html 的 media-scoped theme-color 处理：
-// 浅色 #FFF6FA（= --bg-main，启动无接缝）/ 深色 #1C1C1E（= --surface）。
+// 浅色 #FFFFFF / 深色 #1C1C1E = --surface（= NavBar 顶栏色）。
+// `html` 画布同色（style.css），故安装态与浏览器顶部三处（状态栏/chrome、画布、标题栏）恒为一体。
 onMounted(() => {
   auth.restoreSession()
 })
