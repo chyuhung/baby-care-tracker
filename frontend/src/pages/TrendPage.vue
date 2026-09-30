@@ -289,8 +289,10 @@ const dayOptions = [
   { label: '30天', value: 30 },
 ]
 
-// 指标极性：up-good = 升高是好事（默认），up-bad = 升高是坏事（体温升高即发热）。
-// 标在每张卡上而非按类别：体温类里「测温天数」升高是测得更勤，属 up-good。
+// 指标极性：up-good = 升高是好事（默认），up-bad = 升高是坏事。
+// 逆向指标：体温升高即发热（但同类「测温天数」升高是测得更勤，属 up-good）、
+// 尿布次数增加即红臀风险上升（该类 4 张卡全部同向）。
+// 故标在每张卡上而非按类别。
 type Polarity = 'up-good' | 'up-bad'
 
 const summary = computed(() => {
@@ -354,15 +356,16 @@ const summary = computed(() => {
     push('单日最高奶量', 'ml', curHas ? maxOf(data, d => d.total_ml || 0) : null, prevAgg(d => d.total_ml || 0, maxF(d => d.total_ml || 0)), i0)
   }
 
+  // 尿布：变化次数越少越好（红臀预防），故 4 张卡全为 up-bad —— 增加红、减少绿、持平黄
   const diaper = () => {
     const f = (d: any) => d.diaper_count || 0
     const has = (rows: any[]) => rows.some(d => f(d) > 0)
     if (!has(data) && !(pv && has(pv))) return emptyCards()
     const curHas = has(data)
-    push('日均尿布次数', '次', curHas ? sumOf(data, f) / P : null, prevAgg(f, avgF(f)), h1)
-    push('单日最多', '次', curHas ? maxOf(data, f) : null, prevAgg(f, maxF(f)), i0)
-    push('单日最少', '次', curHas ? curMinPos(f) : null, prevAgg(f, minPosF(f)), i0)
-    push('期间总次数', '次', curHas ? sumOf(data, f) : null, prevAgg(f, sumF(f)), i0)
+    push('日均尿布次数', '次', curHas ? sumOf(data, f) / P : null, prevAgg(f, avgF(f)), h1, 'up-bad')
+    push('单日最多', '次', curHas ? maxOf(data, f) : null, prevAgg(f, maxF(f)), i0, 'up-bad')
+    push('单日最少', '次', curHas ? curMinPos(f) : null, prevAgg(f, minPosF(f)), i0, 'up-bad')
+    push('期间总次数', '次', curHas ? sumOf(data, f) : null, prevAgg(f, sumF(f)), i0, 'up-bad')
   }
 
   const sleep = () => {
@@ -453,7 +456,8 @@ const periodLabel = computed(() => {
 
 function deltaArrow(d: number): string { return d > 0 ? '↑' : d < 0 ? '↓' : '—' }
 // 徽章语义色：与成长记录页三分区色同一套语言 —— 绿=优秀/升高、黄=正常/持平、红=落后/下降。
-// 体温三项极性相反（升高=发热故红、回落故绿）；持平两种极性都是黄。
+// 逆向指标极性相反（up-bad）：体温升高=发热、尿布次数增加=红臀风险上升，故升高红、回落故绿。
+// 持平两种极性都是黄。
 function deltaClass(c: { delta: number, polarity: Polarity }): string {
   const d = c.delta
   const upBad = c.polarity === 'up-bad'
