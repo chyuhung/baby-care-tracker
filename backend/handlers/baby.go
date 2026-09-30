@@ -11,11 +11,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// checkBabyFamily 检查宝宝是否属于当前用户的家庭
+// checkBabyFamily 检查宝宝是否属于当前用户的家庭（软删除的宝宝视为不可用）
 func checkBabyFamily(babyID, userID int64) bool {
 	var familyID int64
 	database.DB.QueryRow(
-		"SELECT u.family_id FROM babies b JOIN users u ON b.user_id = u.id WHERE b.id = ?",
+		"SELECT u.family_id FROM babies b JOIN users u ON b.user_id = u.id WHERE b.id = ? AND b.deleted_at IS NULL",
 		babyID,
 	).Scan(&familyID)
 	if familyID == 0 {
@@ -34,7 +34,7 @@ func GetBabies(c *gin.Context) {
 		`SELECT b.id, b.user_id, b.name, b.birth_date, b.gender, b.avatar_color, b.created_at
 		FROM babies b
 		JOIN users u ON b.user_id = u.id
-		WHERE u.family_id = (SELECT family_id FROM users WHERE id = ?)
+		WHERE u.family_id = (SELECT family_id FROM users WHERE id = ?) AND b.deleted_at IS NULL
 		ORDER BY b.created_at DESC`,
 		userID,
 	)
@@ -193,7 +193,9 @@ func DeleteBaby(c *gin.Context) {
 		return
 	}
 
-	_, err = database.DB.Exec("DELETE FROM babies WHERE id = ?", babyID)
+	// 软删除：仅打 deleted_at 标记，行保留，所有记录外键不受影响
+	now := time.Now().UTC().Format(time.RFC3339)
+	_, err = database.DB.Exec("UPDATE babies SET deleted_at = ? WHERE id = ?", now, babyID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "删除失败"})
 		return

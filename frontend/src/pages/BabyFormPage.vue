@@ -62,7 +62,7 @@
       </button>
     </FormBar>
 
-    <ConfirmSheet :open="showDelete" :loading="deleting" message="删除宝宝将同时删除其所有护理记录，且无法恢复。"
+    <ConfirmSheet :open="showDelete" :loading="deleting" message="删除后将不再显示宝宝档案与全部护理记录，无法恢复。"
       confirm-text="删除宝宝" @confirm="doDelete" @cancel="showDelete = false" />
   </div>
 </template>

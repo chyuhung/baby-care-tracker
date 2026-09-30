@@ -54,6 +54,7 @@ func createTables() error {
 		gender TEXT DEFAULT '',
 		avatar_color TEXT DEFAULT '#F25C8C',
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+		deleted_at DATETIME,
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 	);
 
@@ -176,6 +177,9 @@ func createTables() error {
 
 	// Migration: add family_id column if it doesn't exist (for existing databases)
 	DB.Exec("ALTER TABLE users ADD COLUMN family_id INTEGER REFERENCES families(id)")
+
+	// Migration: add deleted_at for soft-delete (existing databases)
+	DB.Exec("ALTER TABLE babies ADD COLUMN deleted_at DATETIME")
 
 	return nil
 }

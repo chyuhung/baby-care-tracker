@@ -82,11 +82,12 @@
             </div>
 
             <div v-if="famOpen" id="fam-detail" class="divide-y divide-border-color/60">
-              <!-- 邀请码 + 复制 -->
+              <!-- 邀请码 + 重置/复制 并列 -->
               <div class="px-4 py-3 flex items-center justify-between min-h-[44px]">
                 <span class="text-sm text-text-secondary">邀请码</span>
                 <span class="flex items-center gap-2">
                   <span class="text-base font-bold tracking-widest text-primary-deep select-all">{{ family.invite_code }}</span>
+                  <button @click="regenerateCode" class="-mr-1 text-xs font-medium text-primary-deep py-2 px-2 min-h-[44px] flex items-center">重置</button>
                   <button @click="copyCode" class="-mr-2 text-xs font-medium text-primary-deep py-2 px-2 min-h-[44px] flex items-center">复制</button>
                 </span>
               </div>
@@ -98,13 +99,6 @@
                   {{ memberText }}
                 </span>
               </div>
-
-              <!-- 重新生成邀请码 -->
-              <button type="button" @click="regenerateCode"
-                class="w-full px-4 py-3 flex items-center justify-between min-h-[44px] text-left btn-press">
-                <span class="text-sm text-text-primary">重新生成邀请码</span>
-                <span class="text-xs text-text-secondary">旧邀请码将失效</span>
-              </button>
 
               <!-- 加入其他家庭（二级展开输入） -->
               <div>
@@ -167,11 +161,6 @@
             </span>
             <ActivityIndicator v-if="exporting" :size="18" class="text-text-secondary" />
           </button>
-
-          <div class="px-4 py-3.5 flex items-center justify-between min-h-[44px]">
-            <span class="text-text-primary">版本</span>
-            <span class="text-sm text-text-secondary">v{{ appVersion }}</span>
-          </div>
         </div>
       </div>
 
@@ -218,7 +207,6 @@ interface Family {
 const router = useRouter()
 const auth = useAuthStore()
 const app = useAppStore()
-const appVersion = '1.0.0'
 const exporting = ref(false)
 
 async function exportData() {
@@ -333,7 +321,7 @@ async function regenerateCode() {
   try {
     const res = await familyAPI.regenerateCode()
     family.value!.invite_code = res.data.invite_code
-    app.showToast('邀请码已更新', 'success')
+    app.showToast('邀请码已重置，旧码已失效', 'success')
   } catch (e: any) {
     app.showToast(e.response?.data?.error || '操作失败', 'error')
   }
