@@ -3,20 +3,7 @@
     <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
       :refresh="loadData">
       <template #header>
-        <NavBar title="记录" />
-        <div class="flex items-center gap-3 px-4 pb-2">
-          <div class="flex min-w-0 items-center gap-2">
-            <span class="min-w-0 truncate text-[13px] font-medium text-text-primary">{{ app.currentBaby?.name || '未添加宝宝' }}</span>
-            <span v-if="ageText" class="shrink-0 whitespace-nowrap text-[13px] text-text-secondary">{{ ageText }}</span>
-          </div>
-          <span class="flex-1 truncate text-center text-[13px] text-text-secondary">{{ todayDateText }}</span>
-          <div class="flex shrink-0 justify-end">
-            <span v-if="app.wsConnected" class="inline-flex items-center gap-1.5 text-[13px] font-medium text-success">
-              <span class="inline-block h-1.5 w-1.5 rounded-full bg-success"></span>同步
-            </span>
-            <span v-else class="text-[13px] text-text-secondary">离线</span>
-          </div>
-        </div>
+        <NavBar :title="app.currentBaby?.name || '记录'" />
       </template>
 
       <!-- 空状态：无宝宝 -->
@@ -31,6 +18,12 @@
 
       <!-- 主内容 -->
       <template v-else>
+        <!-- 离线提示（微信惯例：常态不显示，仅离线时打扰一次，1.5s 优雅期防冷启动闪屏） -->
+        <div v-if="showOffline" class="flex items-center gap-2 rounded-xl bg-muted px-3 py-2.5 text-[13px] text-text-secondary">
+          <span class="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-text-secondary/60"></span>
+          当前离线，数据仍在本机保存
+        </div>
+
         <!-- 统计卡片（可点击跳转） -->
         <div class="grid grid-cols-2 gap-3">
           <!-- 喂奶卡片 -->
@@ -243,7 +236,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
@@ -263,7 +256,7 @@ import ActivityIndicator from '@/components/ActivityIndicator.vue'
 import { recordDisplay, CONTEXT_ICONS } from '@/utils/recordDisplay'
 import EmptyState from '@/components/EmptyState.vue'
 import NavBar from '@/components/NavBar.vue'
-import { durationCompactParts, formatDurationCN, WEEKDAY_SHORT, parseLocalDate } from '@/utils'
+import { durationCompactParts, formatDurationCN } from '@/utils'
 
 const tick = ref(0)
 let tickTimer: number | null = null
@@ -329,38 +322,25 @@ const loadingAction = ref<string | null>(null)
 const deleting = ref(false)
 let loadGeneration = 0
 
-const ageText = computed(() => {
-  const baby = app.currentBaby
-  if (!baby?.birth_date) return ''
-  const bd = parseLocalDate(baby.birth_date)
-  if (!bd) return ''
-  const birthYear = bd.getFullYear()
-  const birthMonth = bd.getMonth()
-  const birthDay = bd.getDate()
-  const now = new Date()
-  if (now.getFullYear() < birthYear ||
-      (now.getFullYear() === birthYear && (now.getMonth() < birthMonth ||
-        (now.getMonth() === birthMonth && now.getDate() < birthDay)))) {
-    return '未出生'
+// 离线横幅：常态隐藏，仅离线显示。1.5s 优雅期避免冷启动时 WS 未连上闪现「离线」
+const showOffline = ref(false)
+let offlineTimer: ReturnType<typeof setTimeout> | null = null
+watch(() => app.wsConnected, (connected) => {
+  if (offlineTimer !== null) {
+    clearTimeout(offlineTimer)
+    offlineTimer = null
   }
-  let months = (now.getFullYear() - birthYear) * 12 + now.getMonth() - birthMonth
-  const prevMonthDays = new Date(now.getFullYear(), now.getMonth(), 0).getDate()
-  const effBirthDay = Math.min(birthDay, prevMonthDays)
-  let days: number
-  if (now.getDate() >= effBirthDay) {
-    days = now.getDate() - effBirthDay
+  if (connected) {
+    showOffline.value = false
   } else {
-    months--
-    days = prevMonthDays - effBirthDay + now.getDate()
+    offlineTimer = setTimeout(() => {
+      showOffline.value = true
+      offlineTimer = null
+    }, 1500)
   }
-  if (months > 0 && days === 0) return `${months}个月`
-  if (months > 0) return `${months}个月${days}天`
-  return `${days}天`
-})
-
-const todayDateText = computed(() => {
-  const d = new Date()
-  return `${d.getMonth() + 1}月${d.getDate()}日 ${WEEKDAY_SHORT[d.getDay()]}`
+}, { immediate: true })
+onUnmounted(() => {
+  if (offlineTimer !== null) clearTimeout(offlineTimer)
 })
 
 function getTimeAgo(isoString: string | null) {
