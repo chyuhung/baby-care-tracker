@@ -109,6 +109,12 @@
                 <button @click="joinFamily" :disabled="!joinCode.trim()"
                   class="shrink-0 px-4 py-3 bg-primary/10 text-primary-deep text-sm font-medium rounded-xl btn-press min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed">加入</button>
               </div>
+
+              <!-- 退出家庭（破坏性操作挂所属语境，微信退出群聊式卡底居中红字） -->
+              <button v-if="family.members.length > 1" type="button" @click="leaveFamily"
+                class="w-full py-3.5 text-sm font-medium text-danger text-center min-h-[44px] btn-press">
+                退出家庭
+              </button>
             </div>
           </template>
         </div>
@@ -147,16 +153,11 @@
         </div>
       </div>
 
-      <!-- 退出家庭 / 退出登录（页底危险操作分组，节省版面） -->
-      <div class="bg-surface rounded-2xl shadow-card overflow-hidden divide-y divide-border-color/60 mt-2">
-        <button v-if="family && family.members.length > 1" type="button" @click="leaveFamily"
-          class="w-full px-4 py-3.5 text-sm font-medium text-danger text-left min-h-[44px] btn-press">
-          退出家庭
-        </button>
-        <button @click="logout" class="w-full px-4 py-3.5 text-sm font-medium text-danger text-left min-h-[44px] btn-press">
-          退出登录
-        </button>
-      </div>
+      <!-- 退出登录（页底唯一危险操作，微信「我」页式全宽居中红字） -->
+      <button type="button" @click="logout"
+        class="w-full py-3.5 text-sm font-medium text-danger text-center min-h-[44px] bg-surface rounded-2xl shadow-card mt-2 btn-press">
+        退出登录
+      </button>
     </PullRefresh>
 
     <!-- 加入 / 退出家庭确认（iOS 底部操作表） -->
