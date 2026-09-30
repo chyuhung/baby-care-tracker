@@ -233,7 +233,7 @@
                 <span v-if="c.unit" class="text-xs text-text-secondary">{{ c.unit }}</span>
               </div>
               <div class="flex items-center gap-1 mt-1">
-                <span v-if="c.delta !== null" class="text-[11px] font-num font-medium px-1.5 py-0.5 rounded-md" :class="deltaClass(c.delta)">{{ deltaArrow(c.delta) }}{{ Math.abs(c.delta) }}%</span>
+                <span v-if="c.delta !== null" class="text-[11px] font-num font-medium px-1.5 py-0.5 rounded-md" :class="deltaClass(c)">{{ deltaArrow(c.delta) }}{{ Math.abs(c.delta) }}%</span>
                 <span class="text-[11px] text-text-secondary truncate">{{ c.prevText }}</span>
               </div>
             </div>
@@ -289,11 +289,15 @@ const dayOptions = [
   { label: '30天', value: 30 },
 ]
 
+// 指标极性：up-good = 升高是好事（默认），up-bad = 升高是坏事（体温升高即发热）。
+// 标在每张卡上而非按类别：体温类里「测温天数」升高是测得更勤，属 up-good。
+type Polarity = 'up-good' | 'up-bad'
+
 const summary = computed(() => {
   // 当日数据尚未完善，不参与对比：周期自前一天起算，cur/prev 由 loadTrend 切好
   const data = trendCur.value
   const prevRows = trendPrev.value
-  const cards: { label: string, unit: string, value: string, prevText: string, delta: number | null }[] = []
+  const cards: { label: string, unit: string, value: string, prevText: string, delta: number | null, polarity: Polarity }[] = []
   let noData = false
   if (!data.length) return { cards, empty: true }
 
@@ -304,7 +308,7 @@ const summary = computed(() => {
   const i0 = (v: number) => String(Math.round(v))
   const pv = prevRows.length ? prevRows : null
 
-  const push = (label: string, unit: string, curVal: number | null, prevVal: number | null, fmt: (v: number) => string) => {
+  const push = (label: string, unit: string, curVal: number | null, prevVal: number | null, fmt: (v: number) => string, polarity: Polarity = 'up-good') => {
     let delta: number | null = null
     if (curVal !== null && prevVal !== null) {
       if (prevVal > 0) delta = Math.round((curVal - prevVal) / prevVal * 100)
@@ -315,6 +319,7 @@ const summary = computed(() => {
       value: curVal === null ? '--' : fmt(curVal),
       prevText: prevVal === null ? '—' : `上期 ${fmt(prevVal)}${unit}`,
       delta,
+      polarity,
     })
   }
 
@@ -390,9 +395,9 @@ const summary = computed(() => {
     const avgTemp = (rows: any[]) => rows.length ? sumOf(rows, d => d.temperature_avg || 0) / rows.length : 0
     const fever = (rows: any[]) => rows.filter(d => f(d) >= 37.5).length
     const pvMeas = pvM.length ? pvM : null
-    push('平均体温', '°C', curM.length ? avgTemp(curM) : null, pvMeas ? avgTemp(pvMeas) : null, v => v.toFixed(1))
-    push('期间最高', '°C', curM.length ? maxOf(curM, f) : null, pvMeas ? maxOf(pvMeas, f) : null, v => v.toFixed(1))
-    push('发烧天数', '天', curM.length ? fever(curM) : null, pvMeas ? fever(pvMeas) : null, i0)
+    push('平均体温', '°C', curM.length ? avgTemp(curM) : null, pvMeas ? avgTemp(pvMeas) : null, v => v.toFixed(1), 'up-bad')
+    push('期间最高', '°C', curM.length ? maxOf(curM, f) : null, pvMeas ? maxOf(pvMeas, f) : null, v => v.toFixed(1), 'up-bad')
+    push('发烧天数', '天', curM.length ? fever(curM) : null, pvMeas ? fever(pvMeas) : null, i0, 'up-bad')
     push('测温天数', '天', curM.length, pvMeas ? pvMeas.length : null, i0)
   }
 
@@ -447,8 +452,15 @@ const periodLabel = computed(() => {
 })
 
 function deltaArrow(d: number): string { return d > 0 ? '↑' : d < 0 ? '↓' : '—' }
-// 中性配色：只表达方向，不对“多/少”做价值判断
-function deltaClass(_d: number): string { return 'bg-muted text-text-secondary' }
+// 徽章语义色：与成长记录页三分区色同一套语言 —— 绿=优秀/升高、黄=正常/持平、红=落后/下降。
+// 体温三项极性相反（升高=发热故红、回落故绿）；持平两种极性都是黄。
+function deltaClass(c: { delta: number, polarity: Polarity }): string {
+  const d = c.delta
+  const upBad = c.polarity === 'up-bad'
+  if (d > 0) return upBad ? 'bg-danger/10 text-danger' : 'bg-success/10 text-success'
+  if (d < 0) return upBad ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'
+  return 'bg-warning/15 text-warning'
+}
 
 const CHART = { padL: 28, padR: 26, padT: 14, padB: 32, svgW: 340, svgH: 228 }
 const DATE_LABEL_Y = CHART.svgH - 11

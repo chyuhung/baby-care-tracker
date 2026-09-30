@@ -48,13 +48,13 @@
           <!-- 参考区间图例 -->
           <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-1 mb-1.5 text-[11px] text-text-secondary">
             <span class="inline-flex items-center gap-1">
-              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--danger-deep) / 0.3)"></i>落后 &lt;P25
+              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--success-deep) / 0.3)"></i>优秀 ≥P75
             </span>
             <span class="inline-flex items-center gap-1">
               <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--warning-deep) / 0.3)"></i>正常 P25–P75
             </span>
             <span class="inline-flex items-center gap-1">
-              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--success-deep) / 0.3)"></i>优秀 ≥P75
+              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--danger-deep) / 0.3)"></i>落后 &lt;P25
             </span>
             <span class="inline-flex items-center gap-1">
               <i class="w-3 h-0 border-t border-dashed" style="border-color: rgb(var(--text-secondary) / 0.7)"></i>P50 中位
@@ -67,13 +67,13 @@
             <EmptyState size="sm" icon="chart" title="暂无数据" subtitle="记录几次测量后即可看到趋势" />
           </div>
           <svg v-else :viewBox="`0 0 ${W} ${H}`" class="w-full" role="img" aria-label="成长曲线图">
-            <!-- 参考区间三色（落后红<25 / 正常黄 25-75 / 优秀绿≥75） -->
+            <!-- 参考区间三色，绘制顺序与图例一致：优秀绿 ≥75 / 正常黄 25-75 / 落后红 <25 -->
             <template v-if="zonePaths">
-              <path :d="zonePaths.redLow" style="fill: rgb(var(--danger-deep) / 0.12)" />
-              <path :d="zonePaths.yellowLow" style="fill: rgb(var(--danger-deep) / 0.12)" />
-              <path :d="zonePaths.green" style="fill: rgb(var(--warning-deep) / 0.12)" />
-              <path :d="zonePaths.yellowHigh" style="fill: rgb(var(--success-deep) / 0.12)" />
-              <path :d="zonePaths.redHigh" style="fill: rgb(var(--success-deep) / 0.12)" />
+              <path :d="zonePaths.excellentInner" style="fill: rgb(var(--success-deep) / 0.12)" />
+              <path :d="zonePaths.excellentOuter" style="fill: rgb(var(--success-deep) / 0.12)" />
+              <path :d="zonePaths.normal" style="fill: rgb(var(--warning-deep) / 0.12)" />
+              <path :d="zonePaths.laggingInner" style="fill: rgb(var(--danger-deep) / 0.12)" />
+              <path :d="zonePaths.laggingOuter" style="fill: rgb(var(--danger-deep) / 0.12)" />
             </template>
             <!-- 网格（横向实线 + 纵向辅助虚线） -->
             <line v-for="(t, i) in yTicks" :key="'g' + i" :x1="PAD_L" :x2="W - PAD_R" :y1="t.y" :y2="t.y"
@@ -98,8 +98,8 @@
               class="chart-axis-label" font-size="9">{{ t.label }}</text>
           </svg>
           <p class="text-[11px] text-text-secondary mt-2 leading-relaxed px-1">
-            参考区间依据《7岁以下儿童生长标准》(WS/T 423-2022)：红区 &lt;P25 落后/偏低，黄区 P25–P75 正常，绿区
-            ≥P75 优秀/偏高。横轴为月龄；2 岁前为身长、2 岁后为身高，头围参考至 3 岁。仅供参考，不能替代儿科医生评估。
+            参考区间依据《7岁以下儿童生长标准》(WS/T 423-2022)：绿区 ≥P75 优秀/偏高，黄区 P25–P75 正常，红区
+            &lt;P25 落后/偏低。横轴为月龄；2 岁前为身长、2 岁后为身高，头围参考至 3 岁。仅供参考，不能替代儿科医生评估。
           </p>
         </div>
 
@@ -213,7 +213,7 @@ const list = ref<GrowthRecord[]>([])
 const stats = ref<GrowthStats | null>(null)
 const reference = ref<GrowthReference | null>(null)
 
-const metric = ref<'weight' | 'height' | 'head'>('weight')
+const metric = ref<'weight' | 'height' | 'head'>('height')
 const metricOptions = [
   { label: '身高', value: 'height' },
   { label: '体重', value: 'weight' },
@@ -247,10 +247,12 @@ const metrics = computed(() => {
 
 function pctClass(p: number) {
   // 与图内三色分区一致：<P25 落后/偏低（红）、P25-P75 正常（黄）、≥P75 优秀/偏高（绿）
+  // 用 warning 而非 warning-deep：tailwind.config 只映射 success/warning/danger → *-deep 变量，
+  // text-warning-deep 不是有效类（不生成），会让「正常」胶囊文字色退回继承色
   if (p <= 0) return 'bg-muted text-text-secondary'
   if (p < 25) return 'bg-danger/10 text-danger'
   if (p > 75) return 'bg-success/10 text-success'
-  return 'bg-warning/15 text-warning-deep'
+  return 'bg-warning/15 text-warning'
 }
 
 function detailOf(g: GrowthRecord) {
@@ -371,7 +373,8 @@ const refPaths = computed<Record<string, string> | null>(() => {
   return out
 })
 
-// 参考区间三色语义（一眼读懂，未按五级细分）：红=滞后/偏低 <P25、黄=正常 P25-P75、绿=优秀/偏高 ≥P75
+// 参考区间三色语义（一眼读懂，未按五级细分）：绿=优秀/偏高 ≥P75、黄=正常 P25-P75、红=落后/偏低 <P25。
+// 键名按语义命名（Inner=区间内缘，Outer=P3/P97 外的极端段），避免旧名 green/yellowHigh 与实际填色相反的陷阱。
 const zonePaths = computed(() => {
   const vis = visibleRef.value
   if (!vis) return null
@@ -382,16 +385,17 @@ const zonePaths = computed(() => {
   const x1 = xAt(vis[n - 1].month).toFixed(1)
   const top = PAD_T, bottom = H - PAD_B
   return {
-    green: `${fwd('p75')} ${back('p25')} Z`,
-    yellowLow: `${fwd('p25')} ${back('p3')} Z`,
-    yellowHigh: `${fwd('p97')} ${back('p75')} Z`,
-    redLow: `${fwd('p3')} L${x1} ${bottom} L${x0} ${bottom} Z`,
-    redHigh: `${fwd('p97')} L${x1} ${top} L${x0} ${top} Z`,
+    excellentInner: `${fwd('p97')} ${back('p75')} Z`,
+    excellentOuter: `${fwd('p97')} L${x1} ${top} L${x0} ${top} Z`,
+    normal: `${fwd('p75')} ${back('p25')} Z`,
+    laggingInner: `${fwd('p25')} ${back('p3')} Z`,
+    laggingOuter: `${fwd('p3')} L${x1} ${bottom} L${x0} ${bottom} Z`,
   }
 })
 
+// 身高用主题色（默认展示项），体重/头围各取一色，切段时颜色稳定不跳
 const strokeColor = computed(() => {
-  const key = metric.value === 'weight' ? '--chart-primary' : metric.value === 'height' ? '--chart-sleep' : '--chart-outdoor'
+  const key = metric.value === 'height' ? '--chart-primary' : metric.value === 'weight' ? '--chart-sleep' : '--chart-outdoor'
   return `var(${key})`
 })
 
