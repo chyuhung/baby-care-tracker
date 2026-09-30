@@ -8,6 +8,14 @@
   touch-action: manipulation;
 }
 
+/* 长按禁用文本选择 / iOS 呼出菜单（全站长按已有「编辑/删除」菜单语义，原生选择气泡常被误触）。
+   仅表单字段放行，见下方 input, textarea 规则 */
+* {
+  -webkit-touch-callout: none;   /* iOS 长按呼出「选择文字/拷贝/翻译」气泡 */
+  -webkit-user-select: none;     /* 放大镜文本选择（WebKit） */
+  user-select: none;
+}
+
 /* ============================================================
    主题变量（清透 iOS 风 · 明亮大留白）
    - 粉色系（默认 / 保密 / 女宝）：樱花粉，与贝壳图标同色系
@@ -295,6 +303,12 @@ nav.glass-surface {
 /* iOS 聚焦时若字号 <16px 会强制放大页面，统一至少 16px */
 input, select, textarea {
   font-size: 16px;
+}
+
+/* 表单字段放行文本选择：全局 user-select:none 下仍可正常光标编辑、选中、复制 */
+input, textarea, [contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* ============================================================
