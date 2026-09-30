@@ -53,7 +53,7 @@
         <div class="bg-surface rounded-2xl shadow-card overflow-hidden">
           <!-- 无家庭：直接加入 -->
           <div v-if="!family" class="p-4 space-y-2">
-            <p class="text-xs text-text-secondary">加入其他家庭后，你和你的宝宝数据将切换到新家庭</p>
+            <p class="text-xs text-text-secondary">加入家庭后，你创建的宝宝会跟随你，可与家人共同记录</p>
             <div class="flex gap-2 pt-1">
               <input v-model="joinCode" placeholder="输入对方的邀请码" maxlength="6"
                 aria-label="邀请码" inputmode="text" autocapitalize="characters" autocomplete="off" enterkeyhint="done"
@@ -109,6 +109,8 @@
                 <button @click="joinFamily" :disabled="!joinCode.trim()"
                   class="shrink-0 px-4 py-3 bg-primary/10 text-primary-deep text-sm font-medium rounded-xl btn-press min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed">加入</button>
               </div>
+              <!-- 加入其他家庭提示：所有权跟随创建者 -->
+              <p class="px-4 pb-3 text-xs text-text-secondary">加入后你创建的宝宝会跟随你，其他成员创建的宝宝仍留在原家庭</p>
 
               <!-- 退出家庭（仅多人家庭） -->
               <button v-if="family.members.length > 1" type="button" @click="leaveFamily"
@@ -240,8 +242,8 @@ const sheet = computed(() => ({
   open: sheetMode.value !== '',
   title: sheetMode.value === 'join' ? '加入新家庭' : '退出当前家庭',
   message: sheetMode.value === 'join'
-    ? '加入新家庭后，你将退出当前家庭。\n\n你的宝宝数据会跟随你到新家庭，原家庭成员将无法看到你的数据。确定继续？'
-    : '退出后，你将无法查看当前家庭的宝宝数据。',
+    ? '加入新家庭后，你将退出当前家庭。\n\n仅你创建的宝宝会跟随你，原家庭成员将无法看到它们；其他成员创建的宝宝和记录则留在原家庭。确定继续？'
+    : '退出后，你创建的宝宝将随你离开，原家庭无法再看到它们；其他成员创建的宝宝和记录留在原家庭，你将无法查看。确定继续？',
   confirmText: sheetMode.value === 'join' ? '加入' : '退出家庭',
 }))
 
@@ -261,7 +263,7 @@ async function refreshAll() {
 function joinFamily() {
   if (!joinCode.value.trim()) return
   // 如果用户已有家庭，先二次确认
-  if (family.value && family.value.members.length > 1) {
+  if (family.value) {
     sheetMode.value = 'join'
     return
   }
