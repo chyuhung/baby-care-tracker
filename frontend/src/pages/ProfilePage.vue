@@ -109,14 +109,6 @@
                 <button @click="joinFamily" :disabled="!joinCode.trim()"
                   class="shrink-0 px-4 py-3 bg-primary/10 text-primary-deep text-sm font-medium rounded-xl btn-press min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed">加入</button>
               </div>
-              <!-- 加入其他家庭提示：所有权跟随创建者 -->
-              <p class="px-4 pb-3 text-xs text-text-secondary">加入后你创建的宝宝会跟随你，其他成员创建的宝宝仍留在原家庭</p>
-
-              <!-- 退出家庭（仅多人家庭） -->
-              <button v-if="family.members.length > 1" type="button" @click="leaveFamily"
-                class="w-full px-4 py-3 text-sm font-medium text-danger text-left min-h-[44px] btn-press">
-                退出家庭
-              </button>
             </div>
           </template>
         </div>
@@ -155,10 +147,16 @@
         </div>
       </div>
 
-      <!-- 登出 -->
-      <button @click="logout" class="w-full py-3 bg-surface text-danger font-medium rounded-xl shadow-card btn-press mt-2 min-h-[44px]">
-        退出登录
-      </button>
+      <!-- 退出家庭 / 退出登录（页底危险操作分组，节省版面） -->
+      <div class="bg-surface rounded-2xl shadow-card overflow-hidden divide-y divide-border-color/60 mt-2">
+        <button v-if="family && family.members.length > 1" type="button" @click="leaveFamily"
+          class="w-full px-4 py-3.5 text-sm font-medium text-danger text-left min-h-[44px] btn-press">
+          退出家庭
+        </button>
+        <button @click="logout" class="w-full px-4 py-3.5 text-sm font-medium text-danger text-left min-h-[44px] btn-press">
+          退出登录
+        </button>
+      </div>
     </PullRefresh>
 
     <!-- 加入 / 退出家庭确认（iOS 底部操作表） -->

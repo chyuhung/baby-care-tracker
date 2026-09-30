@@ -11,11 +11,16 @@
     </svg>
   </button>
 
-  <!-- 触发按钮 · icon 模式（微信式标题栏右侧精简图标，选中非默认项时主题色高亮） -->
+  <!-- 触发按钮 · icon 模式（微信式标题栏精简图标，选中非默认项时主题色高亮） -->
   <button v-else type="button" @click="open = true"
-    class="flex h-11 items-center justify-center -mr-1 px-2 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    class="flex h-11 items-center justify-center rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+    :class="align === 'left' ? '-ml-1 px-2' : '-mr-1 px-2'"
     :aria-haspopup="true" :aria-expanded="open" :aria-label="ariaLabel">
-    <svg class="w-5 h-5" :class="isNonDefault ? 'text-primary-deep' : 'text-text-secondary'" viewBox="0 0 24 24"
+    <svg v-if="iconGlyph" class="w-5 h-5" :class="isNonDefault ? 'text-primary-deep' : 'text-text-secondary'" viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path :d="iconGlyph" />
+    </svg>
+    <svg v-else class="w-5 h-5" :class="isNonDefault ? 'text-primary-deep' : 'text-text-secondary'" viewBox="0 0 24 24"
       fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
       <path d="M4 7h8M17 7h3M4 12h4M13 12h7M4 17h12M19 17h1" />
       <circle cx="14" cy="7" r="2" />
@@ -74,11 +79,15 @@ const props = withDefaults(defineProps<{
   placeholder?: string
   ariaLabel?: string
   trigger?: 'pill' | 'icon'
+  iconGlyph?: string
+  align?: 'left' | 'right'
 }>(), {
   title: '',
   placeholder: '请选择',
   ariaLabel: '选择',
   trigger: 'pill',
+  iconGlyph: '',
+  align: 'right',
 })
 
 const emit = defineEmits<{ (e: 'update:modelValue', v: string | number): void }>()

@@ -55,6 +55,13 @@ Family group sharing, timezone fix, record performance optimization
 
 - 版式/高级感细节修正（用户确认全做，方向按推荐）：**(A1)** TrendPage「7天/30天」Segmented `flex justify-end`→`justify-center`（消左空块）；**(A2)** GrowthPage 曲线图例 `justify-center`（不再左散两行）；**(A3)** 页级分组标题统一为微信 13px 灰字——Home「最近记录」`text-sm font-semibold`→`text-[13px]`、Timeline 日期组 `text-xs font-semibold`→`text-[13px] font-medium`（Profile 已是 13px；层级制度=页级分组 13px、卡内标题 14px semibold 两层，Growth 卡内标题不动）；**(A4)** RecordCard 消空洞重构：首行仅 17px 标题（原 14px），meta 行 `flex justify-between` 左值右时间（`metaText || timeLabel` 兜底无值场景防左洞），发热点/备注扩容；**(B1)** TrendPage 期间对比空态去 `bg-muted rounded-xl` 死灰块，白卡内直接居中；**(C1)** Home 6 卡「＋ 喂奶」等 4 处文字加号 `＋`→内联 `＋` SVG（`w-4 h-4` stroke 2.2，对齐 GrowthPage 记录胶囊）；**(C2)** GrowthPage 历史记录行右端加淡 chevron（`text-text-secondary/50`）暗示可点。`npm run build` 通过
 
+- RecordCard 三区布局重构：左列只放「值」——标题 17px + 值行（时长/量/温度/补剂；喂奶 `duration_minutes>0` 时任何类型都显示 `N分钟`，睡眠/户外 `进行中` 态不显示时长只留区间），发热行/备注保留；右端独立时间列（睡眠/户外=时间区间、其余=发生时刻）`shrink-0 text-right` 在整卡高度内 **上下垂直居中**，尿布等无值记录左列仅标题+右时间，无空洞（`RecordCard.vue`，`metaText`→`valueText`）
+- TrendPage 7/30天筛选移入标题栏左端：内容区行内 Segmented 删除；`MenuSelect` 新增 `iconGlyph`（自定义单 path 图标，默认仍是 sliders）+ `align: 'left'|'right'`（icon 光学偏移 `-ml-1/-mr-1`）；左侧日历 icon（`M8 2v4M16 2v4M3 8h18M5 4h14…`）+ 右侧 sliders 类别，标题栏左右对称；`dayOptions` 值改数字 7/30 匹配 MenuSelect 严格 `===`；`#left` 外层套 `@click.stop` 防触发整栏回顶
+- TrendPage 期间对比 summary 去灰：`bg-muted rounded-xl p-3` 灰块 → 白卡内细线分隔网格（grid-cols-2：偶列 `border-l`、第 3/4 行 `border-t`、`border-border-color/60`，cell `pr-3/pl-3`）
+- ProfilePage 我的家庭精简：删除「加入其他家庭」下 13px 所有权提示行（弹窗已提醒，冗余）；「退出家庭」（仍仅 `members>1`）从家庭展开区移出，与「退出登录」合并为页底一张危险操作卡（`divide-y` 两行，替代独立登出按钮）——无家庭时加入表单及其提示行保留不动
+
+- GrowthPage 精简统一（用户确认）：**(1)** 标题栏「记录」胶囊 → 纯图标圆钮（44px 触控 `rounded-full bg-primary/10 text-primary-deep` 内联 `＋` SVG `-mr-1`，对齐 Home 卡片加号/tinted 主按钮语言）；**(2)** 最新测量 3 灰块 → 白卡内 `grid grid-cols-3 divide-x divide-border-color/60` hairline 分隔（对齐趋势期间对比，`pctClass` 胶囊保留）；**(3)** 成长曲线图简化——删 P3/P25/P75/P97 四灰线、只留 P50 中位虚线（`text-secondary/0.7`、1.3、`dasharray 4,3`，与趋势虚线语言一致；区间语义由色带承担），参考区间填色 `0.14-0.16→0.1`（图例同色块），新增 X 轴月龄纵向辅助虚线（`dasharray 2,3`、`text-secondary/0.18`）+ 左/右/下 `--chart-line` 轴边框（对齐 TrendPage 画法），图例 P50 条改虚线样例「P50 中位」
+
 ### Known Issues
 - `vue-tsc` typecheck fails on Node.js v24 — not a code issue (needed to catch dead-method bugs like the export one above)
 - `.gitignore` root-anchors `/data/`; `baby-care-tracker.exe` binary is tracked in git

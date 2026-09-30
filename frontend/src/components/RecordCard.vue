@@ -1,20 +1,20 @@
 <template>
-  <!-- 记录卡片（微信式收敛版）：左 emoji 色块 + 17px 标题 + 底行（左值 · 右时间）+ 备注。
+  <!-- 记录卡片：左 emoji 色块 + 左列（标题 17px + 值区「时长/量等」+ 发热/备注）+ 右列时间（上下垂直居中）。
        类型由色块弱着色 + emoji 区分；点按=编辑，删除走长按 ContextMenu（编辑/删除→确认），无常显按钮、无滑动删除 -->
   <div role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')"
     class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer press-card"
     @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
     <div class="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-lg leading-none" :class="tintClass">{{ emoji }}</div>
-    <div class="flex-1 min-w-0">
-      <span class="block text-[17px] font-semibold text-text-primary truncate">{{ title }}</span>
-      <div class="mt-1 text-xs text-text-secondary font-num flex items-center justify-between gap-3">
-        <span class="min-w-0 truncate">{{ metaText || timeLabel }}</span>
-        <span v-if="metaText" class="shrink-0">{{ timeLabel }}</span>
+    <div class="flex flex-1 min-w-0 items-center justify-between gap-3">
+      <div class="min-w-0">
+        <span class="block text-[17px] font-semibold text-text-primary truncate">{{ title }}</span>
+        <div v-if="valueText" class="mt-1 text-xs text-text-secondary font-num truncate">{{ valueText }}</div>
+        <div v-if="fever && record.record_type === 'temperature'" class="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-danger">
+          <span class="inline-block h-1.5 w-1.5 rounded-full bg-danger"></span>发热
+        </div>
+        <div v-if="rd.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ rd.note }}</div>
       </div>
-      <div v-if="fever && record.record_type === 'temperature'" class="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-danger">
-        <span class="inline-block h-1.5 w-1.5 rounded-full bg-danger"></span>发热
-      </div>
-      <div v-if="rd.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ rd.note }}</div>
+      <div class="shrink-0 text-right text-xs text-text-secondary font-num">{{ timeLabel }}</div>
     </div>
   </div>
 </template>
@@ -105,18 +105,18 @@ const timeLabel = computed(() => {
   return timeAgo.value
 })
 
-/* 元数据一行纯文本，值·值 分隔（替代胶囊 chip） */
-const metaText = computed(() => {
+/* 值区一行纯文本（时长/量/温度/补剂等），时间不入此列——时间固定显示在卡片右端垂直居中 */
+const valueText = computed(() => {
   const parts: string[] = []
   switch (type.value) {
     case 'feeding':
-      if (rd.value.type !== 'breast' && rd.value.amount_ml > 0) parts.push(`${rd.value.amount_ml}ml`)
-      if (rd.value.type === 'breast' && rd.value.duration_minutes > 0) parts.push(`${rd.value.duration_minutes}分钟`)
+      if (rd.value.amount_ml > 0) parts.push(`${rd.value.amount_ml}ml`)
+      if (rd.value.duration_minutes > 0) parts.push(`${rd.value.duration_minutes}分钟`)
       if (rd.value.type === 'breast' && rd.value.side) parts.push(sideMap[rd.value.side] || rd.value.side)
       if (rd.value.brand) parts.push(rd.value.brand)
       break
     case 'sleep':
-      if (sleepDurationLabel.value) parts.push(sleepDurationLabel.value)
+      if (sleepDurationLabel.value && rd.value.ended_at) parts.push(sleepDurationLabel.value)
       break
     case 'temperature':
       if (rd.value.temperature) parts.push(`${rd.value.temperature}°C`)

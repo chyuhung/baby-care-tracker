@@ -5,10 +5,9 @@
       <template #header>
         <NavBar title="成长记录">
           <template #actions>
-            <button type="button" @click="openForm"
-              class="inline-flex items-center gap-1 h-9 px-3.5 rounded-full bg-primary/10 text-primary-deep text-sm font-semibold btn-press">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 5v14m7-7H5"/></svg>
-              记录
+            <button type="button" @click="openForm" aria-label="记录测量"
+              class="-mr-1 flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary-deep btn-press">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 5v14m7-7H5"/></svg>
             </button>
           </template>
         </NavBar>
@@ -25,8 +24,8 @@
             <h2 class="text-sm font-semibold text-text-secondary">最新测量</h2>
             <span class="text-xs text-text-secondary">{{ stats.age_months }} 月龄 · {{ stats.gender === 'male' ? '男宝' : '女宝' }}</span>
           </div>
-          <div class="grid grid-cols-3 gap-2.5">
-            <div v-for="m in metrics" :key="m.key" class="bg-muted rounded-xl p-3 text-center">
+          <div class="grid grid-cols-3 divide-x divide-border-color/60">
+            <div v-for="m in metrics" :key="m.key" class="px-3 py-1 text-center">
               <div class="text-xs text-text-secondary">{{ m.label }}</div>
               <div class="font-num text-lg font-bold text-text-primary mt-0.5">{{ m.value }}</div>
               <div class="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
@@ -49,16 +48,16 @@
           <!-- 参考区间图例 -->
           <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-1 mb-1.5 text-[10px] text-text-secondary">
             <span class="inline-flex items-center gap-1">
-              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--success-deep) / 0.35)"></i>正常 P25–P75
+              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--success-deep) / 0.1)"></i>正常 P25–P75
             </span>
             <span class="inline-flex items-center gap-1">
-              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--warning-deep) / 0.4)"></i>中下/中上
+              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--warning-deep) / 0.1)"></i>中下/中上
             </span>
             <span class="inline-flex items-center gap-1">
-              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--danger-deep) / 0.4)"></i>&lt;P3 / &gt;P97
+              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--danger-deep) / 0.1)"></i>&lt;P3 / &gt;P97
             </span>
             <span class="inline-flex items-center gap-1">
-              <i class="w-3 h-px" style="background: rgb(var(--text-secondary) / 0.6)"></i>平均 P50
+              <i class="w-3 h-0 border-t border-dashed" style="border-color: rgb(var(--text-secondary) / 0.7)"></i>P50 中位
             </span>
             <span class="inline-flex items-center gap-1">
               <i class="w-2 h-2 rounded-full" :style="{ background: strokeColor }"></i>实测
@@ -68,26 +67,28 @@
             <EmptyState size="sm" icon="chart" title="暂无数据" subtitle="记录几次测量后即可看到趋势" />
           </div>
           <svg v-else :viewBox="`0 0 ${W} ${H}`" class="w-full" role="img" aria-label="成长曲线图">
-            <!-- 参考区间（医院图风格：红/黄/绿） -->
+            <!-- 参考区间（医院图三色，浅淡底） -->
             <template v-if="zonePaths">
-              <path :d="zonePaths.redLow" style="fill: rgb(var(--danger-deep) / 0.14)" />
-              <path :d="zonePaths.redHigh" style="fill: rgb(var(--danger-deep) / 0.14)" />
-              <path :d="zonePaths.yellowLow" style="fill: rgb(var(--warning-deep) / 0.16)" />
-              <path :d="zonePaths.yellowHigh" style="fill: rgb(var(--warning-deep) / 0.16)" />
-              <path :d="zonePaths.green" style="fill: rgb(var(--success-deep) / 0.16)" />
+              <path :d="zonePaths.redLow" style="fill: rgb(var(--danger-deep) / 0.1)" />
+              <path :d="zonePaths.redHigh" style="fill: rgb(var(--danger-deep) / 0.1)" />
+              <path :d="zonePaths.yellowLow" style="fill: rgb(var(--warning-deep) / 0.1)" />
+              <path :d="zonePaths.yellowHigh" style="fill: rgb(var(--warning-deep) / 0.1)" />
+              <path :d="zonePaths.green" style="fill: rgb(var(--success-deep) / 0.1)" />
             </template>
-            <!-- 网格 -->
+            <!-- 网格（横向实线 + 纵向辅助虚线） -->
             <line v-for="(t, i) in yTicks" :key="'g' + i" :x1="PAD_L" :x2="W - PAD_R" :y1="t.y" :y2="t.y"
               class="chart-grid" />
+            <line v-for="(t, i) in xTicks" :key="'gv' + i" :x1="t.x" :x2="t.x" :y1="PAD_T" :y2="H - PAD_B"
+              stroke-dasharray="2,3" style="stroke: rgb(var(--text-secondary) / 0.18)" />
+            <!-- 轴边框（对齐其他图表） -->
+            <line :x1="PAD_L" :x2="PAD_L" :y1="PAD_T" :y2="H - PAD_B" stroke="var(--chart-line)" stroke-width="1" />
+            <line :x1="W - PAD_R" :x2="W - PAD_R" :y1="PAD_T" :y2="H - PAD_B" stroke="var(--chart-line)" stroke-width="1" />
+            <line :x1="PAD_L" :x2="W - PAD_R" :y1="H - PAD_B" :y2="H - PAD_B" stroke="var(--chart-line)" stroke-width="1" />
             <text v-for="(t, i) in yTicks" :key="'gt' + i" :x="PAD_L - 4" :y="t.y + 3" text-anchor="end"
               class="chart-axis-label" font-size="9">{{ t.label }}</text>
-            <!-- 参考百分位线 -->
-            <template v-if="refPaths">
-              <path v-for="k in ['p3', 'p25', 'p75', 'p97']" :key="'r' + k" :d="refPaths[k]" fill="none"
-                style="stroke: rgb(var(--text-secondary) / 0.4)" stroke-width="1" stroke-linecap="round" />
-              <path :d="refPaths.p50" fill="none" style="stroke: rgb(var(--text-secondary) / 0.65)"
-                stroke-width="1.3" stroke-dasharray="4,3" stroke-linecap="round" />
-            </template>
+            <!-- 参考中位线 -->
+            <path v-if="refPaths" :d="refPaths.p50" fill="none" style="stroke: rgb(var(--text-secondary) / 0.7)"
+              stroke-width="1.3" stroke-dasharray="4,3" stroke-linecap="round" />
             <!-- 实测折线 -->
             <path :d="linePath" fill="none" :stroke="strokeColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
             <!-- 数据点 -->
@@ -359,12 +360,12 @@ const xTicks = computed(() => {
   return out
 })
 
-// 参考百分位线
+// 参考中位线（去掉了 P3/P25/P75/P97 细线，只留 P50 中位虚线，区间语义由色带承担）
 const refPaths = computed<Record<string, string> | null>(() => {
   const vis = visibleRef.value
   if (!vis) return null
   const out: Record<string, string> = {}
-  for (const key of ['p3', 'p25', 'p50', 'p75', 'p97'] as PctKey[]) {
+  for (const key of ['p50'] as PctKey[]) {
     out[key] = vis.map((p, i) => `${i === 0 ? 'M' : 'L'}${xAt(p.month).toFixed(1)} ${yAt(p[key]).toFixed(1)}`).join(' ')
   }
   return out

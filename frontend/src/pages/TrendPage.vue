@@ -4,16 +4,18 @@
       :refresh="() => loadTrend(true)">
     <template #header>
       <NavBar title="趋势">
+        <template #left>
+          <div class="flex items-center" @click.stop>
+            <MenuSelect v-model="days" :options="dayOptions" title="时间范围" trigger="icon" align="left"
+              icon-glyph="M8 2v4M16 2v4M3 8h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"
+              aria-label="选择时间范围" @update:model-value="(v: string | number) => { days = Number(v); loadTrend() }" />
+          </div>
+        </template>
         <template #actions>
           <MenuSelect v-model="category" :options="categoryOptions" title="选择类别" trigger="icon" aria-label="选择类别" />
         </template>
       </NavBar>
     </template>
-
-      <div class="flex justify-center">
-        <Segmented :model-value="String(days)" :options="dayOptions" compact
-          @update:model-value="(v: string) => { days = Number(v); loadTrend() }" />
-      </div>
 
       <SkeletonCard v-if="loading" :count="4" />
       <EmptyState v-else-if="trendData.length === 0" title="暂无趋势数据"
@@ -221,8 +223,13 @@
               </router-link>
             </EmptyState>
           </div>
-          <div v-else class="grid grid-cols-2 gap-2.5">
-            <div v-for="c in summary.cards" :key="c.label" class="bg-muted rounded-xl p-3">
+          <div v-else class="grid grid-cols-2">
+            <div v-for="(c, i) in summary.cards" :key="c.label"
+              :class="[
+                'py-3',
+                i % 2 === 0 ? 'pr-3' : 'pl-3 border-l border-border-color/60',
+                i >= 2 ? 'pt-0 border-t border-border-color/60' : 'pb-0',
+              ]">
               <div class="text-xs text-text-secondary">{{ c.label }}</div>
               <div class="flex items-baseline gap-1 mt-1">
                 <span class="text-xl font-bold font-num text-text-primary">{{ c.value }}</span>
@@ -250,7 +257,6 @@ defineOptions({ name: 'TrendPage' })
 import { babyAPI } from '@/api'
 import PullRefresh from '@/components/PullRefresh.vue'
 import EmptyState from '@/components/EmptyState.vue'
-import Segmented from '@/components/Segmented.vue'
 import MenuSelect from '@/components/MenuSelect.vue'
 import NavBar from '@/components/NavBar.vue'
 import SkeletonCard from '@/components/SkeletonCard.vue'
@@ -282,8 +288,8 @@ const dateLabels = computed(() => {
 })
 
 const dayOptions = [
-  { label: '7天', value: '7' },
-  { label: '30天', value: '30' },
+  { label: '7天', value: 7 },
+  { label: '30天', value: 30 },
 ]
 
 const summary = computed(() => {
