@@ -164,7 +164,7 @@
             </div>
             <div class="mt-1 flex items-center justify-between">
               <span class="text-xs text-text-secondary">平均时长</span>
-              <span class="text-xs font-medium text-text-secondary">{{ avgOutdoorDuration > 0 ? formatAvgOutdoor : '--' }}</span>
+              <span class="text-xs font-medium text-text-secondary">{{ avgOutdoorDuration || '--' }}</span>
             </div>
             <button v-if="currentOutdoor" @click.stop="stopOutdoor" :disabled="loadingAction === 'stop-outdoor'"
               class="mt-3 w-full min-h-[44px] py-2 bg-danger-fill text-white text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1 disabled:opacity-50">
@@ -277,9 +277,12 @@ const hasMore = computed(() => loadedCount.value < totalCount.value)
 const loadMoreRemaining = computed(() => Math.max(0, totalCount.value - loadedCount.value))
 // 今日测温记录（独立按 days=1 拉取，不依赖分页窗口；新→旧）
 const todayTempRecords = ref<any[]>([])
-// 最近 10 次补剂记录（独立按 type+limit 拉取）：补剂频率低（约 1–2 次/天），
-// 混在首页 20 条分页窗口里常常不足 2 条 → 平均间隔恒为「--」，故单独取数
-const recentSupplement = ref<any[]>([])
+// 各类型最近 10 次记录（独立按 type+limit 拉取，新→旧）。
+// 首页主列表是 20 条「6 类混排」的分页窗口，低频类型（睡眠/户外/补剂）在窗口里常常凑不满 10 条，
+// 且点「加载更多」还会让均值跳变。独立取数后各项均值只取决于真实数据量：有几次算几次（上限 10 次）。
+const AVG_WINDOW = 10
+const AVG_TYPES = ['feeding', 'diaper', 'sleep', 'outdoor', 'supplement'] as const
+const recentByType = ref<Record<string, any[]>>({})
 const showDeleteConfirm = ref(false)
 const recordToDelete = ref<any>(null)
 const { softDelete } = useUndoDelete(allRecords, { onRestored: () => refreshStatsSoon() })
@@ -367,52 +370,52 @@ function getTimeAgo(isoString: string | null) {
   return { text, isLong: diffHours >= 4, minutes: diffMins }
 }
 
-// 相邻间隔均值：时间戳升序后取最近 10 个，算相邻差值的平均（<2 条无间隔可言，返回 null）
+// 某个类型最近若干次记录（独立窗口，已按新→旧、已截断）
+function recentOf(type: string): any[] { return recentByType.value[type] || [] }
+
+// 相邻间隔均值：升序后取尾部 AVG_WINDOW 个算相邻差值的平均。
+// 数据不足时「有几次算几次」：3 条即按 2 个间隔算；仅 1 条时不存在间隔可言，返回 null 显示「--」。
 function avgGapMinutes(occurredList: (string | undefined | null)[]): number | null {
   const times = occurredList
     .filter((t): t is string => !!t)
     .map(t => new Date(t).getTime())
     .filter(t => !Number.isNaN(t))
     .sort((a, b) => a - b)
-    .slice(-10)
+    .slice(-AVG_WINDOW)
   if (times.length < 2) return null
   let sum = 0
   for (let i = 1; i < times.length; i++) sum += (times[i] - times[i - 1]) / 60000
   return Math.round(sum / (times.length - 1))
 }
 
-function avgIntervalMinutes(records: any[], type: string): number | null {
-  return avgGapMinutes(records.filter(r => r.record_type === type).map(r => r.occurred_at))
+// 平均时长均值：同样「有几次算几次」，0 条返回 null
+function avgDurationMinutes(rows: any[]): number | null {
+  const mins = rows
+    .filter(r => r.data?.started_at && r.data?.ended_at)
+    .map(r => (new Date(r.data.ended_at).getTime() - new Date(r.data.started_at).getTime()) / 60000)
+    .filter(t => t > 0 && !Number.isNaN(t))
+    .slice(0, AVG_WINDOW)
+  if (!mins.length) return null
+  return Math.round(mins.reduce((sum, t) => sum + t, 0) / mins.length)
 }
 
-const feedingAvgInterval = computed(() => {
-  const m = avgIntervalMinutes(allRecords.value, 'feeding')
+const fmtGap = (rows: any[]) => {
+  const m = avgGapMinutes(rows.map(r => r.occurred_at))
   return m == null ? null : formatDurationCN(m)
-})
+}
 
-const diaperAvgInterval = computed(() => {
-  const m = avgIntervalMinutes(allRecords.value, 'diaper')
-  return m == null ? null : formatDurationCN(m)
-})
-
-// 取自独立的最近 10 次补剂记录，不受首页分页窗口影响
-const supplementAvgInterval = computed(() => {
-  const m = avgGapMinutes(recentSupplement.value.map(r => r.occurred_at))
-  return m == null ? null : formatDurationCN(m)
-})
+const feedingAvgInterval = computed(() => fmtGap(recentOf('feeding')))
+const diaperAvgInterval = computed(() => fmtGap(recentOf('diaper')))
+const supplementAvgInterval = computed(() => fmtGap(recentOf('supplement')))
 
 const sleepAvgDuration = computed(() => {
-  const recs = allRecords.value
-    .filter(r => r.record_type === 'sleep' && r.data?.started_at && r.data?.ended_at)
-    .map(r => ({
-      t: (new Date(r.data.ended_at).getTime() - new Date(r.data.started_at).getTime()) / 60000,
-      occurred: new Date(r.occurred_at).getTime(),
-    }))
-    .filter(x => x.t > 0)
-    .sort((a, b) => b.occurred - a.occurred)
-    .slice(0, 10)
-  if (!recs.length) return null
-  return formatDurationCN(Math.round(recs.reduce((sum, x) => sum + x.t, 0) / recs.length))
+  const m = avgDurationMinutes(recentOf('sleep'))
+  return m == null ? null : formatDurationCN(m)
+})
+
+const avgOutdoorDuration = computed(() => {
+  const m = avgDurationMinutes(recentOf('outdoor'))
+  return m == null ? null : formatDurationCN(m)
 })
 
 // 今日日期判定（按本地时区）
@@ -438,15 +441,15 @@ const lastOutdoorAgo = computed(() => {
   tick.value
   const t = stats.value.last_outdoor_end
   if (t) return getTimeAgo(t)
-  const recs = allRecords.value.filter(r => r.record_type === 'outdoor').map(r => r.occurred_at).sort()
+  const recs = recentOf('outdoor').map(r => r.occurred_at).filter(Boolean).sort()
   return getTimeAgo(recs.length ? recs[recs.length - 1] : null)
 })
 const lastSupplementAgo = computed(() => {
   tick.value
   const t = stats.value.last_supplement
   if (t) return getTimeAgo(t)
-  // stats 缺字段时回落到独立取数的最近 10 条（新→旧，取首条）
-  const recs = recentSupplement.value.map(r => r.occurred_at).filter(Boolean).sort()
+  // stats 缺字段时回落到独立取数的最近若干条（取最旧一条即全局最近一次）
+  const recs = recentOf('supplement').map(r => r.occurred_at).filter(Boolean).sort()
   return getTimeAgo(recs.length ? recs[recs.length - 1] : null)
 })
 
@@ -463,23 +466,6 @@ const sleepParts = computed(() =>
 const outdoorParts = computed(() =>
   durationCompactParts(currentOutdoor.value ? elapsedMins(currentOutdoor.value.started_at) : stats.value.outdoor_duration))
 
-// 户外平均时长：与睡眠同口径，取最近 10 次已结束记录的平均时长
-const avgOutdoorDuration = computed(() => {
-  const recs = allRecords.value
-    .filter(r => r.record_type === 'outdoor' && r.data?.started_at && r.data?.ended_at)
-    .map(r => ({
-      t: (new Date(r.data.ended_at).getTime() - new Date(r.data.started_at).getTime()) / 60000,
-      occurred: new Date(r.occurred_at).getTime(),
-    }))
-    .filter(x => x.t > 0)
-    .sort((a, b) => b.occurred - a.occurred)
-    .slice(0, 10)
-  if (!recs.length) return 0
-  return Math.round(recs.reduce((sum, x) => sum + x.t, 0) / recs.length)
-})
-
-const formatAvgOutdoor = computed(() => formatDurationCN(avgOutdoorDuration.value))
-
 async function loadData() {
   if (app.babies.length === 0) {
     await app.loadBabies()
@@ -488,15 +474,15 @@ async function loadData() {
   if (!baby) return
   const gen = ++loadGeneration
   try {
-    const [statsRes, recordsRes, countRes, sleepRes, outdoorRes, tempTodayRes, suppRes] = await Promise.all([
+    const [statsRes, recordsRes, countRes, sleepRes, outdoorRes, tempTodayRes, ...avgRes] = await Promise.all([
       babyAPI.stats(baby.id),
       recordAPI.list(baby.id, { offset: 0, limit: PAGE }),
       recordAPI.count(baby.id),
       recordAPI.getCurrentSleep(baby.id),
       recordAPI.getCurrentOutdoor(baby.id),
       recordAPI.list(baby.id, { type: 'temperature', days: 1 }),
-      // 最近 10 次补剂（后端 type+limit 走窗口分页，返回新→旧），供平均间隔/距上次用
-      recordAPI.list(baby.id, { type: 'supplement', limit: 10 }),
+      // 各类型最近 AVG_WINDOW 次（后端 type+limit 走窗口分页，返回新→旧），供各项均值使用
+      ...AVG_TYPES.map(t => recordAPI.list(baby.id, { type: t, limit: AVG_WINDOW })),
     ])
     if (gen !== loadGeneration) return
     stats.value = statsRes.data
@@ -507,7 +493,7 @@ async function loadData() {
     todayTempRecords.value = (tempTodayRes.data as any[])
       .filter(r => r.data?.temperature > 0 && isToday(r.occurred_at))
       .sort((a, b) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime())
-    recentSupplement.value = (suppRes.data as any[]) || []
+    recentByType.value = Object.fromEntries(AVG_TYPES.map((t, i) => [t, (avgRes[i]?.data as any[]) || []]))
     currentSleep.value = sleepRes.data?.id ? sleepRes.data : null
     currentOutdoor.value = outdoorRes.data?.id ? outdoorRes.data : null
   } catch {
@@ -670,11 +656,14 @@ function onRecordCreated(e: Event) {
       return
     }
     allRecords.value.unshift(record)
-    // 补剂：同步进最近 10 次窗口，平均间隔/距上次立即跟上（否则要等下次整页刷新）
-    if (record.record_type === 'supplement') {
-      recentSupplement.value = [record, ...recentSupplement.value.filter(r => r.id !== record.id)]
+    // 同步进该类型的最近窗口，均值/距上次立即跟上（否则要等下次整页刷新）。
+    // 睡眠/户外在上面的分支已 return（结束时会整页 loadData），此处只处理即时记录的喂奶/尿布/补剂。
+    const t = record.record_type as (typeof AVG_TYPES)[number]
+    if (AVG_TYPES.includes(t)) {
+      const rows = [record, ...recentOf(t).filter(r => r.id !== record.id)]
         .sort((a, b) => (b.occurred_at || '').localeCompare(a.occurred_at || ''))
-        .slice(0, 10)
+        .slice(0, AVG_WINDOW)
+      recentByType.value = { ...recentByType.value, [t]: rows }
     }
   }
 }
@@ -682,9 +671,15 @@ function onRecordCreated(e: Event) {
 function onRecordDeleted(e: Event) {
   const { id, type } = (e as CustomEvent).detail || {}
   allRecords.value = allRecords.value.filter(r => !(r.id === id && r.record_type === (type || r.record_type)))
-  if (!type || type === 'supplement') {
-    recentSupplement.value = recentSupplement.value.filter(r => r.id !== id)
+  const targets = type ? [type] : [...AVG_TYPES]
+  const next = { ...recentByType.value }
+  let changed = false
+  for (const t of targets) {
+    if (!next[t]) continue
+    next[t] = next[t].filter(r => r.id !== id)
+    changed = true
   }
+  if (changed) recentByType.value = next
 }
 
 onMounted(() => {
