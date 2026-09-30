@@ -223,13 +223,10 @@
               </router-link>
             </EmptyState>
           </div>
-          <div v-else class="grid grid-cols-2">
-            <div v-for="(c, i) in summary.cards" :key="c.label"
-              :class="[
-                'py-3',
-                i % 2 === 0 ? 'pr-3' : 'pl-3 border-l border-border-color/60',
-                i >= 2 ? 'pt-0 border-t border-border-color/60' : 'pb-0',
-              ]">
+          <!-- 2×2 指标网格：纯留白分组、无分割线（Apple 指标块惯例；线是列表语言，会把指标读成列表）。
+               gap-x-6=24px 与原 pr-3+pl-3 一致（横向观感不变），gap-y-4 + pt-1 让纵向节奏统一 16px -->
+          <div v-else class="grid grid-cols-2 gap-x-6 gap-y-4 pt-1">
+            <div v-for="c in summary.cards" :key="c.label" class="min-w-0">
               <div class="text-xs text-text-secondary">{{ c.label }}</div>
               <div class="flex items-baseline gap-1 mt-1">
                 <span class="text-xl font-bold font-num text-text-primary">{{ c.value }}</span>
