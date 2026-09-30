@@ -22,7 +22,7 @@
       </EmptyState>
       <div v-else class="space-y-6">
         <div v-for="group in groupedRecords" :key="group.label">
-          <h3 class="text-xs font-semibold text-text-secondary mb-3">{{ group.label }}</h3>
+          <h3 class="text-[13px] font-medium text-text-secondary mb-3">{{ group.label }}</h3>
           <div class="space-y-2">
             <RecordCard v-for="r in group.records" :key="r.record_type + '-' + r.id" :record="r"
               :show-date="false" @edit="editRecord(r)" @context="openContext" />

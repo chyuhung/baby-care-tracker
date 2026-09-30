@@ -49,7 +49,8 @@
             <!-- 新增喂奶入口 -->
             <button @click.stop="goToAddFeeding"
               class="mt-3 w-full min-h-[44px] py-2 bg-primary/10 text-primary-deep text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1">
-              <span class="text-base">＋</span> 喂奶
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 5v14m7-7H5"/></svg>
+            喂奶
             </button>
           </div>
 
@@ -76,7 +77,8 @@
             <!-- 新增尿布入口 -->
             <button @click.stop="goToAddDiaper"
               class="mt-3 w-full min-h-[44px] py-2 bg-diaper/10 text-diaper-deep text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1">
-              <span class="text-base">＋</span> 尿布
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 5v14m7-7H5"/></svg>
+            尿布
             </button>
           </div>
 
@@ -136,7 +138,8 @@
             </div>
             <button @click.stop="goToAddTemperature"
               class="mt-3 w-full min-h-[44px] py-2 bg-temperature/10 text-temperature-deep text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1">
-              <span class="text-base">＋</span> 测温
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 5v14m7-7H5"/></svg>
+            测温
             </button>
           </div>
 
@@ -195,14 +198,15 @@
             </div>
             <button @click.stop="goToAddSupplement"
               class="mt-3 w-full min-h-[44px] py-2 bg-supplement/10 text-supplement-deep text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1">
-              <span class="text-base">＋</span> 补剂
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 5v14m7-7H5"/></svg>
+            补剂
             </button>
           </div>
         </div>
 
         <!-- 最近记录 -->
         <div class="space-y-2">
-          <h2 class="text-sm font-semibold text-text-secondary">最近记录</h2>
+          <h2 class="text-[13px] text-text-secondary">最近记录</h2>
           <div v-if="allRecords.length === 0" class="bg-surface rounded-2xl shadow-card">
             <EmptyState title="还没有记录" subtitle="从上方卡片快速记录喂奶、睡眠等" size="sm" icon="clock" />
           </div>

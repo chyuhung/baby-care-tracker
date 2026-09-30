@@ -47,7 +47,7 @@
             <Segmented v-model="metric" :options="metricOptions" compact />
           </div>
           <!-- 参考区间图例 -->
-          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 px-1 mb-1.5 text-[10px] text-text-secondary">
+          <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-1 mb-1.5 text-[10px] text-text-secondary">
             <span class="inline-flex items-center gap-1">
               <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--success-deep) / 0.35)"></i>正常 P25–P75
             </span>
@@ -110,8 +110,13 @@
             @click="onRowClick(g)" @keydown.enter="openEdit(g)"
             @touchstart.passive="rowTouchStart(g, $event)" @touchmove="rowTouchMove($event)"
             @touchend="rowTouchEnd" @touchcancel="rowTouchEnd">
-            <div class="text-sm font-medium text-text-primary">{{ dateLabelOf(g) }}</div>
-            <div class="text-xs text-text-secondary mt-0.5">{{ detailOf(g) }}</div>
+            <div class="flex items-center gap-2">
+              <div class="min-w-0 flex-1">
+                <div class="text-sm font-medium text-text-primary">{{ dateLabelOf(g) }}</div>
+                <div class="text-xs text-text-secondary mt-0.5 truncate">{{ detailOf(g) }}</div>
+              </div>
+              <svg class="w-4 h-4 shrink-0 text-text-secondary/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </div>
           </div>
         </div>
       </template>

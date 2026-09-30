@@ -1,20 +1,20 @@
 <template>
-  <!-- 记录卡片（微信式收敛版）：左 emoji 色块 + 标题/时间 + 单行文字元数据 + 备注。
+  <!-- 记录卡片（微信式收敛版）：左 emoji 色块 + 17px 标题 + 底行（左值 · 右时间）+ 备注。
        类型由色块弱着色 + emoji 区分；点按=编辑，删除走长按 ContextMenu（编辑/删除→确认），无常显按钮、无滑动删除 -->
   <div role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')"
     class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer press-card"
     @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
     <div class="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-lg leading-none" :class="tintClass">{{ emoji }}</div>
     <div class="flex-1 min-w-0">
-      <div class="flex items-center justify-between gap-2">
-        <span class="text-sm font-semibold text-text-primary truncate">{{ title }}</span>
-        <span class="text-xs text-text-secondary font-num shrink-0">{{ timeLabel }}</span>
+      <span class="block text-[17px] font-semibold text-text-primary truncate">{{ title }}</span>
+      <div class="mt-1 text-xs text-text-secondary font-num flex items-center justify-between gap-3">
+        <span class="min-w-0 truncate">{{ metaText || timeLabel }}</span>
+        <span v-if="metaText" class="shrink-0">{{ timeLabel }}</span>
       </div>
-      <div v-if="metaText" class="text-xs text-text-secondary mt-1 font-num truncate">{{ metaText }}</div>
-      <div v-if="fever && record.record_type === 'temperature'" class="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-danger">
+      <div v-if="fever && record.record_type === 'temperature'" class="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-danger">
         <span class="inline-block h-1.5 w-1.5 rounded-full bg-danger"></span>发热
       </div>
-      <div v-if="rd.note" class="text-xs text-text-secondary mt-1 truncate">{{ rd.note }}</div>
+      <div v-if="rd.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ rd.note }}</div>
     </div>
   </div>
 </template>
