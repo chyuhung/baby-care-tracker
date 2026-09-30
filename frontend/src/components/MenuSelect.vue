@@ -38,7 +38,7 @@
               </div>
               <p v-if="title" class="px-4 pt-2 pb-2 text-[13px] font-semibold text-text-secondary text-center">{{ title }}</p>
               <button v-for="opt in options" :key="String(opt.value)" type="button" @click="select(opt.value)"
-                class="w-full flex items-center gap-3 px-4 min-h-[52px] text-[17px] text-text-primary border-t border-border-color/70 btn-press active:bg-muted/60">
+                class="w-full flex items-center gap-3 px-4 min-h-[52px] text-[17px] text-text-primary border-t border-border-color/60 btn-press active:bg-muted/60">
                 <span v-if="opt.emoji" class="text-xl w-6 text-center leading-none">{{ opt.emoji }}</span>
                 <span class="flex-1 text-left">{{ opt.label }}</span>
                 <svg v-if="opt.value === modelValue" class="w-5 h-5 text-primary-deep" viewBox="0 0 24 24" fill="none">

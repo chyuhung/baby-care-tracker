@@ -8,7 +8,7 @@
       </template>
     </NavBar>
 
-    <main class="flex-1 px-4 py-6 space-y-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
+    <main class="flex-1 px-4 py-6 space-y-5 mx-auto w-full max-w-[480px] pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
       <!-- 时间 -->
       <div>
         <label class="text-sm text-text-secondary block mb-2">记录时间</label>
@@ -100,7 +100,7 @@
     <!-- 固定底部操作栏 -->
     <FormBar>
       <button type="button" @click="save" :disabled="saving"
-        class="btn-press w-full py-3.5 bg-primary-fill text-white font-semibold rounded-xl shadow-card disabled:opacity-50 flex items-center justify-center gap-2">
+        class="btn-press w-full py-3.5 bg-primary-fill text-white font-semibold rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
         <ActivityIndicator v-if="saving" :size="20" class="text-white" />
         <span>{{ saving ? '保存中...' : (isEdit ? '更新记录' : '记录') }}</span>
       </button>

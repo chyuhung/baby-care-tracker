@@ -9,7 +9,7 @@
     </svg>
   </button>
 
-  <DateTimeWheel :open="open" :model-value="modelValue" :title="title"
+  <DateTimeWheel :open="open" :model-value="modelValue" :title="title" :date-only="dateOnly"
     @update:open="(v: boolean) => open = v" @confirm="onConfirm" />
 </template>
 
@@ -21,9 +21,12 @@ const props = withDefaults(defineProps<{
   modelValue: string
   title?: string
   ariaLabel?: string
+  /** 纯日历日模式：滚轮只选日期，输出 'YYYY-MM-DD' */
+  dateOnly?: boolean
 }>(), {
   title: '选择时间',
   ariaLabel: '选择时间',
+  dateOnly: false,
 })
 
 const emit = defineEmits<{ (e: 'update:modelValue', v: string): void }>()
@@ -33,13 +36,14 @@ const open = ref(false)
 const WEEK = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 
 const displayText = computed(() => {
-  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(props.modelValue || '')
-  if (!m) return '选择时间'
+  const m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/.exec(props.modelValue || '')
+  if (!m) return props.dateOnly ? '选择日期' : '选择时间'
   const dt = new Date(+m[1], +m[2] - 1, +m[3])
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const day = new Date(dt); day.setHours(0, 0, 0, 0)
   const diff = Math.round((day.getTime() - today.getTime()) / 86400000)
   const dayTxt = diff === 0 ? '今天' : diff === -1 ? '昨天' : `${+m[2]}月${+m[3]}日 ${WEEK[dt.getDay()]}`
+  if (props.dateOnly) return dayTxt
   return `${dayTxt} ${m[4]}:${m[5]}`
 })
 

@@ -18,7 +18,7 @@
             <div class="bg-surface rounded-2xl overflow-hidden">
               <button v-for="(a, i) in actions" :key="a.key" type="button" @click="run(a)"
                 class="w-full flex items-center gap-3 px-4 min-h-[52px] text-[17px] btn-press active:bg-muted/60"
-                :class="[i > 0 ? 'border-t border-border-color/70' : '', a.danger ? 'text-danger' : 'text-text-primary']">
+                :class="[i > 0 ? 'border-t border-border-color/60' : '', a.danger ? 'text-danger' : 'text-text-primary']">
                 <svg v-if="a.icon" class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none"
                   :class="a.danger ? 'text-danger' : 'text-text-secondary'">
                   <path :d="a.icon" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />

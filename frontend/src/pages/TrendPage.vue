@@ -19,7 +19,7 @@
       <EmptyState v-else-if="trendData.length === 0" title="暂无趋势数据"
         subtitle="记录几天数据后，这里会生成图表趋势" />
       <template v-else>
-        <div v-if="category === 'feeding'" class="bg-surface rounded-2xl shadow-card px-3 pt-2.5 pb-2">
+        <div v-if="category === 'feeding'" class="bg-surface rounded-2xl shadow-card px-3 pt-3 pb-3">
           <div class="flex items-center justify-center gap-4 mb-1 text-[11px] text-text-secondary font-normal">
             <span class="flex items-center gap-1.5"><span class="inline-block w-4" style="border-top: 2px solid var(--chart-primary)"></span>奶量 ml</span>
             <span class="flex items-center gap-1.5"><span class="inline-block w-2.5 h-2.5 rounded-sm" style="background: var(--chart-primary-count-fill); border: 1px solid var(--chart-primary-count)"></span>次数</span>
@@ -66,7 +66,7 @@
             </template>
           </svg>
         </div>
-        <div v-if="category === 'diaper'" class="bg-surface rounded-2xl shadow-card px-3 pt-2.5 pb-2">
+        <div v-if="category === 'diaper'" class="bg-surface rounded-2xl shadow-card px-3 pt-3 pb-3">
           <svg viewBox="0 0 340 228" class="w-full block">
             <template v-if="days === 30">
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
@@ -96,7 +96,7 @@
             </template>
           </svg>
         </div>
-        <div v-if="category === 'sleep'" class="bg-surface rounded-2xl shadow-card px-3 pt-2.5 pb-2">
+        <div v-if="category === 'sleep'" class="bg-surface rounded-2xl shadow-card px-3 pt-3 pb-3">
           <svg viewBox="0 0 340 228" class="w-full block">
             <template v-if="days === 30">
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
@@ -126,7 +126,7 @@
             </template>
           </svg>
         </div>
-        <div v-if="category === 'outdoor'" class="bg-surface rounded-2xl shadow-card px-3 pt-2.5 pb-2">
+        <div v-if="category === 'outdoor'" class="bg-surface rounded-2xl shadow-card px-3 pt-3 pb-3">
           <svg viewBox="0 0 340 228" class="w-full block">
             <template v-if="days === 30">
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
@@ -156,7 +156,7 @@
             </template>
           </svg>
         </div>
-        <div v-if="category === 'supplement'" class="bg-surface rounded-2xl shadow-card px-3 pt-2.5 pb-2">
+        <div v-if="category === 'supplement'" class="bg-surface rounded-2xl shadow-card px-3 pt-3 pb-3">
           <svg viewBox="0 0 340 228" class="w-full block">
             <template v-if="days === 30">
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
@@ -186,7 +186,7 @@
             </template>
           </svg>
         </div>
-        <div v-if="category === 'temperature'" class="bg-surface rounded-2xl shadow-card px-3 pt-2.5 pb-2">
+        <div v-if="category === 'temperature'" class="bg-surface rounded-2xl shadow-card px-3 pt-3 pb-3">
           <svg viewBox="0 0 340 228" class="w-full block">
             <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             <g v-for="(t, ti) in tempTicks" :key="'tl'+ti">
@@ -209,14 +209,14 @@
         </div>
         <div v-if="trendData.length" class="bg-surface rounded-2xl shadow-card p-4 space-y-3">
           <div class="flex items-center justify-between gap-2">
-            <h4 class="text-sm font-semibold text-text-secondary shrink-0">📊 期间对比</h4>
+            <h4 class="text-sm font-semibold text-text-secondary shrink-0">期间对比</h4>
             <span class="text-[11px] text-text-secondary truncate">不含今日 · 当前 vs 上一周期</span>
           </div>
           <div v-if="periodLabel && !summary.empty" class="text-[11px] text-text-secondary">{{ periodLabel }}</div>
           <div v-if="summary.empty" class="bg-muted rounded-xl">
             <EmptyState size="sm" icon="chart" :title="`近 ${days} 天暂无记录`" subtitle="记录几天后，这里会生成周期对比">
               <router-link to="/"
-                class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-primary-fill text-white rounded-xl font-medium text-sm btn-press shadow-card">
+                class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-primary-fill text-white rounded-xl font-medium text-sm btn-press">
                 去记录
               </router-link>
             </EmptyState>

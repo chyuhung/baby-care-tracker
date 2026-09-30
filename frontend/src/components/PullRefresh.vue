@@ -3,8 +3,8 @@
     <!-- 顶部悬浮区（标题栏），渲染在内容上、不套内容边距 -->
     <slot name="header" />
 
-    <!-- 内容区：下拉时整体下移，露出顶栏与内容之间的间隙 -->
-    <div ref="contentRef" :class="contentClass" :style="contentStyle">
+    <!-- 内容区：下拉时整体下移，露出顶栏与内容之间的间隙；居中收窄到 480px 与 FormBar/BottomNav 对齐（平板/大屏不拉伸） -->
+    <div ref="contentRef" :class="['mx-auto w-full max-w-[480px]', contentClass]" :style="contentStyle">
       <slot />
     </div>
 

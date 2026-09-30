@@ -15,7 +15,7 @@
                 <p v-if="message" class="text-[13px] text-text-secondary mt-1 leading-relaxed whitespace-pre-line">{{ message }}</p>
               </div>
               <button ref="confirmRef" type="button" @click="onConfirm" :disabled="loading"
-                class="w-full py-4 px-4 text-[17px] font-medium border-t border-border-color/70 btn-press disabled:opacity-60 flex items-center justify-center gap-2"
+                class="w-full py-4 px-4 text-[17px] font-medium border-t border-border-color/60 btn-press disabled:opacity-60 flex items-center justify-center gap-2"
                 :class="danger ? 'text-danger' : 'text-primary-deep'">
                 <ActivityIndicator v-if="loading" :size="18" />
                 <span>{{ confirmText }}</span>

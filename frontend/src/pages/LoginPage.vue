@@ -35,7 +35,7 @@
       </div>
 
       <button type="submit" :disabled="loading"
-        class="btn-press w-full py-3.5 bg-primary-fill text-white font-semibold rounded-xl shadow-card hover:shadow-card-hover transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+        class="btn-press w-full py-3.5 bg-primary-fill text-white font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2">
         <ActivityIndicator v-if="loading" :size="18" class="text-white" />
         <span>{{ loading ? '处理中...' : (isRegister ? '注册' : '登录') }}</span>
       </button>

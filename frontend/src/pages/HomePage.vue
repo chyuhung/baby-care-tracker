@@ -10,7 +10,7 @@
       <EmptyState v-if="app.babies.length === 0" title="还没有添加宝宝" icon="folder"
         subtitle="添加宝宝档案后即可开始记录护理数据">
         <router-link to="/baby/new"
-          class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-fill text-white rounded-xl font-medium text-sm btn-press shadow-card">
+          class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-fill text-white rounded-xl font-medium text-sm btn-press">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
           添加宝宝
         </router-link>

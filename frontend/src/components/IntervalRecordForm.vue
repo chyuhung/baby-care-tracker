@@ -8,7 +8,7 @@
       </template>
     </NavBar>
 
-    <main class="flex-1 px-4 py-6 space-y-5 pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
+    <main class="flex-1 px-4 py-6 space-y-5 mx-auto w-full max-w-[480px] pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
       <div v-if="!loaded" class="flex justify-center py-20">
         <ActivityIndicator :size="28" class="text-text-secondary" />
       </div>
@@ -38,7 +38,7 @@
 
     <FormBar>
       <button type="button" @click="save" :disabled="submitting || !loaded"
-        class="btn-press w-full py-3.5 bg-primary-fill text-white font-semibold rounded-xl shadow-card disabled:opacity-50 flex items-center justify-center gap-2">
+        class="btn-press w-full py-3.5 bg-primary-fill text-white font-semibold rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
         <ActivityIndicator v-if="submitting" :size="20" class="text-white" />
         <span>{{ submitting ? '保存中...' : '更新记录' }}</span>
       </button>

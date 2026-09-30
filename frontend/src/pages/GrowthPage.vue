@@ -102,19 +102,16 @@
           </p>
         </div>
 
-        <!-- 历史记录 -->
+        <!-- 历史记录（整行 tap=编辑，长按=上下文菜单删除，与记录卡同手势口径） -->
         <div class="bg-surface rounded-2xl shadow-card overflow-hidden">
           <h2 class="text-sm font-semibold text-text-secondary px-4 pt-3 pb-1">历史记录</h2>
-          <div v-for="g in listDesc" :key="g.id" class="px-4 py-3 border-t border-border-color/60 flex items-center gap-3">
-            <div class="flex-1 min-w-0 btn-press rounded-lg -mx-1 px-1 py-1" role="button" tabindex="0"
-              aria-label="编辑此记录" @click="openEdit(g)" @keydown.enter="openEdit(g)">
-              <div class="text-sm font-medium text-text-primary">{{ dateLabelOf(g) }}</div>
-              <div class="text-xs text-text-secondary mt-0.5">{{ detailOf(g) }}</div>
-            </div>
-            <button type="button" aria-label="删除此记录" @click="askDelete(g)"
-              class="w-11 h-11 flex items-center justify-center text-danger/70 btn-press shrink-0">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 7l-.9 12a1.5 1.5 0 01-1.5 1.4H7.4A1.5 1.5 0 015.9 19L5 7m5 0V4.5A1.5 1.5 0 0111.5 3h1A1.5 1.5 0 0114 4.5V7m-9 0h14"/></svg>
-            </button>
+          <div v-for="g in listDesc" :key="g.id" role="button" tabindex="0" aria-label="编辑或删除此记录"
+            class="px-4 py-3 border-t border-border-color/60 btn-press"
+            @click="onRowClick(g)" @keydown.enter="openEdit(g)"
+            @touchstart.passive="rowTouchStart(g, $event)" @touchmove="rowTouchMove($event)"
+            @touchend="rowTouchEnd" @touchcancel="rowTouchEnd">
+            <div class="text-sm font-medium text-text-primary">{{ dateLabelOf(g) }}</div>
+            <div class="text-xs text-text-secondary mt-0.5">{{ detailOf(g) }}</div>
           </div>
         </div>
       </template>
@@ -141,8 +138,7 @@
               <div class="space-y-3">
                 <div>
                   <label class="text-sm text-text-secondary block mb-1.5">测量日期</label>
-                  <input v-model="form.measured_at" type="date"
-                    class="w-full px-4 py-3 bg-muted border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none" />
+                  <DateTimeField v-model="form.measured_at" title="测量日期" aria-label="选择测量日期" date-only />
                 </div>
                 <div class="grid grid-cols-3 gap-2.5">
                   <div>
@@ -181,6 +177,11 @@
 
     <ConfirmSheet :open="!!toDelete" title="删除测量记录" message="确定要删除这条成长记录吗？"
       confirm-text="删除" :loading="deleting" @confirm="doDelete" @cancel="toDelete = null" />
+
+    <!-- 长按上下文菜单（与记录卡一致：编辑 / 删除） -->
+    <ContextMenu :open="contextOpen" :title="contextGrowth ? dateLabelOf(contextGrowth) : ''"
+      :subtitle="contextGrowth ? detailOf(contextGrowth) : ''" emoji="📏" :actions="contextActions"
+      @update:open="contextOpen = $event" @select="onContextSelect" />
   </div>
 </template>
 
@@ -191,10 +192,12 @@ import { useAppStore } from '@/stores/app'
 import { babyAPI, GrowthRecord, GrowthStats, GrowthReference } from '@/api'
 import PullRefresh from '@/components/PullRefresh.vue'
 import NavBar from '@/components/NavBar.vue'
+import DateTimeField from '@/components/DateTimeField.vue'
 import EmptyState from '@/components/EmptyState.vue'
 import Segmented from '@/components/Segmented.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
+import ContextMenu from '@/components/ContextMenu.vue'
 import { parseLocalDate, formatDateCN, measureAgeText } from '@/utils'
 
 const router = useRouter()
@@ -495,6 +498,47 @@ function askDelete(g: GrowthRecord) {
   toDelete.value = g
 }
 
+/* ── 长按上下文菜单（v-for 行不适合逐行 useLongPress，用单例状态内联实现，参数与 useLongPress 一致）── */
+const contextOpen = ref(false)
+const contextGrowth = ref<GrowthRecord | null>(null)
+const contextActions = [
+  { key: 'edit', label: '编辑', icon: 'M16.9 4.3a2.1 2.1 0 013 3L9 18l-4 1 1-4zM13.5 7l3 3' },
+  { key: 'delete', label: '删除', icon: 'M19 7l-.9 12a1.5 1.5 0 01-1.5 1.4H7.4A1.5 1.5 0 015.9 19L5 7m5 0V4.5A1.5 1.5 0 0111.5 3h1A1.5 1.5 0 0114 4.5V7m-9 0h14', danger: true },
+]
+let lpTimer: number | null = null
+let lpFired = false
+let lpStartX = 0
+let lpStartY = 0
+function rowTouchStart(g: GrowthRecord, e: TouchEvent) {
+  if (e.touches.length !== 1) return
+  const t = e.touches[0]
+  lpStartX = t.clientX; lpStartY = t.clientY; lpFired = false
+  if (lpTimer !== null) { clearTimeout(lpTimer); lpTimer = null }
+  lpTimer = window.setTimeout(() => {
+    lpFired = true
+    contextGrowth.value = g
+    contextOpen.value = true
+  }, 480)
+}
+function rowTouchMove(e: TouchEvent) {
+  if (lpTimer === null || lpFired) return
+  const t = e.touches[0]
+  if (Math.abs(t.clientX - lpStartX) > 10 || Math.abs(t.clientY - lpStartY) > 10) { clearTimeout(lpTimer); lpTimer = null }
+}
+function rowTouchEnd() {
+  if (lpTimer !== null) { clearTimeout(lpTimer); lpTimer = null }
+}
+function onRowClick(g: GrowthRecord) {
+  if (lpFired) { lpFired = false; return }
+  openEdit(g)
+}
+function onContextSelect(key: string) {
+  const g = contextGrowth.value
+  if (!g) return
+  if (key === 'edit') openEdit(g)
+  else if (key === 'delete') askDelete(g)
+}
+
 async function doDelete() {
   if (!toDelete.value) return
   deleting.value = true
@@ -520,5 +564,6 @@ onMounted(() => {
 })
 onUnmounted(() => {
   window.removeEventListener('record-updated', onGrowthUpdated)
+  if (lpTimer !== null) { clearTimeout(lpTimer); lpTimer = null }
 })
 </script>

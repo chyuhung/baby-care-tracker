@@ -71,7 +71,7 @@
     <!-- 固定底部操作栏 -->
     <FormBar>
       <button type="button" @click="save" :disabled="saving"
-        class="btn-press w-full py-3.5 bg-primary-fill text-white font-semibold rounded-xl shadow-card disabled:opacity-50 flex items-center justify-center gap-2">
+        class="btn-press w-full py-3.5 bg-primary-fill text-white font-semibold rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
         <ActivityIndicator v-if="saving" :size="20" class="text-white" />
         <span>{{ saving ? '保存中...' : (isEdit ? '更新记录' : '记录') }}</span>
       </button>

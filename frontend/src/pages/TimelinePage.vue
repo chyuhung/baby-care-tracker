@@ -15,7 +15,7 @@
       <EmptyState v-else-if="groupedRecords.length === 0" title="暂无记录" icon="clock"
         subtitle="记录宝宝的每一次喂奶、睡眠与成长瞬间">
         <button @click="router.push('/')"
-          class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-fill text-white rounded-xl font-medium text-sm btn-press shadow-card">
+          class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary-fill text-white rounded-xl font-medium text-sm btn-press">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
           立即记录
         </button>

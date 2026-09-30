@@ -52,15 +52,18 @@ const ITEM_H = 36
 
 const props = withDefaults(defineProps<{
   open: boolean
-  /** 'YYYY-MM-DDTHH:mm'（本地时间，无时区，与 datetime-local 一致） */
+  /** 'YYYY-MM-DDTHH:mm'（本地时间，无时区，与 datetime-local 一致）；dateOnly 时为 'YYYY-MM-DD' */
   modelValue: string
   title?: string
   min?: string
   max?: string
+  /** 纯日历日模式：只显示日期列，输出 'YYYY-MM-DD'（用于出生日期/测量日期等不关心时刻的字段） */
+  dateOnly?: boolean
 }>(), {
   title: '选择时间',
   min: '',
   max: '',
+  dateOnly: false,
 })
 
 const emit = defineEmits<{
@@ -73,8 +76,8 @@ const colEls = ref<HTMLElement[]>([])
 
 function pad(n: number) { return String(n).padStart(2, '0') }
 function parseLocal(s: string) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(s || '')
-  if (m) return { y: +m[1], mo: +m[2], d: +m[3], h: +m[4], mi: +m[5] }
+  const m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/.exec(s || '')
+  if (m) return { y: +m[1], mo: +m[2], d: +m[3], h: m[4] ? +m[4] : 0, mi: m[5] ? +m[5] : 0 }
   const n = new Date()
   return { y: n.getFullYear(), mo: n.getMonth() + 1, d: n.getDate(), h: n.getHours(), mi: n.getMinutes() }
 }
@@ -99,6 +102,9 @@ const minItems = Array.from({ length: 60 }, (_, i) => ({ label: pad(i), value: S
 const columns = computed(() => {
   const dv = `${draft.value.y}-${pad(draft.value.mo)}-${pad(draft.value.d)}`
   const di = Math.max(0, dateItems.value.findIndex(x => x.value === dv))
+  if (props.dateOnly) {
+    return [{ key: 'date', items: dateItems.value, index: di, width: '150px' }]
+  }
   return [
     { key: 'date', items: dateItems.value, index: di, width: '150px' },
     { key: 'hour', items: hourItems, index: draft.value.h, width: '56px' },
@@ -143,8 +149,12 @@ function onScroll(ci: number, e: Event) {
 
 function close(commit: boolean) {
   if (commit) {
-    const v = `${draft.value.y}-${pad(draft.value.mo)}-${pad(draft.value.d)}T${pad(draft.value.h)}:${pad(draft.value.mi)}`
-    emit('confirm', v)
+    if (props.dateOnly) {
+      emit('confirm', `${draft.value.y}-${pad(draft.value.mo)}-${pad(draft.value.d)}`)
+    } else {
+      const v = `${draft.value.y}-${pad(draft.value.mo)}-${pad(draft.value.d)}T${pad(draft.value.h)}:${pad(draft.value.mi)}`
+      emit('confirm', v)
+    }
   }
   emit('update:open', false)
 }
