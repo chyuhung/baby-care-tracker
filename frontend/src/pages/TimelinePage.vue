@@ -24,11 +24,8 @@
         <div v-for="group in groupedRecords" :key="group.label">
           <h3 class="text-xs font-semibold text-text-secondary mb-3">{{ group.label }}</h3>
           <div class="space-y-2">
-            <SwipeToDelete v-for="r in group.records" :key="r.record_type + '-' + r.id"
-              @delete="softDelete(r)">
-              <RecordCard :record="r" :show-date="false"
-                @edit="editRecord(r)" @context="openContext" />
-            </SwipeToDelete>
+            <RecordCard v-for="r in group.records" :key="r.record_type + '-' + r.id" :record="r"
+              :show-date="false" @edit="editRecord(r)" @context="openContext" />
           </div>
         </div>
 
@@ -74,7 +71,6 @@ import EmptyState from '@/components/EmptyState.vue'
 import NavBar from '@/components/NavBar.vue'
 import SkeletonCard from '@/components/SkeletonCard.vue'
 import MenuSelect from '@/components/MenuSelect.vue'
-import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import { useUndoDelete } from '@/composables/useUndoDelete'
 import { WEEKDAY_LONG } from '@/utils'
 

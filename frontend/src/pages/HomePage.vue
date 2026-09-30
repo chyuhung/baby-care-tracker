@@ -206,9 +206,8 @@
           <div v-if="allRecords.length === 0" class="bg-surface rounded-2xl shadow-card">
             <EmptyState title="还没有记录" subtitle="从上方卡片快速记录喂奶、睡眠等" size="sm" icon="clock" />
           </div>
-          <SwipeToDelete v-for="r in allRecords" :key="r.record_type + '-' + r.id" @delete="softDelete(r)">
-            <RecordCard :record="r" @edit="editRecord(r)" @context="openContext" />
-          </SwipeToDelete>
+          <RecordCard v-for="r in allRecords" :key="r.record_type + '-' + r.id" :record="r"
+            @edit="editRecord(r)" @context="openContext" />
 
           <!-- 加载更多（真增量分页）：每次点击一页，避免一次渲染全部卡死 -->
           <div class="h-14 flex items-center justify-center">
@@ -247,7 +246,6 @@ defineOptions({ name: 'HomePage' })
 import { babyAPI, recordAPI } from '@/api'
 import type { BabyStats, SleepRecord, OutdoorRecord } from '@/api'
 import RecordCard from '@/components/RecordCard.vue'
-import SwipeToDelete from '@/components/SwipeToDelete.vue'
 import { useUndoDelete } from '@/composables/useUndoDelete'
 import PullRefresh from '@/components/PullRefresh.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'

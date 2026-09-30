@@ -1,6 +1,6 @@
 <template>
   <!-- 记录卡片（微信式收敛版）：左 emoji 色块 + 标题/时间 + 单行文字元数据 + 备注。
-       类型由色块弱着色 + emoji 区分；删除走滑动 SwipeToDelete / 长按 ContextMenu，无常显按钮 -->
+       类型由色块弱着色 + emoji 区分；点按=编辑，删除走长按 ContextMenu（编辑/删除→确认），无常显按钮、无滑动删除 -->
   <div role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')"
     class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer press-card"
     @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
