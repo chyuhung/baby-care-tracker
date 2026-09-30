@@ -207,7 +207,7 @@
             <EmptyState title="还没有记录" subtitle="从上方卡片快速记录喂奶、睡眠等" size="sm" icon="clock" />
           </div>
           <SwipeToDelete v-for="r in allRecords" :key="r.record_type + '-' + r.id" @delete="softDelete(r)">
-            <RecordCard :record="r" @edit="editRecord(r)" @delete="deleteRecord(r)" @context="openContext" />
+            <RecordCard :record="r" @edit="editRecord(r)" @context="openContext" />
           </SwipeToDelete>
 
           <!-- 加载更多（真增量分页）：每次点击一页，避免一次渲染全部卡死 -->

@@ -1,120 +1,21 @@
 <template>
-  <div v-if="record.record_type === 'feeding'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer press-card" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
-    <div class="w-1.5 h-12 rounded-full bg-primary flex-shrink-0"></div>
+  <!-- 记录卡片（微信式收敛版）：左 emoji 色块 + 标题/时间 + 单行文字元数据 + 备注。
+       类型由色块弱着色 + emoji 区分；删除走滑动 SwipeToDelete / 长按 ContextMenu，无常显按钮 -->
+  <div role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')"
+    class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer press-card"
+    @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
+    <div class="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-lg leading-none" :class="tintClass">{{ emoji }}</div>
     <div class="flex-1 min-w-0">
       <div class="flex items-center justify-between gap-2">
-        <span class="text-sm font-semibold text-text-primary">{{ feedingTypeLabel }}</span>
-        <span class="text-xs text-text-secondary font-num">{{ timeAgo }}</span>
+        <span class="text-sm font-semibold text-text-primary truncate">{{ title }}</span>
+        <span class="text-xs text-text-secondary font-num shrink-0">{{ timeLabel }}</span>
       </div>
-      <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
-        <span v-if="rd.type !== 'breast' && rd.amount_ml > 0" class="bg-muted text-text-secondary px-2 py-0.5 rounded-full font-num">{{ rd.amount_ml }}ml</span>
-        <span v-if="rd.type === 'breast' && rd.duration_minutes > 0" class="bg-muted text-text-secondary px-2 py-0.5 rounded-full">{{ rd.duration_minutes }}分钟</span>
-        <span v-if="rd.type === 'breast' && rd.side" class="bg-muted text-text-secondary px-2 py-0.5 rounded-full">{{ sideLabel }}</span>
-        <span v-if="rd.brand" class="bg-muted text-text-secondary px-2 py-0.5 rounded-full">{{ rd.brand }}</span>
-      </div>
-      <div v-if="rd.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ rd.note }}</div>
-    </div>
-    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="group p-2 min-w-[44px] min-h-[44px] flex items-center justify-center btn-press">
-      <span class="w-7 h-7 rounded-full bg-muted/70 text-text-secondary/60 flex items-center justify-center transition-colors group-hover:bg-danger-light group-hover:text-danger">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </span>
-    </button>
-  </div>
-
-  <div v-else-if="record.record_type === 'diaper'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer press-card" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
-    <div class="w-1.5 h-12 rounded-full bg-diaper flex-shrink-0"></div>
-    <div class="flex-1 min-w-0">
-      <div class="flex items-center justify-between gap-2">
-        <span class="text-sm font-semibold text-text-primary">{{ diaperTypeLabel }}</span>
-        <span class="text-xs text-text-secondary font-num">{{ timeAgo }}</span>
+      <div v-if="metaText" class="text-xs text-text-secondary mt-1 font-num truncate">{{ metaText }}</div>
+      <div v-if="fever && record.record_type === 'temperature'" class="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-danger">
+        <span class="inline-block h-1.5 w-1.5 rounded-full bg-danger"></span>发热
       </div>
       <div v-if="rd.note" class="text-xs text-text-secondary mt-1 truncate">{{ rd.note }}</div>
     </div>
-    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="group p-2 min-w-[44px] min-h-[44px] flex items-center justify-center btn-press">
-      <span class="w-7 h-7 rounded-full bg-muted/70 text-text-secondary/60 flex items-center justify-center transition-colors group-hover:bg-danger-light group-hover:text-danger">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </span>
-    </button>
-  </div>
-
-  <div v-else-if="record.record_type === 'sleep'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer press-card" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
-    <div class="w-1.5 h-12 rounded-full bg-sleep flex-shrink-0"></div>
-    <div class="flex-1 min-w-0">
-      <div class="flex items-center justify-between gap-2">
-        <span class="text-sm font-semibold text-text-primary">😴 睡眠</span>
-        <span class="text-xs text-text-secondary font-num">{{ sleepTimeLabel }}</span>
-      </div>
-      <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
-        <span class="bg-muted text-text-secondary px-2 py-0.5 rounded-full font-num">{{ sleepDurationLabel }}</span>
-      </div>
-      <div v-if="rd.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ rd.note }}</div>
-    </div>
-    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="group p-2 min-w-[44px] min-h-[44px] flex items-center justify-center btn-press">
-      <span class="w-7 h-7 rounded-full bg-muted/70 text-text-secondary/60 flex items-center justify-center transition-colors group-hover:bg-danger-light group-hover:text-danger">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </span>
-    </button>
-  </div>
-
-  <div v-else-if="record.record_type === 'temperature'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer press-card" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
-    <div class="w-1.5 h-12 rounded-full bg-temperature flex-shrink-0"></div>
-    <div class="flex-1 min-w-0">
-      <div class="flex items-center justify-between gap-2">
-        <span class="text-sm font-semibold text-text-primary">🌡️ 体温</span>
-        <span class="text-xs text-text-secondary font-num">{{ timeAgo }}</span>
-      </div>
-      <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
-        <span v-if="rd.temperature" class="bg-muted text-text-secondary px-2 py-0.5 rounded-full font-num">{{ rd.temperature }}°C</span>
-        <span v-if="rd.location" class="bg-muted text-text-secondary px-2 py-0.5 rounded-full">{{ rd.location }}</span>
-        <span v-if="rd.temperature >= 37.5" class="inline-flex items-center gap-1 text-[11px] font-medium text-danger">
-          <span class="inline-block h-1.5 w-1.5 rounded-full bg-danger"></span>发热
-        </span>
-      </div>
-      <div v-if="rd.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ rd.note }}</div>
-    </div>
-    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="group p-2 min-w-[44px] min-h-[44px] flex items-center justify-center btn-press">
-      <span class="w-7 h-7 rounded-full bg-muted/70 text-text-secondary/60 flex items-center justify-center transition-colors group-hover:bg-danger-light group-hover:text-danger">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </span>
-    </button>
-  </div>
-
-  <div v-else-if="record.record_type === 'supplement'" role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer press-card" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
-    <div class="w-1.5 h-12 rounded-full bg-supplement flex-shrink-0"></div>
-    <div class="flex-1 min-w-0">
-      <div class="flex items-center justify-between gap-2">
-        <span class="text-sm font-semibold text-text-primary">💊 {{ rd.name }}</span>
-        <span class="text-xs text-text-secondary font-num">{{ timeAgo }}</span>
-      </div>
-      <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
-        <span v-if="rd.dosage_value > 0" class="bg-muted text-text-secondary px-2 py-0.5 rounded-full font-num">{{ rd.dosage_value }}{{ rd.dosage_unit }}</span>
-      </div>
-      <div v-if="rd.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ rd.note }}</div>
-    </div>
-    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="group p-2 min-w-[44px] min-h-[44px] flex items-center justify-center btn-press">
-      <span class="w-7 h-7 rounded-full bg-muted/70 text-text-secondary/60 flex items-center justify-center transition-colors group-hover:bg-danger-light group-hover:text-danger">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </span>
-    </button>
-  </div>
-
-  <div v-else role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')" class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer press-card" @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
-    <div class="w-1.5 h-12 rounded-full bg-outdoor flex-shrink-0"></div>
-    <div class="flex-1 min-w-0">
-      <div class="flex items-center justify-between gap-2">
-        <span class="text-sm font-semibold text-text-primary">🌳 户外活动</span>
-        <span class="text-xs text-text-secondary font-num">{{ outdoorTimeLabel }}</span>
-      </div>
-      <div class="text-xs text-text-secondary mt-1 flex flex-wrap gap-2">
-        <span class="bg-muted text-text-secondary px-2 py-0.5 rounded-full font-num">{{ outdoorDurationLabel }}</span>
-      </div>
-      <div v-if="rd.note" class="text-xs text-text-secondary mt-1.5 truncate">{{ rd.note }}</div>
-    </div>
-    <button aria-label="删除此记录" @click.stop="$emit('delete')" class="group p-2 min-w-[44px] min-h-[44px] flex items-center justify-center btn-press">
-      <span class="w-7 h-7 rounded-full bg-muted/70 text-text-secondary/60 flex items-center justify-center transition-colors group-hover:bg-danger-light group-hover:text-danger">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-      </span>
-    </button>
   </div>
 </template>
 
@@ -124,7 +25,7 @@ import { formatDurationCompact, formatTimeRangeDay, formatDayTime } from '@/util
 import { useLongPress } from '@/composables/useLongPress'
 
 const props = withDefaults(defineProps<{ record: any; showDate?: boolean }>(), { showDate: true })
-const emit = defineEmits(['edit', 'delete', 'context'])
+const emit = defineEmits(['edit', 'context'])
 
 // 长按 → iOS 上下文菜单（编辑 / 删除）
 const lp = useLongPress(() => emit('context', props.record))
@@ -137,14 +38,47 @@ function onCardClick() {
 
 // 五类记录的 data 字段统一为一个别名
 const rd = computed(() => props.record.data || {})
+const type = computed(() => props.record.record_type)
 
-const feedingTypeMap: Record<string, string> = { breast: '🤱 母乳亲喂', bottle: '🍼 母乳瓶喂', formula: '🍼 配方奶' }
-const diaperTypeMap: Record<string, string> = { pee: '💧 小便', poop: '💩 大便', mixed: '🌪️ 混合' }
+const feedEmoji: Record<string, string> = { breast: '🤱', bottle: '🍼', formula: '🍼' }
+const feedTitle: Record<string, string> = { breast: '母乳亲喂', bottle: '母乳瓶喂', formula: '配方奶' }
+const diaperEmoji: Record<string, string> = { pee: '💧', poop: '💩', mixed: '🌪️' }
+const diaperTitle: Record<string, string> = { pee: '小便', poop: '大便', mixed: '混合' }
 const sideMap: Record<string, string> = { left: '左侧', right: '右侧', both: '双边' }
 
-const feedingTypeLabel = computed(() => feedingTypeMap[rd.value.type] || rd.value.type)
-const diaperTypeLabel = computed(() => diaperTypeMap[rd.value.type] || rd.value.type)
-const sideLabel = computed(() => sideMap[rd.value.side] || rd.value.side)
+const emoji = computed(() => {
+  switch (type.value) {
+    case 'feeding': return feedEmoji[rd.value.type] || '🍼'
+    case 'diaper': return diaperEmoji[rd.value.type] || '💧'
+    case 'sleep': return '😴'
+    case 'temperature': return '🌡️'
+    case 'supplement': return '💊'
+    default: return '🌳'
+  }
+})
+
+const title = computed(() => {
+  switch (type.value) {
+    case 'feeding': return feedTitle[rd.value.type] || rd.value.type
+    case 'diaper': return diaperTitle[rd.value.type] || rd.value.type
+    case 'sleep': return '睡眠'
+    case 'temperature': return '体温'
+    case 'supplement': return rd.value.name
+    default: return '户外活动'
+  }
+})
+
+/* 类型弱着色（单色源，收敛到 emoji 色块，替代原左侧色条） */
+const tintClass = computed(() => {
+  switch (type.value) {
+    case 'feeding': return 'bg-primary/10'
+    case 'diaper': return 'bg-diaper/10'
+    case 'sleep': return 'bg-sleep/10'
+    case 'temperature': return 'bg-temperature/10'
+    case 'supplement': return 'bg-supplement/10'
+    default: return 'bg-outdoor/10'
+  }
+})
 
 function rangeMinutes(startedAt: string, endedAt?: string | null) {
   if (!endedAt) return null
@@ -164,4 +98,36 @@ const outdoorDurationLabel = computed(() => {
 })
 
 const timeAgo = computed(() => formatDayTime(props.record.occurred_at, props.showDate, false))
+
+const timeLabel = computed(() => {
+  if (props.record.record_type === 'sleep') return sleepTimeLabel.value
+  if (props.record.record_type === 'outdoor') return outdoorTimeLabel.value
+  return timeAgo.value
+})
+
+/* 元数据一行纯文本，值·值 分隔（替代胶囊 chip） */
+const metaText = computed(() => {
+  const parts: string[] = []
+  switch (type.value) {
+    case 'feeding':
+      if (rd.value.type !== 'breast' && rd.value.amount_ml > 0) parts.push(`${rd.value.amount_ml}ml`)
+      if (rd.value.type === 'breast' && rd.value.duration_minutes > 0) parts.push(`${rd.value.duration_minutes}分钟`)
+      if (rd.value.type === 'breast' && rd.value.side) parts.push(sideMap[rd.value.side] || rd.value.side)
+      if (rd.value.brand) parts.push(rd.value.brand)
+      break
+    case 'sleep':
+      if (sleepDurationLabel.value) parts.push(sleepDurationLabel.value)
+      break
+    case 'temperature':
+      if (rd.value.temperature) parts.push(`${rd.value.temperature}°C`)
+      if (rd.value.location) parts.push(rd.value.location)
+      break
+    case 'supplement':
+      if (rd.value.dosage_value > 0) parts.push(`${rd.value.dosage_value}${rd.value.dosage_unit || ''}`)
+      break
+  }
+  return parts.join(' · ')
+})
+
+const fever = computed(() => type.value === 'temperature' && rd.value.temperature >= 37.5)
 </script>
