@@ -26,9 +26,9 @@
             {{ group.label }}
           </h3>
           <div class="space-y-2">
-            <SwipeToDelete v-for="(r, i) in group.records" :key="r.record_type + '-' + r.id"
+            <SwipeToDelete v-for="r in group.records" :key="r.record_type + '-' + r.id"
               @delete="softDelete(r)">
-              <RecordCard :record="r" :show-date="false" :style="{ animationDelay: `${i * 40}ms` }" class="card-in"
+              <RecordCard :record="r" :show-date="false"
                 @edit="editRecord(r)" @delete="deleteRecord(r)" @context="openContext" />
             </SwipeToDelete>
           </div>

@@ -213,8 +213,7 @@
           <div v-if="allRecords.length === 0" class="bg-surface rounded-2xl shadow-card">
             <EmptyState title="还没有记录" subtitle="从上方卡片快速记录喂奶、睡眠等" size="sm" icon="clock" />
           </div>
-          <SwipeToDelete v-for="(r, i) in allRecords" :key="r.record_type + '-' + r.id"
-            :style="{ animationDelay: `${i * 60}ms` }" class="card-in" @delete="softDelete(r)">
+          <SwipeToDelete v-for="r in allRecords" :key="r.record_type + '-' + r.id" @delete="softDelete(r)">
             <RecordCard :record="r" @edit="editRecord(r)" @delete="deleteRecord(r)" @context="openContext" />
           </SwipeToDelete>
 

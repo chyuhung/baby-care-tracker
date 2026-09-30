@@ -172,13 +172,13 @@ body {
   transform: scale(0.96);
 }
 
-/* 卡片按压反馈：缩小 + 阴影加深（iOS 3D 提起感）。值对齐 tailwind shadow-card-hover */
+/* 卡片按压反馈：整行闪灰（微信/iOS 单元格高亮），不缩放 —— 密集列表里缩放会显得廉价。
+   闪灰色用 --border-color 而非 --muted：后者在白底上 ΔL 仅 3%，按下时几乎无感 */
 .press-card {
-  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease, background-color 0.3s ease;
+  transition: background-color 0.15s ease;
 }
 .press-card:active {
-  transform: scale(0.975);
-  box-shadow: 0 8px 22px rgba(24, 34, 58, 0.09);
+  background-color: rgb(var(--border-color));
 }
 
 /* 键盘焦点环（a11y，苹果风格） */
@@ -199,21 +199,6 @@ body {
   opacity: 0;
 }
 
-/* 卡片入场动画 */
-@keyframes card-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-.card-in {
-  animation: card-in 0.3s ease both;
-}
-
 /* Toast 动画 */
 .toast-enter-active, .toast-leave-active {
   transition: all 0.3s ease;
@@ -221,15 +206,6 @@ body {
 .toast-enter-from, .toast-leave-to {
   opacity: 0;
   transform: translateY(-20px);
-}
-
-/* 底部弹窗上滑动画 */
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
-}
-.animate-slide-up {
-  animation: slideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 /* iOS 底部操作表（ConfirmSheet）遮罩 / 面板过渡 */
@@ -295,7 +271,6 @@ header.nav-surface {
 /* 用户系统开启"减弱动态效果"时，关闭页面/卡片/弹窗动画 */
 @media (prefers-reduced-motion: reduce) {
   .page-enter-active, .page-leave-active,
-  .card-in, .animate-slide-up,
   .sheet-mask-enter-active, .sheet-mask-leave-active,
   .sheet-panel-enter-active, .sheet-panel-leave-active,
   .toast-enter-active, .toast-leave-active,

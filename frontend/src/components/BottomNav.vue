@@ -5,14 +5,9 @@
         :aria-current="isActive(tab.to) ? 'page' : undefined" :aria-label="tab.label"
         :class="['flex flex-col items-center justify-center w-16 h-full transition-colors relative',
           isActive(tab.to) ? 'text-primary-deep' : 'text-text-secondary']">
-        <svg class="w-6 h-6 transition-transform duration-[350ms] ease-[cubic-bezier(0.34,1.56,0.64,1)]"
-             :class="isActive(tab.to) ? 'scale-110' : 'scale-100'"
-             :fill="isActive(tab.to) ? 'currentColor' : 'none'"
-             :stroke="isActive(tab.to) ? 'none' : 'currentColor'"
-             :stroke-width="isActive(tab.to) ? 0 : 2"
-             stroke-linecap="round" stroke-linejoin="round"
-             viewBox="0 0 24 24">
-          <path :d="isActive(tab.to) ? tab.activeIcon : tab.icon" />
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <path :d="tab.icon" />
         </svg>
         <span class="text-xs mt-1 font-medium">{{ tab.label }}</span>
       </router-link>
@@ -29,26 +24,22 @@ const tabs = [
   {
     to: '/',
     label: '记录',
-    icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
-    activeIcon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+    icon: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a2 2 0 01.707.293l5.414 5.414a2 2 0 01.293.707V19a2 2 0 01-2 2z',
   },
   {
     to: '/timeline',
     label: '时间线',
     icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
-    activeIcon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
   },
   {
     to: '/trend',
     label: '趋势',
     icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
-    activeIcon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
   },
   {
     to: '/profile',
     label: '我的',
     icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
-    activeIcon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
   },
 ]
 

@@ -6,8 +6,8 @@
       <NavBar title="我的" />
     </template>
 
-      <!-- 用户信息 -->
-      <div class="bg-surface rounded-2xl p-4 shadow-card flex items-center gap-4">
+      <!-- 用户信息（微信「我」页：头像+昵称直接落在页面底色上，不套白卡） -->
+      <div class="flex items-center gap-4">
         <div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center text-2xl">👤</div>
         <div>
           <div class="font-semibold text-text-primary">{{ auth.user?.username }}</div>
@@ -16,80 +16,83 @@
       </div>
 
       <!-- 当前宝宝（切换入口，已在首页标题栏等全局生效） -->
-      <div class="bg-surface rounded-2xl shadow-card overflow-hidden">
-        <div class="px-4 pt-3 pb-1">
-          <h2 class="text-sm font-semibold text-text-secondary">当前宝宝</h2>
-        </div>
-        <div class="border-t border-border-color/60 py-1">
-          <div v-for="baby in app.babies" :key="baby.id" role="button" tabindex="0"
-            :aria-current="isCurrentBaby(baby) ? 'true' : undefined"
-            class="w-full px-4 py-2.5 flex items-center gap-3 min-h-[44px] text-left btn-press"
-            @click="switchBaby(baby)">
-            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-              :style="{ background: baby.avatar_color }">{{ baby.name[0] }}</span>
-            <span class="flex-1 min-w-0">
-              <span class="block font-medium text-text-primary">{{ baby.name }}</span>
-              <span class="block text-xs text-text-secondary mt-0.5">{{ formatBirthDate(baby.birth_date) }}</span>
-            </span>
-            <svg v-if="isCurrentBaby(baby)" class="h-5 w-5 shrink-0 text-primary-deep" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7" />
-            </svg>
+      <div>
+        <h2 class="pb-1.5 text-[13px] text-text-secondary">当前宝宝</h2>
+        <div class="bg-surface rounded-2xl shadow-card overflow-hidden">
+          <div class="py-1">
+            <div v-for="baby in app.babies" :key="baby.id" role="button" tabindex="0"
+              :aria-current="isCurrentBaby(baby) ? 'true' : undefined"
+              class="w-full px-4 py-2.5 flex items-center gap-3 min-h-[44px] text-left btn-press"
+              @click="switchBaby(baby)">
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                :style="{ background: baby.avatar_color }">{{ baby.name[0] }}</span>
+              <span class="flex-1 min-w-0">
+                <span class="block font-medium text-text-primary">{{ baby.name }}</span>
+                <span class="block text-xs text-text-secondary mt-0.5">{{ formatBirthDate(baby.birth_date) }}</span>
+              </span>
+              <svg v-if="isCurrentBaby(baby)" class="h-5 w-5 shrink-0 text-primary-deep" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <p v-if="app.babies.length === 0" class="px-4 py-4 text-sm text-text-secondary">还没有宝宝档案，请先在下方添加</p>
           </div>
-          <p v-if="app.babies.length === 0" class="px-4 py-4 text-sm text-text-secondary">还没有宝宝档案，请先在下方添加</p>
         </div>
       </div>
 
       <!-- 家庭信息 -->
-      <div class="bg-surface rounded-2xl p-4 shadow-card space-y-3">
-        <div class="flex items-center justify-between">
-          <h2 class="text-sm font-semibold text-text-secondary">我的家庭</h2>
-          <button v-if="family && family.members.length > 1" @click="leaveFamily" class="text-xs text-danger/80 font-medium py-2 px-3 -mr-2 flex items-center min-h-[44px]">退出家庭</button>
+      <div>
+        <div class="pb-1.5 flex items-center justify-between">
+          <h2 class="text-[13px] text-text-secondary">我的家庭</h2>
+          <button v-if="family && family.members.length > 1" @click="leaveFamily" class="-mr-2 text-xs text-danger/80 font-medium py-2 px-3 flex items-center min-h-[44px]">退出家庭</button>
         </div>
-
-        <!-- 当前家庭信息 -->
-        <div v-if="family" class="space-y-3">
-          <div class="bg-muted rounded-xl p-3">
-            <div class="text-xs text-text-secondary mb-1">邀请码</div>
-            <div class="flex items-center justify-between">
-              <span class="text-lg font-bold tracking-widest text-primary-deep select-all">{{ family.invite_code }}</span>
-              <button @click="copyCode" class="text-xs text-primary-deep font-medium py-2 px-3 min-h-[44px] flex items-center">复制</button>
-            </div>
-          </div>
-
-          <div>
-            <div class="text-xs text-text-secondary mb-2">家庭成员 ({{ family.members.length }}人)</div>
-            <div class="flex flex-wrap gap-2">
-              <div v-for="m in family.members" :key="m.id" class="flex items-center gap-1.5 bg-muted rounded-full px-3 py-1.5 text-sm">
-                <span>👤</span>
-                <span>{{ m.username }}</span>
-                <span v-if="m.id === auth.user?.id" class="text-xs text-text-secondary">(我)</span>
+        <div class="bg-surface rounded-2xl shadow-card p-4 space-y-3">
+          <!-- 当前家庭信息 -->
+          <div v-if="family" class="space-y-3">
+            <div class="bg-muted rounded-xl p-3">
+              <div class="text-xs text-text-secondary mb-1">邀请码</div>
+              <div class="flex items-center justify-between">
+                <span class="text-lg font-bold tracking-widest text-primary-deep select-all">{{ family.invite_code }}</span>
+                <button @click="copyCode" class="text-xs text-primary-deep font-medium py-2 px-3 min-h-[44px] flex items-center">复制</button>
               </div>
             </div>
-          </div>
 
-          <button @click="regenerateCode" class="w-full py-3 text-sm text-primary-deep font-medium rounded-xl border border-primary/30 btn-press min-h-[44px]">
-            重新生成邀请码
-          </button>
+            <div>
+              <div class="text-xs text-text-secondary mb-2">家庭成员 ({{ family.members.length }}人)</div>
+              <div class="flex flex-wrap gap-2">
+                <div v-for="m in family.members" :key="m.id" class="flex items-center gap-1.5 bg-muted rounded-full px-3 py-1.5 text-sm">
+                  <span>👤</span>
+                  <span>{{ m.username }}</span>
+                  <span v-if="m.id === auth.user?.id" class="text-xs text-text-secondary">(我)</span>
+                </div>
+              </div>
+            </div>
+
+            <button @click="regenerateCode" class="w-full py-3 text-sm text-primary-deep font-medium rounded-xl border border-primary/30 btn-press min-h-[44px]">
+              重新生成邀请码
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- 加入其他家庭（独立卡片） -->
-      <div class="bg-surface rounded-2xl p-4 shadow-card space-y-2">
-        <h2 class="text-sm font-semibold text-text-secondary">加入其他家庭</h2>
-        <p class="text-xs text-text-secondary">加入其他家庭后，你和你的宝宝数据将切换到新家庭</p>
-        <div class="flex gap-2 pt-1">
-          <input v-model="joinCode" placeholder="输入对方的邀请码" maxlength="6"
-            aria-label="邀请码" inputmode="text" autocapitalize="characters" autocomplete="off" enterkeyhint="done"
-            class="flex-1 min-h-[44px] px-3 py-2.5 bg-muted border border-border-color rounded-xl text-base focus:border-primary focus:outline-none transition-colors uppercase" />
-          <button @click="joinFamily" :disabled="!joinCode.trim()"
-            class="px-4 py-3 bg-primary-fill text-white text-sm font-medium rounded-xl btn-press min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed">加入</button>
+      <!-- 加入其他家庭（独立分组） -->
+      <div>
+        <h2 class="pb-1.5 text-[13px] text-text-secondary">加入其他家庭</h2>
+        <div class="bg-surface rounded-2xl shadow-card p-4 space-y-2">
+          <p class="text-xs text-text-secondary">加入其他家庭后，你和你的宝宝数据将切换到新家庭</p>
+          <div class="flex gap-2 pt-1">
+            <input v-model="joinCode" placeholder="输入对方的邀请码" maxlength="6"
+              aria-label="邀请码" inputmode="text" autocapitalize="characters" autocomplete="off" enterkeyhint="done"
+              class="flex-1 min-h-[44px] px-3 py-2.5 bg-muted border border-border-color rounded-xl text-base focus:border-primary focus:outline-none transition-colors uppercase" />
+            <button @click="joinFamily" :disabled="!joinCode.trim()"
+              class="px-4 py-3 bg-primary-fill text-white text-sm font-medium rounded-xl btn-press min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed">加入</button>
+          </div>
         </div>
       </div>
 
       <!-- 宝宝列表 -->
       <div class="space-y-3">
         <div class="flex items-center justify-between">
-          <h2 class="text-sm font-semibold text-text-secondary">宝宝档案</h2>
+          <h2 class="text-[13px] text-text-secondary">宝宝档案</h2>
           <router-link to="/baby/new" class="text-primary-deep text-sm font-medium flex items-center gap-1 min-h-[44px]">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             添加
@@ -133,36 +136,36 @@
       </router-link>
 
       <!-- 数据导出 -->
-      <div class="bg-surface rounded-2xl shadow-card overflow-hidden">
-        <div class="px-4 pt-3 pb-1">
-          <h2 class="text-sm font-semibold text-text-secondary">数据</h2>
+      <div>
+        <h2 class="pb-1.5 text-[13px] text-text-secondary">数据</h2>
+        <div class="bg-surface rounded-2xl shadow-card overflow-hidden">
+          <button type="button" @click="exportData" :disabled="exporting || app.babies.length === 0"
+            class="w-full px-4 py-3.5 flex items-center gap-3 min-h-[44px] text-left btn-press disabled:opacity-40">
+            <span class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <svg class="w-5 h-5 text-primary-deep" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
+              </svg>
+            </span>
+            <div class="flex-1 min-w-0">
+              <div class="font-medium text-text-primary">导出全部记录（CSV）</div>
+              <div class="text-xs text-text-secondary mt-0.5">Excel / 医生可直接打开，用于就诊或备份</div>
+            </div>
+            <ActivityIndicator v-if="exporting" :size="18" class="text-text-secondary" />
+          </button>
         </div>
-        <button type="button" @click="exportData" :disabled="exporting || app.babies.length === 0"
-          class="w-full px-4 py-3.5 flex items-center gap-3 border-t border-border-color/60 min-h-[44px] text-left btn-press disabled:opacity-40">
-          <span class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-            <svg class="w-5 h-5 text-primary-deep" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
-            </svg>
-          </span>
-          <div class="flex-1 min-w-0">
-            <div class="font-medium text-text-primary">导出全部记录（CSV）</div>
-            <div class="text-xs text-text-secondary mt-0.5">Excel / 医生可直接打开，用于就诊或备份</div>
-          </div>
-          <ActivityIndicator v-if="exporting" :size="18" class="text-text-secondary" />
-        </button>
       </div>
 
       <!-- 关于 -->
-      <div class="bg-surface rounded-2xl shadow-card overflow-hidden">
-        <div class="px-4 pt-3 pb-1">
-          <h2 class="text-sm font-semibold text-text-secondary">关于</h2>
-        </div>
-        <div class="px-4 py-3.5 border-t border-border-color/60 flex items-center justify-between min-h-[44px]">
-          <span class="text-text-primary">版本</span>
-          <span class="text-sm text-text-secondary">v{{ appVersion }}</span>
-        </div>
-        <div class="px-4 py-3.5 border-t border-border-color/60 text-xs text-text-secondary leading-relaxed">
-          宝宝护理记录 · 本地优先的多照护者同步记录工具。所有数据仅存储在自建服务端。
+      <div>
+        <h2 class="pb-1.5 text-[13px] text-text-secondary">关于</h2>
+        <div class="bg-surface rounded-2xl shadow-card overflow-hidden">
+          <div class="px-4 py-3.5 flex items-center justify-between min-h-[44px]">
+            <span class="text-text-primary">版本</span>
+            <span class="text-sm text-text-secondary">v{{ appVersion }}</span>
+          </div>
+          <div class="px-4 py-3.5 border-t border-border-color/60 text-xs text-text-secondary leading-relaxed">
+            宝宝护理记录 · 本地优先的多照护者同步记录工具。所有数据仅存储在自建服务端。
+          </div>
         </div>
       </div>
 
