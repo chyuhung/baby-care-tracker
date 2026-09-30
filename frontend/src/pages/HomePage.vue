@@ -277,6 +277,9 @@ const hasMore = computed(() => loadedCount.value < totalCount.value)
 const loadMoreRemaining = computed(() => Math.max(0, totalCount.value - loadedCount.value))
 // 今日测温记录（独立按 days=1 拉取，不依赖分页窗口；新→旧）
 const todayTempRecords = ref<any[]>([])
+// 最近 10 次补剂记录（独立按 type+limit 拉取）：补剂频率低（约 1–2 次/天），
+// 混在首页 20 条分页窗口里常常不足 2 条 → 平均间隔恒为「--」，故单独取数
+const recentSupplement = ref<any[]>([])
 const showDeleteConfirm = ref(false)
 const recordToDelete = ref<any>(null)
 const { softDelete } = useUndoDelete(allRecords, { onRestored: () => refreshStatsSoon() })
@@ -364,16 +367,22 @@ function getTimeAgo(isoString: string | null) {
   return { text, isLong: diffHours >= 4, minutes: diffMins }
 }
 
-function avgIntervalMinutes(records: any[], type: string): number | null {
-  const times = records
-    .filter(r => r.record_type === type)
-    .map(r => new Date(r.occurred_at).getTime())
+// 相邻间隔均值：时间戳升序后取最近 10 个，算相邻差值的平均（<2 条无间隔可言，返回 null）
+function avgGapMinutes(occurredList: (string | undefined | null)[]): number | null {
+  const times = occurredList
+    .filter((t): t is string => !!t)
+    .map(t => new Date(t).getTime())
+    .filter(t => !Number.isNaN(t))
     .sort((a, b) => a - b)
     .slice(-10)
   if (times.length < 2) return null
   let sum = 0
   for (let i = 1; i < times.length; i++) sum += (times[i] - times[i - 1]) / 60000
   return Math.round(sum / (times.length - 1))
+}
+
+function avgIntervalMinutes(records: any[], type: string): number | null {
+  return avgGapMinutes(records.filter(r => r.record_type === type).map(r => r.occurred_at))
 }
 
 const feedingAvgInterval = computed(() => {
@@ -386,8 +395,9 @@ const diaperAvgInterval = computed(() => {
   return m == null ? null : formatDurationCN(m)
 })
 
+// 取自独立的最近 10 次补剂记录，不受首页分页窗口影响
 const supplementAvgInterval = computed(() => {
-  const m = avgIntervalMinutes(allRecords.value, 'supplement')
+  const m = avgGapMinutes(recentSupplement.value.map(r => r.occurred_at))
   return m == null ? null : formatDurationCN(m)
 })
 
@@ -435,7 +445,8 @@ const lastSupplementAgo = computed(() => {
   tick.value
   const t = stats.value.last_supplement
   if (t) return getTimeAgo(t)
-  const recs = allRecords.value.filter(r => r.record_type === 'supplement').map(r => r.occurred_at).sort()
+  // stats 缺字段时回落到独立取数的最近 10 条（新→旧，取首条）
+  const recs = recentSupplement.value.map(r => r.occurred_at).filter(Boolean).sort()
   return getTimeAgo(recs.length ? recs[recs.length - 1] : null)
 })
 
@@ -477,13 +488,15 @@ async function loadData() {
   if (!baby) return
   const gen = ++loadGeneration
   try {
-    const [statsRes, recordsRes, countRes, sleepRes, outdoorRes, tempTodayRes] = await Promise.all([
+    const [statsRes, recordsRes, countRes, sleepRes, outdoorRes, tempTodayRes, suppRes] = await Promise.all([
       babyAPI.stats(baby.id),
       recordAPI.list(baby.id, { offset: 0, limit: PAGE }),
       recordAPI.count(baby.id),
       recordAPI.getCurrentSleep(baby.id),
       recordAPI.getCurrentOutdoor(baby.id),
       recordAPI.list(baby.id, { type: 'temperature', days: 1 }),
+      // 最近 10 次补剂（后端 type+limit 走窗口分页，返回新→旧），供平均间隔/距上次用
+      recordAPI.list(baby.id, { type: 'supplement', limit: 10 }),
     ])
     if (gen !== loadGeneration) return
     stats.value = statsRes.data
@@ -494,6 +507,7 @@ async function loadData() {
     todayTempRecords.value = (tempTodayRes.data as any[])
       .filter(r => r.data?.temperature > 0 && isToday(r.occurred_at))
       .sort((a, b) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime())
+    recentSupplement.value = (suppRes.data as any[]) || []
     currentSleep.value = sleepRes.data?.id ? sleepRes.data : null
     currentOutdoor.value = outdoorRes.data?.id ? outdoorRes.data : null
   } catch {
@@ -656,12 +670,21 @@ function onRecordCreated(e: Event) {
       return
     }
     allRecords.value.unshift(record)
+    // 补剂：同步进最近 10 次窗口，平均间隔/距上次立即跟上（否则要等下次整页刷新）
+    if (record.record_type === 'supplement') {
+      recentSupplement.value = [record, ...recentSupplement.value.filter(r => r.id !== record.id)]
+        .sort((a, b) => (b.occurred_at || '').localeCompare(a.occurred_at || ''))
+        .slice(0, 10)
+    }
   }
 }
 
 function onRecordDeleted(e: Event) {
   const { id, type } = (e as CustomEvent).detail || {}
   allRecords.value = allRecords.value.filter(r => !(r.id === id && r.record_type === (type || r.record_type)))
+  if (!type || type === 'supplement') {
+    recentSupplement.value = recentSupplement.value.filter(r => r.id !== id)
+  }
 }
 
 onMounted(() => {
