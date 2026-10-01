@@ -47,8 +47,7 @@ export function recordDisplay(record: any): RecordDisplay {
   }
 }
 
+// 长按菜单现在只有「删除」一项（编辑走卡片点按），edit/copy 图标随之下线
 export const CONTEXT_ICONS = {
-  edit: 'M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z',
-  copy: 'M9 9h10a1 1 0 011 1v10a1 1 0 01-1 1H9a1 1 0 01-1-1V10a1 1 0 011-1zm-4 6H4a1 1 0 01-1-1V4a1 1 0 011-1h10a1 1 0 011 1v1',
   delete: 'M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-8 0v12a1 1 0 001 1h6a1 1 0 001-1V7',
 }

@@ -6,8 +6,18 @@
         <NavBar :title="app.currentBaby?.name || '记录'" />
       </template>
 
+<!-- 空状态：宝宝列表加载失败（后端不可达）与「确实还没有宝宝」必须区分 -->
+      <EmptyState v-if="babiesLoadFailed" title="无法加载宝宝列表" icon="wifi"
+        subtitle="请检查网络或后端服务后重试">
+        <button @click="retryLoadBabies"
+          class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary/10 text-primary-deep rounded-xl font-medium text-sm btn-press">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6M20 9a9 9 0 0 0-15.5-3M4 15a9 9 0 0 0 15.5 3"/></svg>
+          重新加载
+        </button>
+      </EmptyState>
+
       <!-- 空状态：无宝宝 -->
-      <EmptyState v-if="app.babies.length === 0" title="还没有添加宝宝" icon="folder"
+      <EmptyState v-else-if="app.babies.length === 0" title="还没有添加宝宝" icon="folder"
         subtitle="添加宝宝档案后即可开始记录护理数据">
         <router-link to="/baby/new"
           class="inline-flex items-center gap-2 px-5 py-2.5 bg-primary/10 text-primary-deep rounded-xl font-medium text-sm btn-press">
@@ -18,12 +28,6 @@
 
       <!-- 主内容 -->
       <template v-else>
-        <!-- 离线提示（微信惯例：常态不显示，仅离线时打扰一次，1.5s 优雅期防冷启动闪屏） -->
-        <div v-if="showOffline" class="flex items-center gap-2 rounded-xl bg-muted px-3 py-2.5 text-[13px] text-text-secondary">
-          <span class="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-text-secondary/60"></span>
-          当前离线，数据仍在本机保存
-        </div>
-
         <!-- 统计卡片（可点击跳转） -->
         <div class="grid grid-cols-2 gap-3">
           <!-- 喂奶卡片 -->
@@ -239,7 +243,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
@@ -247,7 +251,7 @@ import { useAppStore } from '@/stores/app'
 // 显式命名：MainLayout 内层 <keep-alive include="HomePage,..."> 命中缓存
 defineOptions({ name: 'HomePage' })
 
-import { babyAPI, recordAPI } from '@/api'
+import { babyAPI, recordAPI, writeErrorMessage } from '@/api'
 import type { BabyStats, SleepRecord, OutdoorRecord } from '@/api'
 import RecordCard from '@/components/RecordCard.vue'
 import { useUndoDelete } from '@/composables/useUndoDelete'
@@ -290,8 +294,8 @@ const { softDelete } = useUndoDelete(allRecords, { onRestored: () => refreshStat
 // ── 长按上下文菜单 ─────────────────────────────────────────
 const contextOpen = ref(false)
 const contextRecord = ref<any>(null)
+// 长按只留删除：编辑走卡片点按（与 ContextMenu 无关的独立手势，避免误触）
 const contextActions = [
-  { key: 'edit', label: '编辑', icon: CONTEXT_ICONS.edit },
   { key: 'delete', label: '删除', icon: CONTEXT_ICONS.delete, danger: true },
 ]
 function openContext(rec: any) {
@@ -301,8 +305,7 @@ function openContext(rec: any) {
 function onContextSelect(key: string) {
   const rec = contextRecord.value?.record
   if (!rec) return
-  if (key === 'edit') editRecord(rec)
-  else if (key === 'delete') deleteRecord(rec)
+  if (key === 'delete') deleteRecord(rec)
 }
 
 // 删除/撤销后仅刷新统计（不重拉列表，避免打断撤销窗口内的乐观 UI）
@@ -330,26 +333,18 @@ const loadingAction = ref<string | null>(null)
 const deleting = ref(false)
 let loadGeneration = 0
 
-// 离线横幅：常态隐藏，仅离线显示。1.5s 优雅期避免冷启动时 WS 未连上闪现「离线」
-const showOffline = ref(false)
-let offlineTimer: ReturnType<typeof setTimeout> | null = null
-watch(() => app.wsConnected, (connected) => {
-  if (offlineTimer !== null) {
-    clearTimeout(offlineTimer)
-    offlineTimer = null
+// 宝宝列表加载失败（后端不可达）——与「确实还没有宝宝」区分，避免冷启动离线时误报无宝宝并给出无法保存的添加入口
+const babiesLoadFailed = ref(false)
+async function retryLoadBabies() {
+  babiesLoadFailed.value = false
+  try {
+    await app.loadBabies()
+    if (app.babies.length === 0) return
+    await loadData()
+  } catch {
+    babiesLoadFailed.value = true
   }
-  if (connected) {
-    showOffline.value = false
-  } else {
-    offlineTimer = setTimeout(() => {
-      showOffline.value = true
-      offlineTimer = null
-    }, 1500)
-  }
-}, { immediate: true })
-onUnmounted(() => {
-  if (offlineTimer !== null) clearTimeout(offlineTimer)
-})
+}
 
 function getTimeAgo(isoString: string | null) {
   if (!isoString) return null
@@ -468,36 +463,70 @@ const outdoorParts = computed(() =>
 
 async function loadData() {
   if (app.babies.length === 0) {
-    await app.loadBabies()
+    const loaded = await app.loadBabies()
+    if (!loaded) {
+      babiesLoadFailed.value = true
+      return
+    }
   }
   const baby = app.currentBaby
   if (!baby) return
+  babiesLoadFailed.value = false
   const gen = ++loadGeneration
-  try {
-    const [statsRes, recordsRes, countRes, sleepRes, outdoorRes, tempTodayRes, ...avgRes] = await Promise.all([
-      babyAPI.stats(baby.id),
-      recordAPI.list(baby.id, { offset: 0, limit: PAGE }),
-      recordAPI.count(baby.id),
-      recordAPI.getCurrentSleep(baby.id),
-      recordAPI.getCurrentOutdoor(baby.id),
-      recordAPI.list(baby.id, { type: 'temperature', days: 1 }),
-      // 各类型最近 AVG_WINDOW 次（后端 type+limit 走窗口分页，返回新→旧），供各项均值使用
-      ...AVG_TYPES.map(t => recordAPI.list(baby.id, { type: t, limit: AVG_WINDOW })),
-    ])
-    if (gen !== loadGeneration) return
-    stats.value = statsRes.data
+  const tasks: Promise<any>[] = [
+    babyAPI.stats(baby.id),
+    recordAPI.list(baby.id, { offset: 0, limit: PAGE }),
+    recordAPI.count(baby.id),
+    recordAPI.getCurrentSleep(baby.id),
+    recordAPI.getCurrentOutdoor(baby.id),
+    recordAPI.list(baby.id, { type: 'temperature', days: 1 }),
+    // 各类型最近 AVG_WINDOW 次（后端 type+limit 走窗口分页，返回新→旧），供各项均值使用
+    ...AVG_TYPES.map(t => recordAPI.list(baby.id, { type: t, limit: AVG_WINDOW })),
+  ]
+  // 逐请求独立落地：任一子请求失败不再牵连整页。
+  // 旧写法 Promise.all 是全有全无——11 个请求任一 reject 就整批丢弃，首页变空。
+  const settled = await Promise.allSettled(tasks)
+  if (gen !== loadGeneration) return
+  const val = (i: number): any => (settled[i].status === 'fulfilled' ? settled[i].value : undefined)
+
+  const statsRes = val(0)
+  if (statsRes) stats.value = statsRes.data
+
+  const recordsRes = val(1)
+  if (recordsRes) {
     allRecords.value = recordsRes.data as any[]
-    totalCount.value = countRes.data.total
     loadedCount.value = allRecords.value.length
     nextOffset.value = allRecords.value.length
+  }
+
+  const countRes = val(2)
+  if (countRes) totalCount.value = countRes.data.total
+
+  // 进行中的睡眠/户外：失败时保留旧值，避免把「正在睡」误清成无
+  const sleepRes = val(3)
+  if (sleepRes) currentSleep.value = sleepRes.data?.id ? sleepRes.data : null
+  const outdoorRes = val(4)
+  if (outdoorRes) currentOutdoor.value = outdoorRes.data?.id ? outdoorRes.data : null
+
+  const tempTodayRes = val(5)
+  if (tempTodayRes) {
     todayTempRecords.value = (tempTodayRes.data as any[])
       .filter(r => r.data?.temperature > 0 && isToday(r.occurred_at))
       .sort((a, b) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime())
-    recentByType.value = Object.fromEntries(AVG_TYPES.map((t, i) => [t, (avgRes[i]?.data as any[]) || []]))
-    currentSleep.value = sleepRes.data?.id ? sleepRes.data : null
-    currentOutdoor.value = outdoorRes.data?.id ? outdoorRes.data : null
-  } catch {
-    app.showToast('数据加载失败', 'error')
+  }
+
+  // 均值窗口失败时保留上一轮，避免闪断时统计跳变
+  recentByType.value = Object.fromEntries(
+    AVG_TYPES.map((t, i) => {
+      const r = settled[6 + i]
+      const rows = r.status === 'fulfilled' ? ((r.value?.data as any[]) || []) : recentByType.value[t] || []
+      return [t, rows]
+    }),
+  )
+
+  // 仅当主列表失败且当前无数据可展示时才提示，避免可选/后台请求失败反复刷屏
+  if (settled[1].status === 'rejected' && allRecords.value.length === 0) {
+    app.showToast('数据加载失败，请检查网络或后端服务', 'error')
   }
 }
 
@@ -552,7 +581,7 @@ async function startSleep() {
     app.showToast('开始睡觉', 'success')
   } catch (e: any) {
     console.error('开始睡眠失败:', e?.response?.data || e)
-    app.showToast(e?.response?.data?.error || '开始睡眠失败', 'error')
+    app.showToast(writeErrorMessage(e, '开始睡眠失败'), 'error')
   } finally {
     loadingAction.value = null
   }
@@ -570,7 +599,7 @@ async function stopSleep() {
     app.showToast('睡眠已结束', 'success')
   } catch (e: any) {
     console.error('结束睡眠失败:', e?.response?.data || e)
-    app.showToast(e?.response?.data?.error || '结束睡眠失败', 'error')
+    app.showToast(writeErrorMessage(e, '结束睡眠失败'), 'error')
   } finally {
     loadingAction.value = null
   }
@@ -588,7 +617,7 @@ async function startOutdoor() {
     app.showToast('开始户外活动', 'success')
   } catch (e: any) {
     console.error('开始户外活动失败:', e?.response?.data || e)
-    app.showToast(e?.response?.data?.error || '开始户外活动失败', 'error')
+    app.showToast(writeErrorMessage(e, '开始户外活动失败'), 'error')
   } finally {
     loadingAction.value = null
   }
@@ -606,7 +635,7 @@ async function stopOutdoor() {
     app.showToast('户外活动已结束', 'success')
   } catch (e: any) {
     console.error('结束户外活动失败:', e?.response?.data || e)
-    app.showToast(e?.response?.data?.error || '结束户外活动失败', 'error')
+    app.showToast(writeErrorMessage(e, '结束户外活动失败'), 'error')
   } finally {
     loadingAction.value = null
   }

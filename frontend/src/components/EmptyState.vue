@@ -24,7 +24,7 @@ const props = withDefaults(defineProps<{
   title: string
   subtitle?: string
   size?: 'sm' | 'md'
-  /** SF Symbols 风字形：clock | chart | folder | moon | drop | sun | pill | bell | box */
+  /** SF Symbols 风字形：clock | chart | folder | moon | drop | sun | pill | bell | box | wifi */
   icon?: string
 }>(), {
   subtitle: '',
@@ -35,6 +35,8 @@ const props = withDefaults(defineProps<{
 const GLYPHS: Record<string, string> = {
   // clock.arrow.circlepath
   clock: 'M12 8v4l3 2M4 12a8 8 0 108-8 8 8 0 00-6.9 4M3.5 4v4h4',
+  // wifi.slash（连接不可用）
+  wifi: 'M3 5.5l14.5 14.5M8.5 13.5a5 5 0 017 0M5 10a10 10 0 0111.4-1M2 7a15 15 0 0119.5-1.6M12 19.5h.01',
   // chart.bar.xaxis
   chart: 'M4 20V10M10 20V4M16 20v-8M4 20h16',
   // folder

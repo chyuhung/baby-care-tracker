@@ -83,10 +83,10 @@ const { softDelete } = useUndoDelete(records)
 // ── 长按上下文菜单 ─────────────────────────────────────────
 const contextOpen = ref(false)
 const contextRecord = ref<any>(null)
-const contextActions = computed(() => [
-  { key: 'edit', label: '编辑', icon: CONTEXT_ICONS.edit },
+// 长按只留删除：编辑走卡片点按，避免与长按手势混淆
+const contextActions = [
   { key: 'delete', label: '删除', icon: CONTEXT_ICONS.delete, danger: true },
-])
+]
 function openContext(rec: any) {
   const d = recordDisplay(rec)
   contextRecord.value = { record: rec, ...d }
@@ -95,8 +95,7 @@ function openContext(rec: any) {
 function onContextSelect(key: string) {
   const rec = contextRecord.value?.record
   if (!rec) return
-  if (key === 'edit') editRecord(rec)
-  else if (key === 'delete') deleteRecord(rec)
+  if (key === 'delete') deleteRecord(rec)
 }
 const loading = ref(false)
 const loadingMore = ref(false)

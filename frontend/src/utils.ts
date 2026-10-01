@@ -62,6 +62,35 @@ export function measureAgeText(birthDate: string, measuredAt: string): string {
   return parts.length ? parts.join('') : '0天'
 }
 
+/** 两个日历日之间的整天数（按本地日历日算，不受时分秒/夏令时影响） */
+function calendarDaysBetween(birth: Date, at: Date): number {
+  const utc = (d: Date) => Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())
+  return Math.round((utc(at) - utc(birth)) / 86400000)
+}
+
+/** 宝宝当前年龄（分段口径）：
+    ≤100 天 → 天数 `86天`；满 100 天至 1 岁 → 月龄 `7个月`；
+    1 岁至满 3 岁 → 年+月 `2岁5个月`；超过 3 岁 → 仅年 `4岁`。
+    边界按「满 N 岁」判定：满 3 岁当天即不再展示月份（3岁0月 与 3岁1月 同显示 `3岁`）。
+    at 缺省取今天；无出生日期或该日早于出生日 → 空串 */
+export function babyAgeText(birthDate: string, at?: string): string {
+  const birth = parseLocalDate(birthDate)
+  const ref = at ? parseLocalDate(at) : new Date()
+  if (!birth || !ref) return ''
+  if (ref.getTime() < birth.getTime()) return ''
+  const days = calendarDaysBetween(birth, ref)
+  // 出生 100 天内按天更直观（婴儿期变化以天计）
+  if (days <= 100) return `${days}天`
+  let y = ref.getFullYear() - birth.getFullYear()
+  let m = ref.getMonth() - birth.getMonth()
+  if (ref.getDate() < birth.getDate()) m--
+  if (m < 0) { m += 12; y-- }
+  // 满 3 岁起不再展示月份（「超过三岁只展示年龄」）
+  if (y >= 3) return `${y}岁`
+  if (y >= 1) return m > 0 ? `${y}岁${m}个月` : `${y}岁`
+  return `${m}个月`
+}
+
 /** 当前本地时间 YYYY-MM-DDTHH:mm（datetime-local 默认值） */
 export function nowLocalDatetime() {
   return toLocalDatetime(new Date().toISOString())

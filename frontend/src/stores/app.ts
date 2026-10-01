@@ -59,8 +59,10 @@ export const useAppStore = defineStore('app', () => {
       if (babies.value.length > 0 && !currentBabyId.value) {
         setCurrentBaby(babies.value[0].id)
       }
-    } catch {
-      console.error('加载宝宝列表失败')
+      return true
+    } catch (e) {
+      console.error('加载宝宝列表失败', e)
+      return false
     }
   }
 
@@ -96,13 +98,17 @@ export const useAppStore = defineStore('app', () => {
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
     ws = new WebSocket(`${protocol}//${location.host}/ws?token=${auth.token}`)
     ws.onopen = () => {
+      const reconnected = reconnectAttempts > 0
       wsConnected.value = true
       reconnectAttempts = 0
+      if (reconnected) showToast('已恢复连接', 'success')
     }
     ws.onclose = () => {
       wsConnected.value = false
       ws = null
       if (document.hidden) return
+      // 仅首次断连提示一次：退避重连每轮都会触发 onclose，用 reconnectAttempts 判定避免刷屏
+      if (reconnectAttempts === 0) showToast('当前离线，记录将无法保存', 'error')
       const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000)
       reconnectAttempts++
       const jitter = Math.random() * 1000

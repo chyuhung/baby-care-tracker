@@ -200,6 +200,10 @@ export interface GrowthStats {
   empty?: boolean
   age_months?: number
   gender?: string
+  /** 档案实际选择：male / female / ''（保密） */
+  gender_label?: string
+  /** 档案为「保密」时百分位暂按女宝标准计算 */
+  gender_fallback?: boolean
   weight_kg?: number
   height_cm?: number
   head_cm?: number
@@ -264,6 +268,16 @@ api.interceptors.response.use(
     return Promise.reject(err)
   }
 )
+
+/**
+ * 统一的写入失败提示：区分「请求根本没发出去/没收到响应」（断网、后端进程已停）
+ * 与「服务端返回了业务错误」。断网时 axios 没有 response 对象，此时笼统的
+ * 「保存失败」会让用户以为数据已存或可重试，实际记录已经丢失，故明确告知未保存。
+ */
+export function writeErrorMessage(e: any, fallback = '保存失败'): string {
+  if (!e?.response) return '当前离线或后端不可用，本次操作未生效'
+  return e.response?.data?.error || fallback
+}
 
 export const authAPI = {
   register: (username: string, password: string) =>

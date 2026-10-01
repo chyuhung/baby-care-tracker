@@ -77,7 +77,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { recordAPI } from '@/api'
+import { recordAPI, writeErrorMessage } from '@/api'
 import { nowLocalDatetime, toLocalDatetime } from '@/utils'
 import Segmented from '@/components/Segmented.vue'
 import DateTimeField from '@/components/DateTimeField.vue'
@@ -96,6 +96,8 @@ const saving = ref(false)
 const deleting = ref(false)
 const showDelete = ref(false)
 const error = ref('')
+// 编辑态取数失败标记：加载失败后禁止保存，避免空表单覆盖真实记录
+const loadFailed = ref(false)
 
 const locationOptions = [
   { value: '腋下', label: '腋下' },
@@ -141,9 +143,12 @@ async function loadRecord() {
       form.location = record.data.location || '腋下'
       form.note = record.data.note || ''
     }
+    loadFailed.value = false
   } catch {
-    app.showToast('加载失败', 'error')
-    router.back()
+    // 离线编辑态下不再 router.back() 静默弹回：那会把用户直接踢走，观感等同「点击无反应」。
+    // 改为内联报错并锁定保存，防止用空白默认表单覆盖真实记录。
+    loadFailed.value = true
+    error.value = '当前离线或后端不可用，本次操作未生效'
   }
 }
 
@@ -153,6 +158,10 @@ async function refreshAll() {
 }
 
 async function save() {
+  if (isEdit.value && loadFailed.value) {
+    error.value = '记录未能加载，无法保存，请返回重试'
+    return
+  }
   error.value = ''
   if (!form.temperature || form.temperature < 30 || form.temperature > 45) {
     error.value = '请输入正确的体温（30-45°C）'
@@ -181,7 +190,7 @@ async function save() {
     app.showToast(isEdit.value ? '已保存' : '体温已记录', 'success')
     router.back()
   } catch (e: any) {
-    app.showToast(e.response?.data?.error || '保存失败', 'error')
+    app.showToast(writeErrorMessage(e, '保存失败'), 'error')
   } finally {
     saving.value = false
   }
@@ -196,7 +205,7 @@ async function doDelete() {
     app.showToast('已删除', 'success')
     router.back()
   } catch (e: any) {
-    app.showToast(e.response?.data?.error || '删除失败', 'error')
+    app.showToast(writeErrorMessage(e, '删除失败'), 'error')
     showDelete.value = false
   } finally {
     deleting.value = false

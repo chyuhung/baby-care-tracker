@@ -38,13 +38,19 @@
               <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
                 :style="{ background: baby.avatar_color }">{{ baby.name[0] }}</span>
               <span class="flex-1 min-w-0">
-                <span class="block font-medium text-text-primary">{{ baby.name }}</span>
-                <span class="block text-xs text-text-secondary mt-0.5">{{ formatBirthDate(baby.birth_date) }}</span>
+                <span class="block font-medium text-text-primary truncate">
+                  {{ baby.name }}
+                  <svg v-if="isCurrentBaby(baby)" class="inline-block h-4 w-4 -mt-0.5 ml-0.5 text-primary-deep"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </span>
+                <span class="block text-xs text-text-secondary mt-0.5 truncate">
+                  <template v-if="babyAgeText(baby.birth_date)">{{ babyAgeText(baby.birth_date) }} · </template>{{ formatBirthDate(baby.birth_date) }}
+                </span>
               </span>
-              <svg v-if="isCurrentBaby(baby)" class="h-5 w-5 shrink-0 text-primary-deep" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7" />
-              </svg>
-              <button v-else type="button" @click.stop="router.push(`/baby/${baby.id}/edit`)"
+              <!-- 当前宝宝也必须有编辑入口：此前此处是 v-else，单宝宝时全 App 无资料编辑入口 -->
+              <button type="button" @click.stop="router.push(`/baby/${baby.id}/edit`)"
                 class="-mr-1 shrink-0 text-xs font-medium text-primary-deep py-2 px-1 min-h-[44px]">编辑</button>
             </div>
           </div>
@@ -185,7 +191,7 @@ import ConfirmSheet from '@/components/ConfirmSheet.vue'
 
 import NavBar from '@/components/NavBar.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
-import { parseLocalDate } from '@/utils'
+import { parseLocalDate, babyAgeText } from '@/utils'
 
 interface FamilyMember {
   id: number

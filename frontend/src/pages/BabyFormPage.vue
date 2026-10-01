@@ -71,7 +71,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { babyAPI } from '@/api'
+import { babyAPI, writeErrorMessage } from '@/api'
 import { nowLocalDatetime, toLocalDatetime } from '@/utils'
 import Segmented from '@/components/Segmented.vue'
 import DateTimeField from '@/components/DateTimeField.vue'
@@ -148,7 +148,7 @@ async function save() {
     await app.loadBabies()
     router.push('/')
   } catch (e: any) {
-    app.showToast(e.response?.data?.error || '保存失败', 'error')
+    app.showToast(writeErrorMessage(e, '保存失败'), 'error')
   } finally {
     saving.value = false
   }
@@ -163,7 +163,7 @@ async function doDelete() {
     app.showToast('已删除', 'success')
     router.push('/')
   } catch (e: any) {
-    app.showToast(e.response?.data?.error || '删除失败', 'error')
+    app.showToast(writeErrorMessage(e, '删除失败'), 'error')
     showDelete.value = false
   } finally {
     deleting.value = false

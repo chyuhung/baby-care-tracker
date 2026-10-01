@@ -22,7 +22,7 @@
         <div class="bg-surface rounded-2xl p-4 shadow-card">
           <div class="flex items-center justify-between mb-3">
             <h2 class="text-sm font-semibold text-text-secondary">最新测量</h2>
-            <span class="text-xs text-text-secondary">{{ stats.age_months }} 月龄 · {{ stats.gender === 'male' ? '男宝' : '女宝' }}</span>
+            <span class="text-xs text-text-secondary">{{ latestSubtitle }}</span>
           </div>
           <div class="grid grid-cols-3 divide-x divide-border-color/60">
             <div v-for="m in metrics" :key="m.key" class="px-3 py-1 text-center">
@@ -70,10 +70,8 @@
             <!-- 参考区间三色，绘制顺序与图例一致：优秀绿 ≥75 / 正常黄 25-75 / 落后红 <25 -->
             <template v-if="zonePaths">
               <path :d="zonePaths.excellentInner" style="fill: rgb(var(--success-deep) / 0.12)" />
-              <path :d="zonePaths.excellentOuter" style="fill: rgb(var(--success-deep) / 0.12)" />
-              <path :d="zonePaths.normal" style="fill: rgb(var(--warning-deep) / 0.12)" />
+              <path :d="zonePaths.normal" style="fill: rgb(var(--warning-deep) / 0.16)" />
               <path :d="zonePaths.laggingInner" style="fill: rgb(var(--danger-deep) / 0.12)" />
-              <path :d="zonePaths.laggingOuter" style="fill: rgb(var(--danger-deep) / 0.12)" />
             </template>
             <!-- 网格（横向实线 + 纵向辅助虚线） -->
             <line v-for="(t, i) in yTicks" :key="'g' + i" :x1="PAD_L" :x2="W - PAD_R" :y1="t.y" :y2="t.y"
@@ -99,14 +97,15 @@
           </svg>
           <p class="text-[11px] text-text-secondary mt-2 leading-relaxed px-1">
             参考区间依据《7岁以下儿童生长标准》(WS/T 423-2022)：绿区 ≥P75 优秀/偏高，黄区 P25–P75 正常，红区
-            &lt;P25 落后/偏低。横轴为月龄；2 岁前为身长、2 岁后为身高，头围参考至 3 岁。仅供参考，不能替代儿科医生评估。
+            &lt;P25 落后/偏低。横轴为月龄；纵轴为百分位非线性拉伸（标准中 P25–P75 仅占 P3–P97 约 35%，线性轴下正常区
+            偏窄），故不可按像素读数，数值以左侧刻度为准。2 岁前为身长、2 岁后为身高，头围参考至 3 岁。仅供参考，不能替代儿科医生评估。
           </p>
         </div>
 
         <!-- 历史记录（整行 tap=编辑，长按=上下文菜单删除，与记录卡同手势口径） -->
         <div class="bg-surface rounded-2xl shadow-card overflow-hidden">
           <h2 class="text-sm font-semibold text-text-secondary px-4 pt-3 pb-1">历史记录</h2>
-          <div v-for="g in listDesc" :key="g.id" role="button" tabindex="0" aria-label="编辑或删除此记录"
+          <div v-for="g in listDesc" :key="g.id" role="button" tabindex="0" aria-label="编辑此记录，长按可删除"
             class="px-4 py-3 border-t border-border-color/60 btn-press"
             @click="onRowClick(g)" @keydown.enter="openEdit(g)"
             @touchstart.passive="rowTouchStart(g, $event)" @touchmove="rowTouchMove($event)"
@@ -195,7 +194,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { babyAPI, GrowthRecord, GrowthStats, GrowthReference } from '@/api'
+import { babyAPI, GrowthRecord, GrowthStats, GrowthReference, writeErrorMessage } from '@/api'
 import PullRefresh from '@/components/PullRefresh.vue'
 import NavBar from '@/components/NavBar.vue'
 import DateTimeField from '@/components/DateTimeField.vue'
@@ -243,6 +242,16 @@ const metrics = computed(() => {
     { key: 'weight', label: '体重 kg', value: fmt(s.weight_kg || 0), pct: s.weight_pct || 0 },
     { key: 'head', label: '头围 cm', value: fmt(s.head_cm || 0), pct: s.head_pct || 0 },
   ]
+})
+
+// 最新测量副标题：月龄为「测量时」的月龄（后端 monthsBetween(birth, measured)），
+// 不是当前月龄；档案性别为「保密」时如实显示，不再被静默显示成女宝
+const latestSubtitle = computed(() => {
+  const s = stats.value
+  if (!s) return ''
+  const g = s.gender_label === 'male' ? '男宝' : s.gender_label === 'female' ? '女宝' : '保密'
+  const gender = s.gender_fallback ? `${g}（暂按女宝标准）` : g
+  return `${s.age_months ?? 0} 月龄 · ${gender}`
 })
 
 function pctClass(p: number) {
@@ -310,7 +319,8 @@ const visibleRef = computed(() => {
   return pts.length > 1 ? pts : null
 })
 
-// Y 轴域：实测值 + 参考 P3/P97 共同决定
+// 线性 Y 值域：仅在「无参考数据」时作为退化轴使用（此时图表不可见，属兜底路径）。
+// 有参考数据时 y 轴由 refAt() 的五锚点直接决定，实测值超出 P3/P97 走 8% 留白外延。
 const bounds = computed(() => {
   const vs = series.value.map(p => p.v)
   const vis = visibleRef.value
@@ -327,13 +337,78 @@ function xAt(month: number) {
   const plot = W - PAD_L - PAD_R
   return PAD_L + (month / (xMax.value || 1)) * plot
 }
-function yAt(v: number) {
-  const { min, max } = bounds.value
-  const span = max - min || 1
-  return PAD_T + (1 - (v - min) / span) * (H - PAD_T - PAD_B)
+
+/**
+ * 百分位锚点弯曲（Y 轴非线性）。
+ *
+ * 背景：WS/T 423-2022 中 P25–P75（正常区）恒定只占 P3–P97 全距的约 35%
+ * （12 月龄男宝体重 1.4kg / 4.0kg），线性轴下黄区天然偏窄。对数轴无效
+ * （实测 35.0% → 35.3%，因生长曲线近似指数分布，取对数后比例几乎不变）。
+ *
+ * 做法：把参考带五个锚点重映射到均分位置 —— p3→0、p25→T、p50→0.5、p75→1-T、p97→1，
+ * 段内做分段线性插值。正常区宽度 = (1-T) − T = 1 − 2T，即 BEND = 2T 时正常区 = 1 − BEND。
+ * 取 BEND = 0.5 → 正常区占 p3–p97 全高的 50%（原始线性口径约 35%）。
+ * 调大 BEND 会让正常区更宽但两端被压得更扁，0.5 是保守档。
+ *
+ * 严格单调（段斜率均为正），保持大小关系可读；仅垂直分辨率在两端被压缩。
+ * 注意：这是刻度拉伸，不是等比坐标轴，脚注已声明不可按像素读数。
+ */
+const BEND = 0.5
+// 某月龄处的五锚点值（用于反查参考带范围）
+function refAt(month: number) {
+  const vis = visibleRef.value
+  if (!vis || !vis.length) return null
+  // 参考点按月递增，找到区间后线性插值；超出末点则沿用末点（此时外侧已是留白）
+  if (month <= vis[0].month) return vis[0]
+  if (month >= vis[vis.length - 1].month) return vis[vis.length - 1]
+  for (let i = 0; i < vis.length - 1; i++) {
+    const a = vis[i], b = vis[i + 1]
+    if (month >= a.month && month <= b.month) {
+      const t = b.month === a.month ? 0 : (month - a.month) / (b.month - a.month)
+      const mix = (k: PctKey) => a[k] + (b[k] - a[k]) * t
+      return { p3: mix('p3'), p25: mix('p25'), p50: mix('p50'), p75: mix('p75'), p97: mix('p97') }
+    }
+  }
+  return vis[vis.length - 1]
 }
 
-const chartSeries = computed(() => series.value.map(p => ({ x: xAt(p.month), y: yAt(p.v) })))
+/** 单调映射：value → 该值在「弯曲后」刻度上的归一化位置 0..1（1 为顶部） */
+function warpedPos(v: number, month: number): number {
+  const r = refAt(month)
+  const T = BEND / 2
+  if (!r) {
+    // 无参考数据时退化为线性
+    const { min, max } = bounds.value
+    const span = max - min || 1
+    return 1 - (v - min) / span
+  }
+  const { p3, p25, p50, p75, p97 } = r
+  const up = (x: number) => 1 - x // 上方像素位置翻转
+  if (v <= p3) return up(0)
+  if (v < p25) return up(((v - p3) / (p25 - p3 || 1)) * T)
+  if (v < p50) return up(T + ((v - p25) / (p50 - p25 || 1)) * (0.5 - T))
+  if (v < p75) return up(0.5 + ((v - p50) / (p75 - p50 || 1)) * (0.5 - T))
+  if (v < p97) return up(1 - T + ((v - p75) / (p97 - p75 || 1)) * T)
+  return up(1)
+}
+
+function yAt(v: number, month: number) {
+  const plot = H - PAD_T - PAD_B
+  const r = refAt(month)
+  let pos = warpedPos(v, month)
+  // 实测值可能落在参考带之外：线性外延到留白区，保证仍然可见
+  if (r && v < r.p3) {
+    const span = r.p3 * 0.08 || 1
+    pos = (v - r.p3) / span // 负值 → 向下外延
+  } else if (r && v > r.p97) {
+    const span = r.p97 * 0.08 || 1
+    pos = 1 - (v - r.p97) / span // >1 → 向上外延
+  }
+  const clamped = Math.max(-0.35, Math.min(1.35, pos))
+  return PAD_T + clamped * plot
+}
+
+const chartSeries = computed(() => series.value.map(p => ({ x: xAt(p.month), y: yAt(p.v, p.month) })))
 
 const linePath = computed(() => {
   const pts = chartSeries.value
@@ -341,15 +416,24 @@ const linePath = computed(() => {
   return pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ')
 })
 
+// Y 轴刻度：锚在参考带五分位点上，标签为该处真实数值——因为轴已弯曲，
+// 不能用 min/max 等分（否则刻度线与色带位置对不上）
 const yTicks = computed(() => {
-  const { min, max } = bounds.value
-  const n = 4
-  const out: { y: number, label: string }[] = []
-  for (let i = 0; i <= n; i++) {
-    const v = min + (max - min) * (i / n)
-    out.push({ y: yAt(v), label: v.toFixed(1) })
+  const vis = visibleRef.value
+  if (!vis || !vis.length) {
+    const { min, max } = bounds.value
+    const out: { y: number, label: string }[] = []
+    for (let i = 0; i <= 4; i++) {
+      const v = min + (max - min) * (i / 4)
+      out.push({ y: yAt(v, xMax.value / 2), label: v.toFixed(1) })
+    }
+    return out
   }
-  return out
+  const last = vis[vis.length - 1]
+  return (['p3', 'p25', 'p50', 'p75', 'p97'] as PctKey[]).map(k => ({
+    y: yAt(last[k], last.month),
+    label: last[k].toFixed(1),
+  }))
 })
 
 // X 轴刻度（月龄）
@@ -368,7 +452,7 @@ const refPaths = computed<Record<string, string> | null>(() => {
   if (!vis) return null
   const out: Record<string, string> = {}
   for (const key of ['p50'] as PctKey[]) {
-    out[key] = vis.map((p, i) => `${i === 0 ? 'M' : 'L'}${xAt(p.month).toFixed(1)} ${yAt(p[key]).toFixed(1)}`).join(' ')
+    out[key] = vis.map((p, i) => `${i === 0 ? 'M' : 'L'}${xAt(p.month).toFixed(1)} ${yAt(p[key], p.month).toFixed(1)}`).join(' ')
   }
   return out
 })
@@ -378,18 +462,13 @@ const refPaths = computed<Record<string, string> | null>(() => {
 const zonePaths = computed(() => {
   const vis = visibleRef.value
   if (!vis) return null
-  const n = vis.length
-  const fwd = (key: PctKey) => vis.map((p, i) => `${i === 0 ? 'M' : 'L'}${xAt(p.month).toFixed(1)} ${yAt(p[key]).toFixed(1)}`).join(' ')
-  const back = (key: PctKey) => vis.slice().reverse().map(p => `L${xAt(p.month).toFixed(1)} ${yAt(p[key]).toFixed(1)}`).join(' ')
-  const x0 = xAt(vis[0].month).toFixed(1)
-  const x1 = xAt(vis[n - 1].month).toFixed(1)
-  const top = PAD_T, bottom = H - PAD_B
+  const fwd = (key: PctKey) => vis.map((p, i) => `${i === 0 ? 'M' : 'L'}${xAt(p.month).toFixed(1)} ${yAt(p[key], p.month).toFixed(1)}`).join(' ')
+  const back = (key: PctKey) => vis.slice().reverse().map(p => `L${xAt(p.month).toFixed(1)} ${yAt(p[key], p.month).toFixed(1)}`).join(' ')
+  // 仅保留 P3–P97 内的三段；P97 以上 / P3 以下不再填色（此前绿/红整块外填让正常区显得更窄）
   return {
     excellentInner: `${fwd('p97')} ${back('p75')} Z`,
-    excellentOuter: `${fwd('p97')} L${x1} ${top} L${x0} ${top} Z`,
     normal: `${fwd('p75')} ${back('p25')} Z`,
     laggingInner: `${fwd('p25')} ${back('p3')} Z`,
-    laggingOuter: `${fwd('p3')} L${x1} ${bottom} L${x0} ${bottom} Z`,
   }
 })
 
@@ -498,7 +577,7 @@ async function submit() {
     await load()
     app.showToast('已保存', 'success')
   } catch (e: any) {
-    formError.value = e.response?.data?.error || '保存失败'
+    formError.value = writeErrorMessage(e, '保存失败')
   } finally {
     submitting.value = false
   }
@@ -511,8 +590,8 @@ function askDelete(g: GrowthRecord) {
 /* ── 长按上下文菜单（v-for 行不适合逐行 useLongPress，用单例状态内联实现，参数与 useLongPress 一致）── */
 const contextOpen = ref(false)
 const contextGrowth = ref<GrowthRecord | null>(null)
+// 长按只留删除：编辑走整行点按 / 回车键
 const contextActions = [
-  { key: 'edit', label: '编辑', icon: 'M16.9 4.3a2.1 2.1 0 013 3L9 18l-4 1 1-4zM13.5 7l3 3' },
   { key: 'delete', label: '删除', icon: 'M19 7l-.9 12a1.5 1.5 0 01-1.5 1.4H7.4A1.5 1.5 0 015.9 19L5 7m5 0V4.5A1.5 1.5 0 0111.5 3h1A1.5 1.5 0 0114 4.5V7m-9 0h14', danger: true },
 ]
 let lpTimer: number | null = null
@@ -545,8 +624,7 @@ function onRowClick(g: GrowthRecord) {
 function onContextSelect(key: string) {
   const g = contextGrowth.value
   if (!g) return
-  if (key === 'edit') openEdit(g)
-  else if (key === 'delete') askDelete(g)
+  if (key === 'delete') askDelete(g)
 }
 
 async function doDelete() {
@@ -557,8 +635,8 @@ async function doDelete() {
     toDelete.value = null
     await load()
     app.showToast('已删除', 'success')
-  } catch {
-    app.showToast('删除失败', 'error')
+  } catch (e: any) {
+    app.showToast(writeErrorMessage(e, '删除失败'), 'error')
   } finally {
     deleting.value = false
   }

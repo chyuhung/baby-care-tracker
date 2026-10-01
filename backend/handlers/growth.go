@@ -97,12 +97,16 @@ func GetGrowthRecords(c *gin.Context) {
 type GrowthStats struct {
 	AgeMonths float64 `json:"age_months"`
 	Gender    string  `json:"gender"`
-	WeightKg  float64 `json:"weight_kg"`
-	HeightCm  float64 `json:"height_cm"`
-	HeadCm    float64 `json:"head_cm"`
-	WeightPct float64 `json:"weight_pct"`
-	HeightPct float64 `json:"height_pct"`
-	HeadPct   float64 `json:"head_pct"`
+	// GenderLabel 为档案里实际选择的中文性别（保密则为「保密」，不会被静默改写成女宝）
+	GenderLabel string `json:"gender_label"`
+	// GenderFallback 为 true 时表示档案未选择性别（保密），百分位/参考曲线暂按女宝标准计算
+	GenderFallback bool    `json:"gender_fallback"`
+	WeightKg       float64 `json:"weight_kg"`
+	HeightCm       float64 `json:"height_cm"`
+	HeadCm         float64 `json:"head_cm"`
+	WeightPct      float64 `json:"weight_pct"`
+	HeightPct      float64 `json:"height_pct"`
+	HeadPct        float64 `json:"head_pct"`
 }
 
 // GetGrowthStats 获取最新一条成长记录的标准百分位（WS/T 423-2022）
@@ -123,7 +127,11 @@ func GetGrowthStats(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "宝宝不存在"})
 		return
 	}
-	if gender != "male" {
+	// 标准表只有男/女两套；档案未选择性别（保密）时暂按女宝标准计算，
+	// 但 gender_label 仍如实回传空串，避免前端把它显示成女宝
+	genderLabel := gender
+	if gender != "male" && gender != "female" {
+		genderLabel = ""
 		gender = "female"
 	}
 	birth := birthTimeFromDB(birthDate)
@@ -145,9 +153,11 @@ func GetGrowthStats(c *gin.Context) {
 	cp := growthPercentile(gender, birth, measured, "head", g.HeadCm)
 
 	c.JSON(http.StatusOK, GrowthStats{
-		AgeMonths: monthsBetween(birth, measured),
-		Gender:    gender,
-		WeightKg:  g.WeightKg, HeightCm: g.HeightCm, HeadCm: g.HeadCm,
+		AgeMonths:      monthsBetween(birth, measured),
+		Gender:         gender,
+		GenderLabel:    genderLabel,
+		GenderFallback: genderLabel == "",
+		WeightKg:       g.WeightKg, HeightCm: g.HeightCm, HeadCm: g.HeadCm,
 		WeightPct: wp, HeightPct: hp, HeadPct: cp,
 	})
 }
