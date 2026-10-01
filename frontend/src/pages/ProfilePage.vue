@@ -38,7 +38,7 @@
               :aria-current="isCurrentBaby(baby) ? 'true' : undefined"
               class="w-full px-4 py-3.5 flex items-center gap-3 min-h-[44px] text-left press-card"
               @click="switchBaby(baby)">
-              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold"
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold"
                 :style="{ background: baby.avatar_color, color: avatarInk(baby.avatar_color) }">{{ baby.name[0] }}</span>
               <span class="flex-1 min-w-0">
                 <span class="block font-medium text-text-primary truncate">
@@ -83,7 +83,7 @@
               @click="famOpen = !famOpen">
               <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
                 <svg class="w-5 h-5 text-primary-deep" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 11.2L12 4l9 7.2V19a1 1 0 0 1-1 1h-5.5v-6h-9v6H4a1 1 0 0 1-1-1v-7.8z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 10.5V20h16V10.5M3 10.5L12 4l9 6.5" />
                 </svg>
               </span>
               <span class="flex-1 min-w-0">
