@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { authAPI } from '@/api'
+import { clearScrollMemory } from '@/composables/useScrollMemory'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('token') || '')
@@ -36,6 +37,8 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = ''
     user.value = null
     localStorage.removeItem('token')
+    // 与 keep-alive 的 cacheInclude 登出清空同理：换账号后不应沿用上个账号的滚动位置
+    clearScrollMemory()
   }
 
   return { token, user, isLoggedIn, restoreSession, login, register, logout }

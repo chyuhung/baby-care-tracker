@@ -30,6 +30,7 @@
 <script setup lang="ts">
 import { ref, computed, useAttrs, onMounted, onUnmounted } from 'vue'
 import ActivityIndicator from './ActivityIndicator.vue'
+import { useScrollMemory } from '@/composables/useScrollMemory'
 
 const props = withDefaults(defineProps<{
   refresh: () => Promise<unknown> | unknown
@@ -227,6 +228,11 @@ function onScroll() {
 function onScrollToTop() {
   rootRef.value?.scrollTo({ top: 0, behavior: 'smooth' })
 }
+
+/* 滚动位置记忆：keep-alive 摘走 DOM 时浏览器会清零本容器的 scrollTop，
+ * 这里交给 useScrollMemory 在「离开路由时保存 / 回来时恢复」。
+ * 本组件是全站唯一的列表滚动容器，所以每页用它即自动获得该能力。 */
+useScrollMemory(() => rootRef.value)
 
 onMounted(() => {
   const el = rootRef.value
