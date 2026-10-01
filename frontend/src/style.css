@@ -67,8 +67,7 @@
      不占用 --text-secondary 的墨色，避免与轴/数值标签撞色；不引入新色相，自动跟随男女主题。
      与奶量的区分靠形状（实心 vs 描边空心、实线 vs 虚线），不靠色相差——
      因为两条序列共用柱状压暗 alpha，同色相的深浅差会被乘性压暗压缩掉。 */
-  --chart-primary-count: rgb(var(--primary) / 0.55);        /* 描边 / 虚线 / 空心点 */
-  --chart-primary-count-fill: rgb(var(--primary) / 0.20);  /* 空心柱内填充 */
+  --chart-primary-count: rgb(var(--primary) / 0.55);        /* 描边 / 虚线 / 实心次柱 / 空心点 */
   --chart-line: #E7EAF0;           /* 图表基线/网格线 */
   --hairline: 60 60 67;            /* 发丝线 RGB（配合 .hairline-* 的 alpha） */
   --shadow-card: 0 2px 12px rgba(24, 34, 58, 0.05);  /* 内容卡微抬升（浅底有效，对比 ≈1.10） */
@@ -117,7 +116,6 @@
     /* 图表色：统一引用关键词 token，随主题自动一致。
        次数第二色在深底上需提高 alpha —— 低 alpha 叠近黑会糊成暗红泥而不是淡粉。 */
     --chart-primary-count: rgb(var(--primary) / 0.72);
-    --chart-primary-count-fill: rgb(var(--primary) / 0.28);
     --chart-line: #38383C;
 
     /* 暗色阴影：内容卡归零 —— 页面底为纯黑，阴影是减光操作，落在 #000 上
@@ -277,12 +275,15 @@ nav.glass-surface {
   letter-spacing: -0.02em;
 }
 
-/* 用户系统开启"减弱动态效果"时，关闭弹窗/操作表/按钮动画（页面切换已无动画，见上方说明） */
+/* 用户系统开启"减弱动态效果"时，关闭弹窗/操作表/按钮动画（页面切换已无动画，见上方说明）。
+   .press-card 与 .btn-press 必须同列：前者是 12 个卡片/列表行的按压背景过渡，
+   漏掉它会让"减弱动态"的用户仍看到一整片单元格同时闪色。 */
 @media (prefers-reduced-motion: reduce) {
   .sheet-mask-enter-active, .sheet-mask-leave-active,
   .sheet-panel-enter-active, .sheet-panel-leave-active,
   .toast-enter-active, .toast-leave-active,
-  .btn-press {
+  .btn-press,
+  .press-card {
     transition: none !important;
     animation: none !important;
   }

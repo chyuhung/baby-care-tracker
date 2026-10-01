@@ -22,9 +22,21 @@
         subtitle="记录几天数据后，这里会生成图表趋势" />
       <template v-else>
         <div v-if="category === 'feeding'" class="bg-surface rounded-2xl shadow-card px-3 pt-3 pb-3">
+          <!-- 图例跟随区间形态：7 天为柱状（两个实心方块），30 天为趋势（实线 + 虚线）。
+               线宽与图内 stroke-width 对齐（1.5px），虚线节距与 SVG dasharray 同源（全站统一 6,3）：
+               用 repeating-linear-gradient 画，不用 border-top: dashed —— 浏览器虚线节距不固定，对不上。
+               柱顶数值标签 10px，与 Y 轴刻度/单位/日期标签同一档；柱状视图无网格线，
+               柱顶标签是唯一的精确读数通道，故不得再小于它。 -->
           <div class="flex items-center justify-center gap-4 mb-1 text-[11px] text-text-secondary font-normal">
-            <span class="flex items-center gap-1.5"><span class="inline-block w-4" style="border-top: 2px solid var(--chart-primary)"></span>奶量 ml</span>
-            <span class="flex items-center gap-1.5"><span class="inline-block w-2.5 h-2.5 rounded-sm" style="background: var(--chart-primary-count-fill); border: 1px solid var(--chart-primary-count)"></span>次数</span>
+            <template v-if="days === 30">
+              <span class="flex items-center gap-1.5"><span class="inline-block w-4 h-[1.5px]" style="background: var(--chart-primary)"></span>奶量 ml</span>
+              <span class="flex items-center gap-1.5"><span class="inline-block w-4 h-[1.5px]"
+                style="background-image: repeating-linear-gradient(90deg, var(--chart-primary-count) 0 6px, transparent 6px 9px)"></span>次数</span>
+            </template>
+            <template v-else>
+              <span class="flex items-center gap-1.5"><span class="inline-block w-2.5 h-2.5 rounded-sm" style="background: var(--chart-primary)"></span>奶量 ml</span>
+              <span class="flex items-center gap-1.5"><span class="inline-block w-2.5 h-2.5 rounded-sm" style="background: var(--chart-primary-count)"></span>次数</span>
+            </template>
           </div>
           <svg viewBox="0 0 340 228" class="w-full block">
             <template v-if="days === 30">
@@ -40,7 +52,7 @@
                 <line :x1="pt.x" :y1="axis.topY" :x2="pt.x" :y2="axis.baseY" class="chart-guide"/>
               </g>
               <line v-if="feedingMlScatter.trend" :x1="feedingMlScatter.trend.x1" :y1="feedingMlScatter.trend.y1" :x2="feedingMlScatter.trend.x2" :y2="feedingMlScatter.trend.y2" stroke="var(--chart-primary)" stroke-width="1.5" opacity="0.85"/>
-              <line v-if="feedingCountScatter.trend" :x1="feedingCountScatter.trend.x1" :y1="feedingCountScatter.trend.y1" :x2="feedingCountScatter.trend.x2" :y2="feedingCountScatter.trend.y2" stroke="var(--chart-primary-count)" stroke-width="1.5" stroke-dasharray="3,3" opacity="0.85"/>
+              <line v-if="feedingCountScatter.trend" :x1="feedingCountScatter.trend.x1" :y1="feedingCountScatter.trend.y1" :x2="feedingCountScatter.trend.x2" :y2="feedingCountScatter.trend.y2" stroke="var(--chart-primary-count)" stroke-width="1.5" stroke-dasharray="6,3" opacity="0.85"/>
               <g v-for="(pt, i) in feedingMlScatter.points" :key="'dp'+i">
                 <circle :cx="pt.x" :cy="pt.y" r="2.5" fill="var(--chart-primary)" :opacity="nodeOpacity(i)"/>
               </g>
@@ -51,11 +63,11 @@
             <template v-else>
               <g v-for="(b, i) in feedingMl.items" :key="'bm'+i">
                 <rect :x="feedingRects(i).mlX" :y="b.y" :width="w2" :height="b.h" rx="2" fill="var(--chart-primary)" :opacity="barOpacity(i)"/>
-                <text v-if="b.h > 0" :x="feedingRects(i).mlX + w2 / 2" :y="b.y - 3" text-anchor="middle" font-size="9" :font-weight="labelWeight(i)" class="chart-value-label">{{ b.label }}</text>
+                <text v-if="b.h > 0" :x="feedingRects(i).mlX + w2 / 2" :y="b.y - 3" text-anchor="middle" font-size="10" :font-weight="labelWeight(i)" class="chart-value-label">{{ b.label }}</text>
               </g>
               <g v-for="(b, i) in feedingCount.items" :key="'bc'+i">
-                <rect :x="feedingRects(i).countX" :y="b.y" :width="w2" :height="b.h" rx="2" fill="var(--chart-primary-count-fill)" stroke="var(--chart-primary-count)" stroke-width="1" :opacity="barOpacity(i)"/>
-                <text v-if="b.h > 0" :x="feedingRects(i).countX + w2 / 2" :y="b.y - 3" text-anchor="middle" font-size="9" :font-weight="labelWeight(i)" class="chart-value-label">{{ b.label }}</text>
+                <rect :x="feedingRects(i).countX" :y="b.y" :width="w2" :height="b.h" rx="2" fill="var(--chart-primary-count)" :opacity="barOpacity(i)"/>
+                <text v-if="b.h > 0" :x="feedingRects(i).countX + w2 / 2" :y="b.y - 3" text-anchor="middle" font-size="10" :font-weight="labelWeight(i)" class="chart-value-label">{{ b.label }}</text>
               </g>
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             </template>
@@ -87,7 +99,7 @@
             <template v-else>
               <g v-for="(b, i) in diaper.items" :key="'db'+i">
                 <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-diaper)" :opacity="barOpacity(i)"/>
-                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="9" :font-weight="labelWeight(i)" class="chart-value-label">{{ b.label }}</text>
+                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="10" :font-weight="labelWeight(i)" class="chart-value-label">{{ b.label }}</text>
               </g>
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             </template>
@@ -117,7 +129,7 @@
             <template v-else>
               <g v-for="(b, i) in sleep.items" :key="'sb'+i">
                 <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-sleep)" :opacity="barOpacity(i)"/>
-                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="9" :font-weight="labelWeight(i)" class="chart-value-label">{{ b.label }}</text>
+                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="10" :font-weight="labelWeight(i)" class="chart-value-label">{{ b.label }}</text>
               </g>
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             </template>
@@ -147,7 +159,7 @@
             <template v-else>
               <g v-for="(b, i) in outdoor.items" :key="'ob'+i">
                 <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-outdoor)" :opacity="barOpacity(i)"/>
-                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="9" :font-weight="labelWeight(i)" class="chart-value-label">{{ b.label }}</text>
+                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="10" :font-weight="labelWeight(i)" class="chart-value-label">{{ b.label }}</text>
               </g>
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             </template>
@@ -177,7 +189,7 @@
             <template v-else>
               <g v-for="(b, i) in supplement.items" :key="'sub'+i">
                 <rect :x="singleRects(i).gl" :y="b.y" :width="barW" :height="b.h" rx="2" fill="var(--chart-supplement)" :opacity="barOpacity(i)"/>
-                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="9" :font-weight="labelWeight(i)" class="chart-value-label">{{ b.label }}</text>
+                <text v-if="b.h > 0" :x="singleRects(i).gl + barW / 2" :y="b.y - 3" text-anchor="middle" font-size="10" :font-weight="labelWeight(i)" class="chart-value-label">{{ b.label }}</text>
               </g>
               <line :x1="axis.leftX" :x2="axis.rightX" :y1="axis.baseY" :y2="axis.baseY" stroke="var(--chart-line)" stroke-width="1"/>
             </template>

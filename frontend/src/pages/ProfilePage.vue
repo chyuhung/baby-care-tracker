@@ -45,7 +45,7 @@
                   {{ baby.name }}
                   <svg v-if="isCurrentBaby(baby)" class="inline-block h-4 w-4 -mt-0.5 ml-0.5 text-primary-deep"
                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 13l4 4L19 7" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                   </svg>
                 </span>
                 <span class="block text-xs text-text-secondary mt-0.5 truncate">
@@ -91,7 +91,7 @@
                 <span class="block text-xs text-text-secondary mt-0.5">{{ family.members.length }} 位成员</span>
               </span>
               <svg class="w-5 h-5 shrink-0 text-text-secondary/50 transition-transform" :class="famOpen ? 'rotate-180' : ''"
-                fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5l7 7-7 7" /></svg>
             </div>
 
             <div v-if="famOpen" id="fam-detail" class="divide-y divide-border-color/60">
@@ -147,7 +147,7 @@
               <span class="block font-medium text-text-primary">成长记录</span>
               <span class="block text-xs text-text-secondary mt-0.5">身高 · 体重 · 头围与生长标准百分位</span>
             </span>
-            <svg class="w-5 h-5 text-text-secondary/50 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            <svg class="w-5 h-5 text-text-secondary/50 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5l7 7-7 7"/></svg>
           </router-link>
 
           <button type="button" @click="exportData" :disabled="exporting || app.babies.length === 0"

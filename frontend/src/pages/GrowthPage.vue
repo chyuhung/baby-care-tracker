@@ -7,7 +7,7 @@
           <template #actions>
             <button type="button" @click="openForm" aria-label="记录测量"
               class="-mr-1 flex h-11 w-11 items-center justify-center rounded-lg text-primary-deep btn-press">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5"/></svg>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 5v14m7-7H5"/></svg>
             </button>
           </template>
         </NavBar>
@@ -65,7 +65,7 @@
               <i class="w-2 h-2 rounded-full" style="background: rgb(var(--danger-deep) / 0.9)"></i>超出范围
             </span>
             <span class="inline-flex items-center gap-1">
-              <i class="w-3 h-0 border-t border-dashed" style="border-color: rgb(var(--text-secondary) / 0.7)"></i>P50 中位
+              <i class="inline-block w-4 h-[1.5px]" style="background-image: repeating-linear-gradient(90deg, rgb(var(--text-secondary) / 0.7) 0 4px, transparent 4px 7px)"></i>P50 中位
             </span>
             <span class="inline-flex items-center gap-1">
               <i class="w-2 h-2 rounded-full" :style="{ background: strokeColor }"></i>实测
@@ -315,7 +315,7 @@ function dateLabelOf(g: GrowthRecord) {
 // 缩放后的**实际**像素来定，不能照抄 viewBox 数值。原 font-size=9 实际只有
 // 8.4–8.9px，低于 HIG Caption12 下限，这才是「挤成一团」的主因（不是图太小）。
 // 现取 11 → SE 上 10.3px、PM 上 12.1px。
-const W = 340, H = 250, PAD_L = 34, PAD_R = 12, PAD_T = 16, PAD_B = 28
+  const W = 340, H = 280, PAD_L = 34, PAD_R = 12, PAD_T = 16, PAD_B = 28
 // 刻度文字：11 为 SVG 单位，实际渲染再乘以缩放系数
 const AXIS_FONT = 11
 

@@ -17,11 +17,11 @@
     :class="align === 'left' ? '-ml-1 px-2' : '-mr-1 px-2'"
     :aria-haspopup="true" :aria-expanded="open" :aria-label="ariaLabel">
     <svg v-if="iconGlyph" class="w-5 h-5" :class="isNonDefault ? 'text-primary-deep' : 'text-text-secondary'" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <path :d="iconGlyph" />
     </svg>
     <svg v-else class="w-5 h-5" :class="isNonDefault ? 'text-primary-deep' : 'text-text-secondary'" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
       <path d="M4 7h8M17 7h3M4 12h4M13 12h7M4 17h12M19 17h1" />
       <circle cx="14" cy="7" r="2" />
       <circle cx="10" cy="12" r="2" />
@@ -47,7 +47,7 @@
                 <span v-if="opt.emoji" class="text-xl w-6 text-center leading-none">{{ opt.emoji }}</span>
                 <span class="flex-1 text-left">{{ opt.label }}</span>
                 <svg v-if="opt.value === modelValue" class="w-5 h-5 text-primary-deep" viewBox="0 0 24 24" fill="none">
-                  <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                  <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
               </button>
             </div>
