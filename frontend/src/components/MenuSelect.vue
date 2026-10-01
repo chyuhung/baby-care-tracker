@@ -37,7 +37,7 @@
             class="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] px-3 pb-safe space-y-2 outline-none"
             role="dialog" aria-modal="true" :aria-label="title">
             <!-- 选项组 -->
-            <div class="bg-surface rounded-2xl overflow-hidden">
+            <div class="bg-surface rounded-2xl overflow-hidden shadow-sheet">
               <div class="pt-2.5 flex justify-center">
                 <span class="w-9 h-1 rounded-full bg-border-color"></span>
               </div>
@@ -53,7 +53,7 @@
             </div>
             <!-- 取消（独立成组） -->
             <button type="button" @click="close"
-              class="w-full py-4 bg-surface rounded-2xl text-[17px] font-semibold text-text-primary btn-press">
+              class="w-full py-4 bg-surface rounded-2xl text-[17px] font-semibold text-text-primary shadow-sheet btn-press">
               取消
             </button>
           </div>

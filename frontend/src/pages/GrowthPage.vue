@@ -21,7 +21,7 @@
         <!-- 最新测量 · 标准百分位 -->
         <div class="bg-surface rounded-2xl p-4 shadow-card">
           <div class="flex items-center justify-between mb-3">
-            <h2 class="text-sm font-semibold text-text-secondary">最新测量</h2>
+            <h2 class="text-[13px] text-text-secondary">最新测量</h2>
             <span class="text-xs text-text-secondary">{{ latestSubtitle }}</span>
           </div>
           <div class="grid grid-cols-3 divide-x divide-border-color/60">
@@ -47,7 +47,7 @@
         <!-- 趋势曲线 -->
         <div class="bg-surface rounded-2xl px-3 pt-3 pb-3 shadow-card">
           <div class="flex items-center justify-between px-1 mb-1">
-            <h2 class="text-sm font-semibold text-text-secondary">成长曲线</h2>
+            <h2 class="text-[13px] text-text-secondary">成长曲线</h2>
             <Segmented v-model="metric" :options="metricOptions" compact />
           </div>
           <!-- 参考带图例：图内只填 P3–P97 三段（正常范围），上/下两档以红点表示实测点落在范围外 -->
@@ -118,9 +118,9 @@
 
         <!-- 历史记录（整行 tap=编辑，长按=上下文菜单删除，与记录卡同手势口径） -->
         <div class="bg-surface rounded-2xl shadow-card overflow-hidden">
-          <h2 class="text-sm font-semibold text-text-secondary px-4 pt-3 pb-1">历史记录</h2>
+          <h2 class="text-[13px] text-text-secondary px-4 pt-3 pb-1">历史记录</h2>
           <div v-for="g in listDesc" :key="g.id" role="button" tabindex="0" aria-label="编辑此记录，长按可删除"
-            class="px-4 py-3 border-t border-border-color/60 btn-press"
+            class="px-4 py-3 border-t border-border-color/60 press-card"
             @click="onRowClick(g)" @keydown.enter="openEdit(g)"
             @touchstart.passive="rowTouchStart(g, $event)" @touchmove="rowTouchMove($event)"
             @touchend="rowTouchEnd" @touchcancel="rowTouchEnd">

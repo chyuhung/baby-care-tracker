@@ -45,8 +45,10 @@ export default {
         '2xl': '20px',
       },
       boxShadow: {
-        'card': '0 2px 12px rgba(24, 34, 58, 0.05)',
-        'card-hover': '0 8px 22px rgba(24, 34, 58, 0.09)',
+        // 经 CSS 变量按主题解析：深色下页面底为纯黑，阴影（减光）无法产生可见对比，
+        // 故深色归零，改由 --surface 提亮承担分层（#1C1C1E on #000000，iOS 基准）。
+        'card': 'var(--shadow-card)',
+        'sheet': 'var(--shadow-sheet)',
       },
     },
   },

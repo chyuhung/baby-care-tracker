@@ -7,7 +7,7 @@
             class="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] px-3 pb-safe pt-2 space-y-2"
             role="dialog" aria-modal="true" :aria-label="title">
             <!-- 预览头（iOS 上下文菜单顶部信息行） -->
-            <div v-if="title || subtitle" class="flex items-center gap-3 px-4 py-3 bg-surface rounded-2xl">
+            <div v-if="title || subtitle" class="flex items-center gap-3 px-4 py-3 bg-surface rounded-2xl shadow-sheet">
               <span v-if="emoji" class="text-2xl leading-none">{{ emoji }}</span>
               <div class="min-w-0">
                 <p class="text-[15px] font-semibold text-text-primary truncate">{{ title }}</p>
@@ -15,7 +15,7 @@
               </div>
             </div>
             <!-- 操作组 -->
-            <div class="bg-surface rounded-2xl overflow-hidden">
+            <div class="bg-surface rounded-2xl overflow-hidden shadow-sheet">
               <button v-for="(a, i) in actions" :key="a.key" type="button" @click="run(a)"
                 class="w-full flex items-center gap-3 px-4 min-h-[52px] text-[17px] btn-press active:bg-muted/60"
                 :class="[i > 0 ? 'border-t border-border-color/60' : '', a.danger ? 'text-danger' : 'text-text-primary']">
@@ -28,7 +28,7 @@
             </div>
             <!-- 取消 -->
             <button type="button" @click="close"
-              class="w-full py-4 bg-surface rounded-2xl text-[17px] font-semibold text-text-primary btn-press">
+              class="w-full py-4 bg-surface rounded-2xl text-[17px] font-semibold text-text-primary shadow-sheet btn-press">
               取消
             </button>
           </div>

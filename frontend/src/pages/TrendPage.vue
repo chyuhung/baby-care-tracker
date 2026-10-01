@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col h-dvh">
-    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] space-y-6"
+    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] space-y-4"
       :refresh="() => loadTrend(true)">
     <template #header>
       <NavBar title="趋势">

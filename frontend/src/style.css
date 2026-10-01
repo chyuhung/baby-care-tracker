@@ -71,6 +71,8 @@
   --chart-primary-count-fill: rgb(var(--primary) / 0.20);  /* 空心柱内填充 */
   --chart-line: #E7EAF0;           /* 图表基线/网格线 */
   --hairline: 60 60 67;            /* 发丝线 RGB（配合 .hairline-* 的 alpha） */
+  --shadow-card: 0 2px 12px rgba(24, 34, 58, 0.05);  /* 内容卡微抬升（浅底有效，对比 ≈1.10） */
+  --shadow-sheet: 0 8px 24px rgba(24, 34, 58, 0.14); /* 弹层/菜单离页（浅底） */
 }
 
 [data-theme='male'] {
@@ -117,6 +119,13 @@
     --chart-primary-count: rgb(var(--primary) / 0.72);
     --chart-primary-count-fill: rgb(var(--primary) / 0.28);
     --chart-line: #38383C;
+
+    /* 暗色阴影：内容卡归零 —— 页面底为纯黑，阴影是减光操作，落在 #000 上
+       与 alpha 无关地不可见；分层改由 --surface(#1C1C1E) 对 #000000 的明度差承担
+       （对比 ≈1.23，iOS 深色抬升面基准）。
+       弹层则必须保留：面板与下方卡片同为 #1C1C1E（对比 1.00），仅靠黑基阴影脱离。 */
+    --shadow-card: none;
+    --shadow-sheet: 0 8px 24px rgba(0, 0, 0, 0.6);
   }
 
   [data-theme='male'] {

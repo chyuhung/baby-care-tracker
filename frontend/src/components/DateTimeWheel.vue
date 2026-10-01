@@ -4,7 +4,7 @@
       <div v-if="open" class="fixed inset-0 z-[90] flex items-end justify-center bg-black/35" @click.self="close(false)">
         <transition name="sheet-panel" appear>
           <div v-if="open" ref="panelRef"
-            class="w-full max-w-[480px] bg-surface rounded-t-2xl px-3 pb-safe pt-2 space-y-2"
+            class="w-full max-w-[480px] bg-surface rounded-t-2xl px-3 pb-safe pt-2 space-y-2 shadow-sheet"
             role="dialog" aria-modal="true" :aria-label="title">
             <!-- 顶部工具条 -->
             <div class="flex items-center justify-between px-1 pb-1">
