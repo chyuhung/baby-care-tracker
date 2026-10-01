@@ -31,14 +31,31 @@ const (
 	GradeLow     = "下"  // <P3
 )
 
+// Covers 返回该指标表在 month 月龄处是否仍有标准可依。
+//
+// 标准本身有覆盖上限：头围仅 0–36 月，体重/身高 0–81 月（6 岁 9 月）。
+// 超出上限后 Value() 会把月龄钳制到末行，于是 4 岁男孩 52cm 的正常头围
+// 会被拿去和 3 岁的 P97=51.9cm 比较，误判成「上」（红色告警）。
+// 故判定前必须先用本函数拦截：表没覆盖的月龄一律不判级。
+func Covers(metric, sex string, month float64) bool {
+	rows := Table(metric, sex)
+	if len(rows) == 0 || loadErr != nil {
+		return false
+	}
+	return month <= rows[len(rows)-1].M
+}
+
 // Grade 按表1 返回五级评价：上 / 中上 / 中 / 中下 / 下。
 //
 // 表1 定义的正是「分档」而非连续百分位——它只给出 P3/P25/P75/P97 四个边界，
 // 因此这里直接与边界值比较，不经任何插值（插值只用于 Percentile 的连续百分位）。
 // 正常范围为 P3–P97（约 94% 儿童）；仅 <P3 与 ≥P97 两档落在正常范围之外。
-// value <= 0（该项未测量）时返回空串。
+// 以下情况返回空串（调用方应显示为「无」而非任何档位）：
+//   - value <= 0：该指标未测量
+//   - month < 0：无法确定月龄（如宝宝未填出生日期）
+//   - !Covers：月龄超出该指标表的标准覆盖范围
 func Grade(metric, sex string, month, value float64) string {
-	if value <= 0 {
+	if value <= 0 || month < 0 || !Covers(metric, sex, month) {
 		return ""
 	}
 	p3 := Value(metric, sex, "p3", month)
@@ -180,8 +197,12 @@ func clampFloat(v, lo, hi float64) float64 {
 // Percentile 返回月龄 month 处数值 value 对应的百分位（0-100）。
 // 依据官方印制的 P3/P10/P25/P50/P75/P90/P97 七点分段线性插值；
 // 超出两端时沿最近两点斜率外推并收敛到 [0.5, 99.5]。
+//
+// 注意此换算是本项目的插值近似，WS/T 423-2022 表1 并未定义连续百分位。
+// 与 Grade() 保持一致的三种无数据情况：value <= 0（月龄未知 month < 0）
+// 或月龄超出标准表覆盖范围（Covers），此时一律返回 0。
 func Percentile(metric, sex string, month, value float64) float64 {
-	if value <= 0 {
+	if value <= 0 || month < 0 || !Covers(metric, sex, month) {
 		return 0
 	}
 	cols := Percentiles()

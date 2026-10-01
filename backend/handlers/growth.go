@@ -35,8 +35,15 @@ func measuredTimeFromDB(s string) time.Time {
 	return parseTime(s)
 }
 
-// monthsBetween 计算月龄（按整月，月内不足一天不计）
+// monthsBetween 计算月龄（按整月，月内不足一天不计）。
+//
+// birth 为零值（宝宝未填出生日期）时返回 -1 表示「月龄未知」：
+// 不能返回 0——零值 birth 会算出 (measured.Year-1)*12 这种上万月的假月龄，
+// 被 GrowthStats.AgeMonths 显示成「1200 月龄」，并让标准判定钳制到表末行而误判。
 func monthsBetween(birth, at time.Time) float64 {
+	if birth.IsZero() {
+		return -1
+	}
 	months := (at.Year()-birth.Year())*12 + int(at.Month()) - int(birth.Month())
 	if at.Day() < birth.Day() {
 		months--
@@ -50,17 +57,22 @@ func monthsBetween(birth, at time.Time) float64 {
 // growthPercentile 返回某项指标的连续百分位（0-100），由官方七点分段线性插值得到。
 // 注意：表1 只定义五级评价、不定义连续百分位换算，故本值仅供展示参考，
 // 正式判定请用 growthGrade（见 WS/T 423-2022 表1）。
+// 月龄未知时返回 0；月龄超出标准表覆盖范围时由 Percentile 自行拦截。
 func growthPercentile(gender string, birth time.Time, measured time.Time, metric string, value float64) float64 {
 	if value <= 0 {
 		return 0
 	}
 	month := monthsBetween(birth, measured)
+	if month < 0 {
+		return 0
+	}
 	return math.Round(growthdata.Percentile(metric, gender, month, value)*10) / 10
 }
 
 // growthGrade 返回某项指标的五级评价（上/中上/中/中下/下），
 // 依据 WS/T 423-2022 表1「儿童生长水平的百分位数评价方法」。
 // 正常范围 P3–P97；仅 <P3（下）与 ≥P97（上）落在正常范围之外。
+// 月龄未知或月龄超出标准表覆盖范围时返回空串（界面显示「--」）。
 func growthGrade(gender string, birth time.Time, measured time.Time, metric string, value float64) string {
 	if value <= 0 {
 		return ""
@@ -107,6 +119,9 @@ func GetGrowthRecords(c *gin.Context) {
 
 // GrowthStats 成长百分位响应
 type GrowthStats struct {
+	// AgeMonths 为测量时的月龄（整月，日内不足一天不计）。
+	// 为 -1 表示宝宝未填出生日期、月龄未知，此时前端不显示月龄，
+	// 且各 *_grade 均为空串（标准判定需要月龄）。
 	AgeMonths float64 `json:"age_months"`
 	Gender    string  `json:"gender"`
 	// GenderLabel 为档案里实际选择的中文性别（保密则为「保密」，不会被静默改写成女宝）
@@ -119,7 +134,9 @@ type GrowthStats struct {
 	WeightPct      float64 `json:"weight_pct"`
 	HeightPct      float64 `json:"height_pct"`
 	HeadPct        float64 `json:"head_pct"`
-	// 五级评价（WS/T 423-2022 表1）：上/中上/中/中下/下；空串表示未测量
+	// 五级评价（WS/T 423-2022 表1）：上/中上/中/中下/下；
+	// 空串表示「无档位」——可能是该项未测量、月龄未知，或月龄超出该指标表覆盖范围
+	// （头围标准仅至 36 月、体重身高至 81 月）
 	WeightGrade string `json:"weight_grade"`
 	HeightGrade string `json:"height_grade"`
 	HeadGrade   string `json:"head_grade"`

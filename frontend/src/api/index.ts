@@ -198,6 +198,10 @@ export interface GrowthRecord {
 
 export interface GrowthStats {
   empty?: boolean
+  /**
+   * 测量时的月龄（整月，日内不足一天不计）。
+   * 为 -1 表示宝宝未填出生日期、月龄未知，此时 *_grade 均为空串。
+   */
   age_months?: number
   gender?: string
   /** 档案实际选择：male / female / ''（保密） */
@@ -213,7 +217,8 @@ export interface GrowthStats {
   /**
    * 五级评价，WS/T 423-2022 表1「儿童生长水平的百分位数评价方法」：
    * 上（≥P97）/ 中上（P75–P97）/ 中（P25–P75）/ 中下（P3–P25）/ 下（<P3）。
-   * 正常范围 P3–P97；空串表示该项未测量。
+   * 正常范围 P3–P97。空串表示无档位：该项未测量、月龄未知（未填出生日期），
+   * 或月龄超出该指标表覆盖范围（头围标准仅至 36 月、体重身高至 81 月）。
    * 界面判定以本字段为准，*_pct 仅为插值近似，仅供参考。
    */
   weight_grade?: string

@@ -71,8 +71,9 @@
               <i class="w-2 h-2 rounded-full" :style="{ background: strokeColor }"></i>实测
             </span>
           </div>
-          <div v-if="!refMetric && chartSeries.length === 0" class="py-10">
-            <EmptyState size="sm" icon="chart" title="暂无数据" subtitle="记录几次测量后即可看到趋势" />
+          <div v-if="chartSeries.length === 0" class="py-10">
+            <EmptyState size="sm" icon="chart" title="暂无数据"
+              :subtitle="hasBirthDate ? '记录几次测量后即可看到趋势' : '补充出生日期后即可对照生长标准'" />
           </div>
           <svg v-else :viewBox="`0 0 ${W} ${H}`" class="w-full" role="img" aria-label="成长曲线图">
             <!-- 正常范围 P3–P97 的三段（同色系由浅到深，中最深）。P3 以下 / P97 以上不填色：
@@ -256,13 +257,15 @@ const metrics = computed(() => {
 })
 
 // 最新测量副标题：月龄为「测量时」的月龄（后端 monthsBetween(birth, measured)），
-// 不是当前月龄；档案性别为「保密」时如实显示，不再被静默显示成女宝
+// 不是当前月龄；档案性别为「保密」时如实显示，不再被静默显示成女宝。
+// age_months = -1 表示未填出生日期、月龄未知，此时只显示性别并提示补充出生日期。
 const latestSubtitle = computed(() => {
   const s = stats.value
   if (!s) return ''
   const g = s.gender_label === 'male' ? '男宝' : s.gender_label === 'female' ? '女宝' : '保密'
   const gender = s.gender_fallback ? `${g}（暂按女宝标准）` : g
-  return `${s.age_months ?? 0} 月龄 · ${gender}`
+  const months = s.age_months ?? 0
+  return months >= 0 ? `${months} 月龄 · ${gender}` : `${gender} · 未填出生日期`
 })
 
 /**
@@ -302,24 +305,36 @@ function dateLabelOf(g: GrowthRecord) {
   return age ? `${date}（${age}）` : date
 }
 
-// ── 图表（月龄轴 + WS/T 423-2022 参考曲线，医院图三色风格）──
+// ── 图表（月龄轴 + WS/T 423-2022 参考曲线，线性真实数值轴 + P3–P97 绿带）──
 const W = 340, H = 210, PAD_L = 30, PAD_R = 12, PAD_T = 14, PAD_B = 26
 
 type PctKey = 'p3' | 'p25' | 'p50' | 'p75' | 'p97'
 
+/**
+ * 测量日的月龄，**必须与后端 monthsBetween() 逐字同口径**：日历整月，
+ * 当月天数不足出生日则退一月，结果向下取整为整数。
+ *
+ * 早先这里用的是 `days / 30.4375`（带小数），与后端整数月龄最多差 0.83 个月。
+ * 两条路径在 P3/P97 边界上取值的样本中有 47.9% 会得出相反结论，
+ * 于是出现「胶囊判红 / 红点不红」的自相矛盾。判定必须同源，故一并改为日历整月。
+ *
+ * 宝宝未填出生日期时返回 -1 表示月龄未知（后端 age_months = -1 同一约定）。
+ */
 function monthOf(dateStr: string): number {
   const birth = parseLocalDate(app.currentBaby?.birth_date || '')
   const d = parseLocalDate(dateStr)
-  if (!birth || !d) return 0
-  const days = (d.getTime() - birth.getTime()) / 86400000
-  return Math.max(0, days / 30.4375)
+  if (!birth || !d) return -1
+  let months = (d.getFullYear() - birth.getFullYear()) * 12 + d.getMonth() - birth.getMonth()
+  if (d.getDate() < birth.getDate()) months--
+  return Math.max(0, months)
 }
 
 const series = computed(() => {
   const key = metric.value === 'weight' ? 'weight_kg' : metric.value === 'height' ? 'height_cm' : 'head_cm'
   return list.value
     .map(g => ({ date: g.measured_at, v: Number((g as any)[key]) || 0, month: monthOf(g.measured_at) }))
-    .filter(p => p.v > 0)
+    // 月龄未知（未填出生日期）的记录无法与标准比对，不进图表
+    .filter(p => p.v > 0 && p.month >= 0)
 })
 
 const refMetric = computed(() => {
@@ -327,6 +342,9 @@ const refMetric = computed(() => {
   if (!r) return null
   return metric.value === 'weight' ? r.weight : metric.value === 'height' ? r.height : r.head
 })
+
+// 是否已填出生日期（缺出生日期时无法计算月龄，标准判定与曲线都无从谈起）
+const hasBirthDate = computed(() => !!parseLocalDate(app.currentBaby?.birth_date || ''))
 
 // X 轴域：0..max(最大月龄, 12)（至少 12 月窗口便于观察）
 const xMax = computed(() => {
@@ -342,11 +360,20 @@ const visibleRef = computed(() => {
   return pts.length > 1 ? pts : null
 })
 
-// 线性 Y 值域：取「可见参考带的 P3/P97」与「实测值」的并集，上下各留 6% 余量。
-// 留白的作用是让范围外的实测点（上/下两档）仍留在绘图区内可见，而不是被裁掉。
+/**
+ * 线性 Y 值域：取「可见参考带的 P3/P97」与「实测值」的并集，上下各留 6% 余量。
+ * 留白的作用是让范围外的实测点（上/下两档）仍留在绘图区内可见，而不是被裁掉。
+ *
+ * 只纳入 `refAt()` 确实有参考值的测量点：月龄超出该指标表覆盖范围时
+ * （头围仅至 36 月、体重身高至 81 月）没有标准可比，既不参与定界、
+ * 也不判红点，若让它们撑开 Y 轴会把正常带压扁。
+ */
 const bounds = computed(() => {
-  const vs = series.value.map(p => p.v)
   const vis = visibleRef.value
+  const vs: number[] = []
+  for (const p of series.value) {
+    if (refAt(p.month)) vs.push(p.v)
+  }
   if (vis) for (const p of vis) { vs.push(p.p3, p.p97) }
   if (!vs.length) return { min: 0, max: 1 }
   const lo = Math.min(...vs), hi = Math.max(...vs)
@@ -363,13 +390,18 @@ function xAt(month: number) {
  * 某月龄处的参考带边界值（用于判断实测点是否落在 P3–P97 之外）。
  * 保留线性插值：参考点密度为 0-11 月逐月、其后每 3 月一行，
  * 实测月龄常落在两行之间，需要插值才能取到该月龄的边界。
+ *
+ * month 超出参考点末点月龄时返回 null —— 标准表到头就不再是「末点 + 留白」，
+ * 而是「无标准可依」（头围仅到 36 月、体重身高到 81 月）。
+ * 早先这里沿用末点，导致 4 岁男孩 52cm 的正常头围被拿去和 3 岁的
+ * P97=51.9cm 比而误判成「上」（红点），与后端 Grade() 也不一致。
  */
 function refAt(month: number) {
+  if (month < 0) return null
   const vis = visibleRef.value
   if (!vis || !vis.length) return null
-  // 参考点按月递增，找到区间后线性插值；超出末点则沿用末点（此时外侧已是留白）
+  if (month > vis[vis.length - 1].month) return null
   if (month <= vis[0].month) return vis[0]
-  if (month >= vis[vis.length - 1].month) return vis[vis.length - 1]
   for (let i = 0; i < vis.length - 1; i++) {
     const a = vis[i], b = vis[i + 1]
     if (month >= a.month && month <= b.month) {
@@ -398,8 +430,9 @@ function yAt(v: number) {
 
 /**
  * 实测点是否落在该月龄的 P3–P97 正常范围之外（对应表1 的「下」/「上」两档）。
- * 边界用 `>=` / `<`，与后端 Grade() 完全对齐：P97 本身即判「上」，
- * 若这里写 `> r.p97`，恰好落在 P97 的点会出现「红色胶囊 + 正常色点」的自相矛盾。
+ * 两处边界约定都对齐后端 Grade()，否则胶囊与红点会自相矛盾：
+ *   1. 区间用 `>= p97` / `< p3`：P97 本身即判「上」；
+ *   2. refAt 返回 null（月龄超出标准表覆盖范围）时一律不判 —— 无标准可依不是异常。
  */
 function outOfRangeAt(v: number, month: number): boolean {
   const r = refAt(month)
