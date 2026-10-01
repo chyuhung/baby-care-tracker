@@ -199,17 +199,9 @@ body {
   outline-offset: 2px;
 }
 
-/* 页面切换动画（纯淡入淡出：transform 层会吸附首点，去掉 scale/位移防丢点击） */
-.page-enter-active,
-.page-leave-active {
-  transition: opacity 0.2s ease;
-}
-.page-enter-from {
-  opacity: 0;
-}
-.page-leave-to {
-  opacity: 0;
-}
+/* 页面切换动画：已移除（App.vue / MainLayout.vue 均改为无 <transition> 的瞬时替换）。
+   原 name="page" mode="out-in" + opacity 0.2s 会在「旧页淡出结束 → 新页插入」之间空一帧，
+   浅灰页面底色把这段空档放大成可见闪动；标签页切换本就该按 iOS HIG 瞬时替换。 */
 
 /* Toast 动画 */
 .toast-enter-active, .toast-leave-active {
@@ -276,9 +268,8 @@ nav.glass-surface {
   letter-spacing: -0.02em;
 }
 
-/* 用户系统开启"减弱动态效果"时，关闭页面/卡片/弹窗动画 */
+/* 用户系统开启"减弱动态效果"时，关闭弹窗/操作表/按钮动画（页面切换已无动画，见上方说明） */
 @media (prefers-reduced-motion: reduce) {
-  .page-enter-active, .page-leave-active,
   .sheet-mask-enter-active, .sheet-mask-leave-active,
   .sheet-panel-enter-active, .sheet-panel-leave-active,
   .toast-enter-active, .toast-leave-active,
