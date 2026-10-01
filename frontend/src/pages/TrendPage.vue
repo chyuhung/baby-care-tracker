@@ -455,7 +455,9 @@ const periodLabel = computed(() => {
 })
 
 function deltaArrow(d: number): string { return d > 0 ? '↑' : d < 0 ? '↓' : '—' }
-// 徽章语义色：与成长记录页三分区色同一套语言 —— 绿=优秀/升高、黄=正常/持平、红=落后/下降。
+// 徽章语义色（变化方向，与成长页的五级评价是两套独立语义）：
+// 绿=升高、黄=持平、红=下降；每张卡另有 polarity 标注该指标「升」是好事还是坏事
+// （尿布类变化次数越少越好，故为 up-bad）。
 // 逆向指标极性相反（up-bad）：体温升高=发热、尿布次数增加=红臀风险上升，故升高红、回落故绿。
 // 持平两种极性都是黄。
 function deltaClass(c: { delta: number, polarity: Polarity }): string {

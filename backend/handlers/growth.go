@@ -47,13 +47,25 @@ func monthsBetween(birth, at time.Time) float64 {
 	return float64(months)
 }
 
-// growthPercentile 返回某项指标的百分位（0-100），依据 WS/T 423-2022 百分位表
+// growthPercentile 返回某项指标的连续百分位（0-100），由官方七点分段线性插值得到。
+// 注意：表1 只定义五级评价、不定义连续百分位换算，故本值仅供展示参考，
+// 正式判定请用 growthGrade（见 WS/T 423-2022 表1）。
 func growthPercentile(gender string, birth time.Time, measured time.Time, metric string, value float64) float64 {
 	if value <= 0 {
 		return 0
 	}
 	month := monthsBetween(birth, measured)
 	return math.Round(growthdata.Percentile(metric, gender, month, value)*10) / 10
+}
+
+// growthGrade 返回某项指标的五级评价（上/中上/中/中下/下），
+// 依据 WS/T 423-2022 表1「儿童生长水平的百分位数评价方法」。
+// 正常范围 P3–P97；仅 <P3（下）与 ≥P97（上）落在正常范围之外。
+func growthGrade(gender string, birth time.Time, measured time.Time, metric string, value float64) string {
+	if value <= 0 {
+		return ""
+	}
+	return growthdata.Grade(metric, gender, monthsBetween(birth, measured), value)
 }
 
 // GetGrowthRecords 获取成长记录
@@ -107,6 +119,10 @@ type GrowthStats struct {
 	WeightPct      float64 `json:"weight_pct"`
 	HeightPct      float64 `json:"height_pct"`
 	HeadPct        float64 `json:"head_pct"`
+	// 五级评价（WS/T 423-2022 表1）：上/中上/中/中下/下；空串表示未测量
+	WeightGrade string `json:"weight_grade"`
+	HeightGrade string `json:"height_grade"`
+	HeadGrade   string `json:"head_grade"`
 }
 
 // GetGrowthStats 获取最新一条成长记录的标准百分位（WS/T 423-2022）
@@ -159,6 +175,9 @@ func GetGrowthStats(c *gin.Context) {
 		GenderFallback: genderLabel == "",
 		WeightKg:       g.WeightKg, HeightCm: g.HeightCm, HeadCm: g.HeadCm,
 		WeightPct: wp, HeightPct: hp, HeadPct: cp,
+		WeightGrade: growthGrade(gender, birth, measured, "weight", g.WeightKg),
+		HeightGrade: growthGrade(gender, birth, measured, "height", g.HeightCm),
+		HeadGrade:   growthGrade(gender, birth, measured, "head", g.HeadCm),
 	})
 }
 

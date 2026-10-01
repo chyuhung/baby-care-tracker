@@ -210,6 +210,15 @@ export interface GrowthStats {
   weight_pct?: number
   height_pct?: number
   head_pct?: number
+  /**
+   * 五级评价，WS/T 423-2022 表1「儿童生长水平的百分位数评价方法」：
+   * 上（≥P97）/ 中上（P75–P97）/ 中（P25–P75）/ 中下（P3–P25）/ 下（<P3）。
+   * 正常范围 P3–P97；空串表示该项未测量。
+   * 界面判定以本字段为准，*_pct 仅为插值近似，仅供参考。
+   */
+  weight_grade?: string
+  height_grade?: string
+  head_grade?: string
 }
 
 export interface GrowthReferencePoint {

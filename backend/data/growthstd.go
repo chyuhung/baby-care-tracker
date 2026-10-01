@@ -1,11 +1,15 @@
 // Package data 提供《7岁以下儿童生长标准》(WS/T 423-2022) 的百分位数值表。
 // 数据内嵌自 wst423_2022.json（转录自卫健委官方 PDF 表 A.1/A.3(A.4)/A.11/A.12，
-// 已与官方数值多处交叉核对：男/女体重、女童身高 0 月，女童身高 5岁6月/6岁 中位数均一致）。
+// 已与官方数值多处交叉核对：男/女体重、女童身高 0 月，女童身高 5岁6月/6岁 中位数均一致；
+// 0岁男童体重整行 P3/P10/P25/P50/P75/P90/P97 = 2.8/3.0/3.2/3.5/3.7/4.0/4.2 与官方逐位一致）。
 //
 // 表结构说明：0-11 月逐月，1 岁起每 3 个月一行（源文档发布即为此密度），
 // 头围仅 0-3 岁。月龄为整月或整岁；2 岁前为身长、2 岁后为身高。
 // 与旧 WHO LMS 表不同，本表直接使用官方印制的 P3/P10/P25/P50/P75/P90/P97 七点，
 // 百分位由相邻点分段线性插值得到。
+//
+// 两套口径不要混用：Percentile 给出连续百分位（表1 未定义此换算，属本项目的插值近似）；
+// Grade 给出表1 正式定义的五级评价，直接与 P3/P25/P75/P97 四个边界比较。界面判定一律用 Grade。
 package data
 
 import (
@@ -17,6 +21,43 @@ import (
 
 //go:embed wst423_2022.json
 var rawJSON []byte
+
+// 五级评价用词（WS/T 423-2022 表1「儿童生长水平的百分位数评价方法」）
+const (
+	GradeHigh    = "上"  // ≥P97
+	GradeMidHigh = "中上" // P75 ≤ x < P97
+	GradeMid     = "中"  // P25 ≤ x < P75
+	GradeMidLow  = "中下" // P3 ≤ x < P25
+	GradeLow     = "下"  // <P3
+)
+
+// Grade 按表1 返回五级评价：上 / 中上 / 中 / 中下 / 下。
+//
+// 表1 定义的正是「分档」而非连续百分位——它只给出 P3/P25/P75/P97 四个边界，
+// 因此这里直接与边界值比较，不经任何插值（插值只用于 Percentile 的连续百分位）。
+// 正常范围为 P3–P97（约 94% 儿童）；仅 <P3 与 ≥P97 两档落在正常范围之外。
+// value <= 0（该项未测量）时返回空串。
+func Grade(metric, sex string, month, value float64) string {
+	if value <= 0 {
+		return ""
+	}
+	p3 := Value(metric, sex, "p3", month)
+	p25 := Value(metric, sex, "p25", month)
+	p75 := Value(metric, sex, "p75", month)
+	p97 := Value(metric, sex, "p97", month)
+	switch {
+	case value >= p97:
+		return GradeHigh
+	case value >= p75:
+		return GradeMidHigh
+	case value >= p25:
+		return GradeMid
+	case value >= p3:
+		return GradeMidLow
+	default:
+		return GradeLow
+	}
+}
 
 // PctRow 一行百分位数据（月龄 + 七个百分位点）
 type PctRow struct {

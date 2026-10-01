@@ -28,14 +28,19 @@
             <div v-for="m in metrics" :key="m.key" class="px-3 py-1 text-center">
               <div class="text-xs text-text-secondary">{{ m.label }}</div>
               <div class="font-num text-xl font-bold text-text-primary mt-0.5">{{ m.value }}</div>
-              <div class="mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                :class="pctClass(m.pct)">
-                {{ m.pct > 0 ? 'P' + m.pct.toFixed(0) : '--' }}
-              </div>
+              <template v-if="m.meta">
+                <div class="mt-1.5 inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                  :class="m.meta.pill">
+                  {{ m.meta.label }}
+                </div>
+                <div class="mt-0.5 text-[10px] text-text-secondary font-num">{{ m.meta.range }}</div>
+              </template>
+              <div v-else class="mt-1.5 text-[11px] text-text-secondary">--</div>
             </div>
           </div>
           <p class="text-[11px] text-text-secondary mt-3 leading-relaxed">
-            百分位依据《7岁以下儿童生长标准》(WS/T 423-2022) 计算，仅供参考，不能替代儿科医生评估。
+            分档依据《7 岁以下儿童生长标准》(WS/T 423-2022) 表1 五级评价：≥P97 为上，P75–P97 为中上，
+            P25–P75 为中，P3–P25 为中下，&lt;P3 为下；正常范围 P3–P97。仅供参考，不能替代儿科医生评估。
           </p>
         </div>
 
@@ -45,16 +50,19 @@
             <h2 class="text-sm font-semibold text-text-secondary">成长曲线</h2>
             <Segmented v-model="metric" :options="metricOptions" compact />
           </div>
-          <!-- 参考区间图例 -->
+          <!-- 参考带图例：图内只填 P3–P97 三段（正常范围），上/下两档以红点表示实测点落在范围外 -->
           <div class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 px-1 mb-1.5 text-[11px] text-text-secondary">
             <span class="inline-flex items-center gap-1">
-              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--success-deep) / 0.3)"></i>优秀 ≥P75
+              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--success-deep) / 0.1)"></i>中下 P3–P25
             </span>
             <span class="inline-flex items-center gap-1">
-              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--warning-deep) / 0.3)"></i>正常 P25–P75
+              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--success-deep) / 0.22)"></i>中 P25–P75
             </span>
             <span class="inline-flex items-center gap-1">
-              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--danger-deep) / 0.3)"></i>落后 &lt;P25
+              <i class="w-2.5 h-2.5 rounded-[3px]" style="background: rgb(var(--success-deep) / 0.1)"></i>中上 P75–P97
+            </span>
+            <span class="inline-flex items-center gap-1">
+              <i class="w-2 h-2 rounded-full" style="background: rgb(var(--danger-deep) / 0.9)"></i>超出范围
             </span>
             <span class="inline-flex items-center gap-1">
               <i class="w-3 h-0 border-t border-dashed" style="border-color: rgb(var(--text-secondary) / 0.7)"></i>P50 中位
@@ -67,11 +75,12 @@
             <EmptyState size="sm" icon="chart" title="暂无数据" subtitle="记录几次测量后即可看到趋势" />
           </div>
           <svg v-else :viewBox="`0 0 ${W} ${H}`" class="w-full" role="img" aria-label="成长曲线图">
-            <!-- 参考区间三色，绘制顺序与图例一致：优秀绿 ≥75 / 正常黄 25-75 / 落后红 <25 -->
+            <!-- 正常范围 P3–P97 的三段（同色系由浅到深，中最深）。P3 以下 / P97 以上不填色：
+                 线性数值轴上该区域占满 65-90% 画面，填红会严重误导；改由实测点变红表达。 -->
             <template v-if="zonePaths">
-              <path :d="zonePaths.excellentInner" style="fill: rgb(var(--success-deep) / 0.12)" />
-              <path :d="zonePaths.normal" style="fill: rgb(var(--warning-deep) / 0.16)" />
-              <path :d="zonePaths.laggingInner" style="fill: rgb(var(--danger-deep) / 0.12)" />
+              <path :d="zonePaths.midLow" style="fill: rgb(var(--success-deep) / 0.1)" />
+              <path :d="zonePaths.mid" style="fill: rgb(var(--success-deep) / 0.22)" />
+              <path :d="zonePaths.midHigh" style="fill: rgb(var(--success-deep) / 0.1)" />
             </template>
             <!-- 网格（横向实线 + 纵向辅助虚线） -->
             <line v-for="(t, i) in yTicks" :key="'g' + i" :x1="PAD_L" :x2="W - PAD_R" :y1="t.y" :y2="t.y"
@@ -89,16 +98,17 @@
               stroke-width="1.3" stroke-dasharray="4,3" stroke-linecap="round" />
             <!-- 实测折线 -->
             <path :d="linePath" fill="none" :stroke="strokeColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-            <!-- 数据点 -->
-            <circle v-for="(p, i) in chartSeries" :key="'p' + i" :cx="p.x" :cy="p.y" r="2.8" :fill="strokeColor" />
+            <!-- 数据点：落在 P3–P97 之外时标红（上/下 两档） -->
+            <circle v-for="(p, i) in chartSeries" :key="'p' + i" :cx="p.x" :cy="p.y" r="2.8"
+              :fill="p.outOfRange ? 'rgb(var(--danger-deep))' : strokeColor" />
             <!-- X 轴标签（月龄） -->
             <text v-for="(t, i) in xTicks" :key="'x' + i" :x="t.x" :y="H - 4" text-anchor="middle"
               class="chart-axis-label" font-size="9">{{ t.label }}</text>
           </svg>
           <p class="text-[11px] text-text-secondary mt-2 leading-relaxed px-1">
-            参考区间依据《7岁以下儿童生长标准》(WS/T 423-2022)：绿区 ≥P75 优秀/偏高，黄区 P25–P75 正常，红区
-            &lt;P25 落后/偏低。横轴为月龄；纵轴为百分位非线性拉伸（标准中 P25–P75 仅占 P3–P97 约 35%，线性轴下正常区
-            偏窄），故不可按像素读数，数值以左侧刻度为准。2 岁前为身长、2 岁后为身高，头围参考至 3 岁。仅供参考，不能替代儿科医生评估。
+            绿带为正常范围 P3–P97（约 94% 儿童），按表1 五级评价分为中下 P3–P25、中 P25–P75、中上 P75–P97；
+            &lt;P3 为「下」、≥P97 为「上」，两档落在正常范围之外，图上以红点标出。横轴为月龄，纵轴为实际数值可直接读数。
+            2 岁前为身长、2 岁后为身高，头围参考至 3 岁。仅供参考，不能替代儿科医生评估。
           </p>
         </div>
 
@@ -237,10 +247,11 @@ function fmt(v: number) {
 const metrics = computed(() => {
   const s = stats.value
   if (!s) return []
+  // meta 预先解析好，模板里无需重复调用 gradeMeta（也省去非空断言）
   return [
-    { key: 'height', label: '身高 cm', value: fmt(s.height_cm || 0), pct: s.height_pct || 0 },
-    { key: 'weight', label: '体重 kg', value: fmt(s.weight_kg || 0), pct: s.weight_pct || 0 },
-    { key: 'head', label: '头围 cm', value: fmt(s.head_cm || 0), pct: s.head_pct || 0 },
+    { key: 'height', label: '身高 cm', value: fmt(s.height_cm || 0), meta: gradeMeta(s.height_grade || '') },
+    { key: 'weight', label: '体重 kg', value: fmt(s.weight_kg || 0), meta: gradeMeta(s.weight_grade || '') },
+    { key: 'head', label: '头围 cm', value: fmt(s.head_cm || 0), meta: gradeMeta(s.head_grade || '') },
   ]
 })
 
@@ -254,14 +265,26 @@ const latestSubtitle = computed(() => {
   return `${s.age_months ?? 0} 月龄 · ${gender}`
 })
 
-function pctClass(p: number) {
-  // 与图内三色分区一致：<P25 落后/偏低（红）、P25-P75 正常（黄）、≥P75 优秀/偏高（绿）
-  // 用 warning 而非 warning-deep：tailwind.config 只映射 success/warning/danger → *-deep 变量，
-  // text-warning-deep 不是有效类（不生成），会让「正常」胶囊文字色退回继承色
-  if (p <= 0) return 'bg-muted text-text-secondary'
-  if (p < 25) return 'bg-danger/10 text-danger'
-  if (p > 75) return 'bg-success/10 text-success'
-  return 'bg-warning/15 text-warning'
+/**
+ * WS/T 423-2022 表1 五级评价。判定完全采用后端返回的 *_grade
+ * （直接与 P3/P25/P75/P97 四个边界比较，不经插值），此处只负责配色与文案。
+ *
+ * 正常范围是 P3–P97（约 94% 儿童），中下/中/中上三档都在正常范围内；
+ * 仅「下」(<P3) 与「上」(≥P97) 落在正常范围之外。
+ * 对称口径：中下与中上同色，不因偏高/偏低而赋予褒贬色。
+ */
+interface GradeMeta { label: string; range: string; pill: string }
+
+const GRADE_META: Record<string, GradeMeta> = {
+  上: { label: '上', range: '≥P97', pill: 'bg-danger/10 text-danger' },
+  中上: { label: '中上', range: 'P75–P97', pill: 'bg-muted text-text-secondary' },
+  中: { label: '中', range: 'P25–P75', pill: 'bg-success/10 text-success' },
+  中下: { label: '中下', range: 'P3–P25', pill: 'bg-muted text-text-secondary' },
+  下: { label: '下', range: '<P3', pill: 'bg-danger/10 text-danger' },
+}
+
+function gradeMeta(g: string): GradeMeta | null {
+  return GRADE_META[g] || null
 }
 
 function detailOf(g: GrowthRecord) {
@@ -319,18 +342,16 @@ const visibleRef = computed(() => {
   return pts.length > 1 ? pts : null
 })
 
-// 线性 Y 值域：仅在「无参考数据」时作为退化轴使用（此时图表不可见，属兜底路径）。
-// 有参考数据时 y 轴由 refAt() 的五锚点直接决定，实测值超出 P3/P97 走 8% 留白外延。
+// 线性 Y 值域：取「可见参考带的 P3/P97」与「实测值」的并集，上下各留 6% 余量。
+// 留白的作用是让范围外的实测点（上/下两档）仍留在绘图区内可见，而不是被裁掉。
 const bounds = computed(() => {
   const vs = series.value.map(p => p.v)
   const vis = visibleRef.value
   if (vis) for (const p of vis) { vs.push(p.p3, p.p97) }
   if (!vs.length) return { min: 0, max: 1 }
-  let min = Math.min(...vs), max = Math.max(...vs)
-  const pad = (max - min) * 0.1 || Math.max(1, max * 0.1)
-  min -= pad; max += pad
-  if (min < 0) min = 0
-  return { min, max }
+  const lo = Math.min(...vs), hi = Math.max(...vs)
+  const pad = (hi - lo) * 0.06 || Math.max(1, hi * 0.06)
+  return { min: Math.max(0, lo - pad), max: hi + pad }
 })
 
 function xAt(month: number) {
@@ -339,22 +360,10 @@ function xAt(month: number) {
 }
 
 /**
- * 百分位锚点弯曲（Y 轴非线性）。
- *
- * 背景：WS/T 423-2022 中 P25–P75（正常区）恒定只占 P3–P97 全距的约 35%
- * （12 月龄男宝体重 1.4kg / 4.0kg），线性轴下黄区天然偏窄。对数轴无效
- * （实测 35.0% → 35.3%，因生长曲线近似指数分布，取对数后比例几乎不变）。
- *
- * 做法：把参考带五个锚点重映射到均分位置 —— p3→0、p25→T、p50→0.5、p75→1-T、p97→1，
- * 段内做分段线性插值。正常区宽度 = (1-T) − T = 1 − 2T，即 BEND = 2T 时正常区 = 1 − BEND。
- * 取 BEND = 0.5 → 正常区占 p3–p97 全高的 50%（原始线性口径约 35%）。
- * 调大 BEND 会让正常区更宽但两端被压得更扁，0.5 是保守档。
- *
- * 严格单调（段斜率均为正），保持大小关系可读；仅垂直分辨率在两端被压缩。
- * 注意：这是刻度拉伸，不是等比坐标轴，脚注已声明不可按像素读数。
+ * 某月龄处的参考带边界值（用于判断实测点是否落在 P3–P97 之外）。
+ * 保留线性插值：参考点密度为 0-11 月逐月、其后每 3 月一行，
+ * 实测月龄常落在两行之间，需要插值才能取到该月龄的边界。
  */
-const BEND = 0.5
-// 某月龄处的五锚点值（用于反查参考带范围）
 function refAt(month: number) {
   const vis = visibleRef.value
   if (!vis || !vis.length) return null
@@ -372,43 +381,39 @@ function refAt(month: number) {
   return vis[vis.length - 1]
 }
 
-/** 单调映射：value → 该值在「弯曲后」刻度上的归一化位置 0..1（1 为顶部） */
-function warpedPos(v: number, month: number): number {
-  const r = refAt(month)
-  const T = BEND / 2
-  if (!r) {
-    // 无参考数据时退化为线性
-    const { min, max } = bounds.value
-    const span = max - min || 1
-    return 1 - (v - min) / span
-  }
-  const { p3, p25, p50, p75, p97 } = r
-  const up = (x: number) => 1 - x // 上方像素位置翻转
-  if (v <= p3) return up(0)
-  if (v < p25) return up(((v - p3) / (p25 - p3 || 1)) * T)
-  if (v < p50) return up(T + ((v - p25) / (p50 - p25 || 1)) * (0.5 - T))
-  if (v < p75) return up(0.5 + ((v - p50) / (p75 - p50 || 1)) * (0.5 - T))
-  if (v < p97) return up(1 - T + ((v - p75) / (p97 - p75 || 1)) * T)
-  return up(1)
-}
-
-function yAt(v: number, month: number) {
+/**
+ * Y 轴 = 线性真实数值轴（kg / cm），可直接按刻度读数。
+ *
+ * 曾用「百分位锚点弯曲」（p3/p25/p50/p75/p97 重映射到均分位置）把中档拉宽到 50%，
+ * 现已删除：那个做法的唯一目的是让「正常区」变宽，而它之所以显得窄，
+ * 是因为当时把正常区误定义为 P25–P75。表1 的正常范围是 P3–P97，
+ * 在线性数值轴上已占据参考带全域，色带宽度由数据本身决定，无需拉伸。
+ */
+function yAt(v: number) {
   const plot = H - PAD_T - PAD_B
-  const r = refAt(month)
-  let pos = warpedPos(v, month)
-  // 实测值可能落在参考带之外：线性外延到留白区，保证仍然可见
-  if (r && v < r.p3) {
-    const span = r.p3 * 0.08 || 1
-    pos = (v - r.p3) / span // 负值 → 向下外延
-  } else if (r && v > r.p97) {
-    const span = r.p97 * 0.08 || 1
-    pos = 1 - (v - r.p97) / span // >1 → 向上外延
-  }
-  const clamped = Math.max(-0.35, Math.min(1.35, pos))
-  return PAD_T + clamped * plot
+  const { min, max } = bounds.value
+  const span = max - min || 1
+  return PAD_T + (1 - (v - min) / span) * plot
 }
 
-const chartSeries = computed(() => series.value.map(p => ({ x: xAt(p.month), y: yAt(p.v, p.month) })))
+/**
+ * 实测点是否落在该月龄的 P3–P97 正常范围之外（对应表1 的「下」/「上」两档）。
+ * 边界用 `>=` / `<`，与后端 Grade() 完全对齐：P97 本身即判「上」，
+ * 若这里写 `> r.p97`，恰好落在 P97 的点会出现「红色胶囊 + 正常色点」的自相矛盾。
+ */
+function outOfRangeAt(v: number, month: number): boolean {
+  const r = refAt(month)
+  if (!r) return false
+  return v < r.p3 || v >= r.p97
+}
+
+const chartSeries = computed(() =>
+  series.value.map(p => ({
+    x: xAt(p.month),
+    y: yAt(p.v),
+    outOfRange: outOfRangeAt(p.v, p.month),
+  })),
+)
 
 const linePath = computed(() => {
   const pts = chartSeries.value
@@ -416,24 +421,29 @@ const linePath = computed(() => {
   return pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ')
 })
 
-// Y 轴刻度：锚在参考带五分位点上，标签为该处真实数值——因为轴已弯曲，
-// 不能用 min/max 等分（否则刻度线与色带位置对不上）
+// Y 轴刻度：线性数值轴，取「整齐」的整数步长（体重 0.5/1/2 kg，身高 5/10 cm），
+// 标签即该处的真实数值，可直接读数
 const yTicks = computed(() => {
-  const vis = visibleRef.value
-  if (!vis || !vis.length) {
-    const { min, max } = bounds.value
-    const out: { y: number, label: string }[] = []
-    for (let i = 0; i <= 4; i++) {
-      const v = min + (max - min) * (i / 4)
-      out.push({ y: yAt(v, xMax.value / 2), label: v.toFixed(1) })
-    }
-    return out
+  const { min, max } = bounds.value
+  const span = max - min
+  if (!(span > 0)) return []
+  // 目标 5-6 条刻度线。步长从 1/2/2.5/5/10 × 10^n 中取「最接近 span/5」的一个——
+  // 必须取最接近而非向上取整：身高量程约 52cm 时 span/5=10.4，向上取整会跳到 20，
+  // 只剩 2 条刻度线（实测过），取最接近则得 10 → 6 条。
+  const rawStep = span / 5
+  const mag = Math.pow(10, Math.floor(Math.log10(rawStep)))
+  const candidates = [1, 2, 2.5, 5, 10].map(m => m * mag)
+  const step = candidates.reduce((best, c) =>
+    Math.abs(c - rawStep) < Math.abs(best - rawStep) ? c : best,
+  )
+  // 2.5 这类步长需要一位小数
+  const decimals = step < 1 || step % 1 !== 0 ? 1 : 0
+  const out: { y: number; label: string }[] = []
+  // 从 min 向上取整到步长整数倍，避免首条刻度贴在轴外
+  for (let v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) {
+    out.push({ y: yAt(v), label: v.toFixed(decimals) })
   }
-  const last = vis[vis.length - 1]
-  return (['p3', 'p25', 'p50', 'p75', 'p97'] as PctKey[]).map(k => ({
-    y: yAt(last[k], last.month),
-    label: last[k].toFixed(1),
-  }))
+  return out
 })
 
 // X 轴刻度（月龄）
@@ -446,29 +456,34 @@ const xTicks = computed(() => {
   return out
 })
 
-// 参考中位线（去掉了 P3/P25/P75/P97 细线，只留 P50 中位虚线，区间语义由色带承担）
+// 参考中位线（只留 P50 中位虚线；P3/P25/P75/P97 的边界语义由色带承担）
 const refPaths = computed<Record<string, string> | null>(() => {
   const vis = visibleRef.value
   if (!vis) return null
   const out: Record<string, string> = {}
   for (const key of ['p50'] as PctKey[]) {
-    out[key] = vis.map((p, i) => `${i === 0 ? 'M' : 'L'}${xAt(p.month).toFixed(1)} ${yAt(p[key], p.month).toFixed(1)}`).join(' ')
+    out[key] = vis.map((p, i) => `${i === 0 ? 'M' : 'L'}${xAt(p.month).toFixed(1)} ${yAt(p[key]).toFixed(1)}`).join(' ')
   }
   return out
 })
 
-// 参考区间三色语义（一眼读懂，未按五级细分）：绿=优秀/偏高 ≥P75、黄=正常 P25-P75、红=落后/偏低 <P25。
-// 键名按语义命名（Inner=区间内缘，Outer=P3/P97 外的极端段），避免旧名 green/yellowHigh 与实际填色相反的陷阱。
+/**
+ * 正常范围 P3–P97 的三段，对应表1 五级评价中的中下 / 中 / 中上。
+ *
+ * 三段同色系（浅 → 深 → 浅，中最深）：中下与中上刻意同色，因为标准对偏高与偏低
+ * 是对称表述，不应让任何一档看起来更「好」或更「差」。
+ * P3 以下与 P97 以上不填色——线性数值轴上这两块占满 65-90% 画面，填红会造成
+ * 「大部分区域都异常」的错觉；范围外的实测点改用红点表达（见 chartSeries.outOfRange）。
+ */
 const zonePaths = computed(() => {
   const vis = visibleRef.value
   if (!vis) return null
-  const fwd = (key: PctKey) => vis.map((p, i) => `${i === 0 ? 'M' : 'L'}${xAt(p.month).toFixed(1)} ${yAt(p[key], p.month).toFixed(1)}`).join(' ')
-  const back = (key: PctKey) => vis.slice().reverse().map(p => `L${xAt(p.month).toFixed(1)} ${yAt(p[key], p.month).toFixed(1)}`).join(' ')
-  // 仅保留 P3–P97 内的三段；P97 以上 / P3 以下不再填色（此前绿/红整块外填让正常区显得更窄）
+  const fwd = (key: PctKey) => vis.map((p, i) => `${i === 0 ? 'M' : 'L'}${xAt(p.month).toFixed(1)} ${yAt(p[key]).toFixed(1)}`).join(' ')
+  const back = (key: PctKey) => vis.slice().reverse().map(p => `L${xAt(p.month).toFixed(1)} ${yAt(p[key]).toFixed(1)}`).join(' ')
   return {
-    excellentInner: `${fwd('p97')} ${back('p75')} Z`,
-    normal: `${fwd('p75')} ${back('p25')} Z`,
-    laggingInner: `${fwd('p25')} ${back('p3')} Z`,
+    midHigh: `${fwd('p97')} ${back('p75')} Z`,
+    mid: `${fwd('p75')} ${back('p25')} Z`,
+    midLow: `${fwd('p25')} ${back('p3')} Z`,
   }
 })
 
