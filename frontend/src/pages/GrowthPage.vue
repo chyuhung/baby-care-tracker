@@ -93,7 +93,7 @@
             <line :x1="W - PAD_R" :x2="W - PAD_R" :y1="PAD_T" :y2="H - PAD_B" stroke="var(--chart-line)" stroke-width="1" />
             <line :x1="PAD_L" :x2="W - PAD_R" :y1="H - PAD_B" :y2="H - PAD_B" stroke="var(--chart-line)" stroke-width="1" />
             <text v-for="(t, i) in yTicks" :key="'gt' + i" :x="PAD_L - 4" :y="t.y + 3" text-anchor="end"
-              class="chart-axis-label" font-size="9">{{ t.label }}</text>
+              class="chart-axis-label" :font-size="AXIS_FONT">{{ t.label }}</text>
             <!-- 参考中位线 -->
             <path v-if="refPaths" :d="refPaths.p50" fill="none" style="stroke: rgb(var(--text-secondary) / 0.7)"
               stroke-width="1.3" stroke-dasharray="4,3" stroke-linecap="round" />
@@ -102,9 +102,12 @@
             <!-- 数据点：落在 P3–P97 之外时标红（上/下 两档） -->
             <circle v-for="(p, i) in chartSeries" :key="'p' + i" :cx="p.x" :cy="p.y" r="2.8"
               :fill="p.outOfRange ? 'rgb(var(--danger-deep))' : strokeColor" />
+            <!-- Y 轴单位（随指标切换，对齐 TrendPage 轴顶标注惯例） -->
+            <text :x="PAD_L" :y="PAD_T - 5" text-anchor="middle" font-size="10"
+              class="chart-axis-label">{{ axisUnit }}</text>
             <!-- X 轴标签（月龄） -->
             <text v-for="(t, i) in xTicks" :key="'x' + i" :x="t.x" :y="H - 4" text-anchor="middle"
-              class="chart-axis-label" font-size="9">{{ t.label }}</text>
+              class="chart-axis-label" :font-size="AXIS_FONT">{{ t.label }}</text>
           </svg>
           <p class="text-[11px] text-text-secondary mt-2 leading-relaxed px-1">
             绿带为正常范围 P3–P97（约 94% 儿童），按表1 五级评价分为中下 P3–P25、中 P25–P75、中上 P75–P97；
@@ -306,7 +309,15 @@ function dateLabelOf(g: GrowthRecord) {
 }
 
 // ── 图表（月龄轴 + WS/T 423-2022 参考曲线，线性真实数值轴 + P3–P97 绿带）──
-const W = 340, H = 210, PAD_L = 30, PAD_R = 12, PAD_T = 14, PAD_B = 26
+//
+// 尺寸说明：SVG 是 class="w-full" + viewBox，缩放系数 = 容器宽 / W，与 H 无关。
+// 所以 W=340 在 iPhone SE（容器 319px）上缩放只有 0.938 —— 刻度字号必须按
+// 缩放后的**实际**像素来定，不能照抄 viewBox 数值。原 font-size=9 实际只有
+// 8.4–8.9px，低于 HIG Caption12 下限，这才是「挤成一团」的主因（不是图太小）。
+// 现取 11 → SE 上 10.3px、PM 上 12.1px。
+const W = 340, H = 250, PAD_L = 34, PAD_R = 12, PAD_T = 16, PAD_B = 28
+// 刻度文字：11 为 SVG 单位，实际渲染再乘以缩放系数
+const AXIS_FONT = 11
 
 type PctKey = 'p3' | 'p25' | 'p50' | 'p75' | 'p97'
 
@@ -342,6 +353,18 @@ const refMetric = computed(() => {
   if (!r) return null
   return metric.value === 'weight' ? r.weight : metric.value === 'height' ? r.height : r.head
 })
+
+/**
+ * Y 轴单位标签，随指标切换。
+ *
+ * 单位以后端 `GrowthReferenceMetric.unit` 为单一事实源（weight=kg、height/head=cm），
+ * 兜底分支只防 reference 请求未到达或失败时标签空白 —— 此时用本地按指标推断的
+ * 同值常量，不是另一套口径。
+ *
+ * 不区分「身长/身高」：脚注已说明 2 岁前为身长、2 岁后为身高，两者标准表单位
+ * 都是 cm，在轴上再按年龄切字只会人为制造割裂。
+ */
+const axisUnit = computed(() => refMetric.value?.unit || (metric.value === 'weight' ? 'kg' : 'cm'))
 
 // 是否已填出生日期（缺出生日期时无法计算月龄，标准判定与曲线都无从谈起）
 const hasBirthDate = computed(() => !!parseLocalDate(app.currentBaby?.birth_date || ''))
