@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col h-dvh">
-    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
+    <PullRefresh class="flex-1 min-h-0" content-class="px-4 py-4 space-y-6 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
       :refresh="refreshAll">
     <template #header>
       <NavBar title="我的" />
@@ -14,16 +14,19 @@
           </svg>
         </div>
         <div>
-          <div class="font-semibold text-text-primary">{{ auth.user?.username }}</div>
-          <div class="text-sm text-text-secondary mt-0.5">家庭成员</div>
+          <div class="text-xl font-semibold text-text-primary tracking-tight">{{ auth.user?.username }}</div>
+          <div class="text-[13px] text-text-secondary mt-0.5">家庭成员</div>
         </div>
       </div>
 
       <!-- 宝宝：切换 + 档案合并（微信分组：单卡多行，行 tap=切换、行尾「编辑」） -->
       <div>
         <div class="pb-1.5 flex items-center justify-between">
-          <h2 class="text-[13px] text-text-secondary">宝宝</h2>
-          <router-link to="/baby/new" class="text-primary-deep text-sm font-medium flex items-center gap-1 min-h-[44px]">
+          <h2 class="text-[13px] text-text-secondary self-start">宝宝</h2>
+          <!-- 触控区 min-h-11 靠负 margin 外扩，不参与父行高度计算：
+               否则 items-center 会把 20px 的 h2 沉到 44px 行正中，标题比另两组低 12px -->
+          <router-link to="/baby/new" aria-label="添加宝宝"
+            class="text-primary-deep text-sm font-medium flex items-center gap-1 min-h-[44px] -my-3 -mr-2 px-2 btn-press">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
             添加
           </router-link>
@@ -33,10 +36,10 @@
           <div v-else class="divide-y divide-border-color/60">
             <div v-for="baby in app.babies" :key="baby.id" role="button" tabindex="0"
               :aria-current="isCurrentBaby(baby) ? 'true' : undefined"
-              class="w-full px-4 py-2.5 flex items-center gap-3 min-h-[44px] text-left btn-press"
+              class="w-full px-4 py-3.5 flex items-center gap-3 min-h-[44px] text-left press-card"
               @click="switchBaby(baby)">
-              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
-                :style="{ background: baby.avatar_color }">{{ baby.name[0] }}</span>
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold"
+                :style="{ background: baby.avatar_color, color: avatarInk(baby.avatar_color) }">{{ baby.name[0] }}</span>
               <span class="flex-1 min-w-0">
                 <span class="block font-medium text-text-primary truncate">
                   {{ baby.name }}
@@ -76,9 +79,9 @@
           <!-- 有家庭：默认一行，点击展开 -->
           <template v-else>
             <div role="button" tabindex="0" :aria-expanded="famOpen" :aria-controls="'fam-detail'" @keydown.enter.prevent="famOpen = !famOpen"
-              class="w-full px-4 py-3 flex items-center gap-3 min-h-[44px] text-left btn-press"
+              class="w-full px-4 py-3.5 flex items-center gap-3 min-h-[44px] text-left press-card"
               @click="famOpen = !famOpen">
-              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
+              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
                 <svg class="w-5 h-5 text-primary-deep" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 11.2L12 4l9 7.2V19a1 1 0 0 1-1 1h-5.5v-6h-9v6H4a1 1 0 0 1-1-1v-7.8z" />
                 </svg>
@@ -93,17 +96,17 @@
 
             <div v-if="famOpen" id="fam-detail" class="divide-y divide-border-color/60">
               <!-- 邀请码 + 重置/复制 并列 -->
-              <div class="px-4 py-3 flex items-center justify-between min-h-[44px]">
+              <div class="px-4 py-3.5 flex items-center justify-between min-h-[44px]">
                 <span class="text-sm text-text-secondary">邀请码</span>
                 <span class="flex items-center gap-2">
                   <span class="text-base font-bold tracking-widest text-primary-deep select-all">{{ family.invite_code }}</span>
-                  <button @click="regenerateCode" class="-mr-1 text-xs font-medium text-primary-deep py-2 px-2 min-h-[44px] flex items-center">重置</button>
+                  <button @click="requestRegenerateCode" class="-mr-2 text-xs font-medium text-danger py-2 px-2 min-h-[44px] flex items-center btn-press">重置</button>
                   <button @click="copyCode" class="-mr-2 text-xs font-medium text-primary-deep py-2 px-2 min-h-[44px] flex items-center">复制</button>
                 </span>
               </div>
 
               <!-- 成员 -->
-              <div class="px-4 py-3 flex items-center justify-between gap-3 min-h-[44px]">
+              <div class="px-4 py-3.5 flex items-center justify-between gap-3 min-h-[44px]">
                 <span class="text-sm text-text-secondary shrink-0">家庭成员</span>
                 <span class="truncate text-right text-sm text-text-primary">
                   {{ memberText }}
@@ -111,7 +114,7 @@
               </div>
 
               <!-- 加入其他家庭（单行：标签 + 邀请码 + 加入，不再折叠） -->
-              <div class="px-4 py-3 flex items-center gap-3 min-h-[44px]">
+              <div class="px-4 py-3.5 flex items-center gap-3 min-h-[44px]">
                 <span class="text-sm text-text-secondary shrink-0">加入其他家庭</span>
                 <input v-model="joinCode" placeholder="输入对方邀请码" maxlength="6"
                   aria-label="邀请码" inputmode="text" autocapitalize="characters" autocomplete="off" enterkeyhint="done"
@@ -134,8 +137,8 @@
       <div>
         <h2 class="pb-1.5 text-[13px] text-text-secondary">数据</h2>
         <div class="bg-surface rounded-2xl shadow-card overflow-hidden divide-y divide-border-color/60">
-          <router-link to="/growth" class="px-4 py-3.5 flex items-center gap-3 min-h-[44px] btn-press block">
-            <span class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+          <router-link to="/growth" class="px-4 py-3.5 flex items-center gap-3 min-h-[44px] press-card block">
+            <span class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
               <svg class="w-5 h-5 text-primary-deep" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 20V10M10 20V4M16 20v-8M4 20h16" />
               </svg>
@@ -148,8 +151,8 @@
           </router-link>
 
           <button type="button" @click="exportData" :disabled="exporting || app.babies.length === 0"
-            class="w-full px-4 py-3.5 flex items-center gap-3 min-h-[44px] text-left btn-press disabled:opacity-40">
-            <span class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            class="w-full px-4 py-3.5 flex items-center gap-3 min-h-[44px] text-left press-card disabled:opacity-40">
+            <span class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
               <svg class="w-5 h-5 text-primary-deep" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
               </svg>
@@ -172,7 +175,7 @@
 
     <!-- 加入 / 退出家庭确认（iOS 底部操作表） -->
     <ConfirmSheet :open="sheet.open" :title="sheet.title" :message="sheet.message"
-      :confirm-text="sheet.confirmText" @confirm="onSheetConfirm" @cancel="sheetMode = ''" />
+      :confirm-text="sheet.confirmText" :danger="sheet.danger" @confirm="onSheetConfirm" @cancel="sheetMode = ''" />
   </div>
 </template>
 
@@ -191,7 +194,7 @@ import ConfirmSheet from '@/components/ConfirmSheet.vue'
 
 import NavBar from '@/components/NavBar.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
-import { parseLocalDate, babyAgeText } from '@/utils'
+import { parseLocalDate, babyAgeText, avatarInk } from '@/utils'
 
 interface FamilyMember {
   id: number
@@ -236,7 +239,7 @@ async function exportData() {
 
 const family = ref<Family | null>(null)
 const joinCode = ref('')
-const sheetMode = ref<'' | 'join' | 'leave'>('')
+const sheetMode = ref<'' | 'join' | 'leave' | 'reset'>('')
 
 // 我的家庭折叠展开状态
 const famOpen = ref(false)
@@ -249,11 +252,16 @@ const memberText = computed(() =>
 
 const sheet = computed(() => ({
   open: sheetMode.value !== '',
-  title: sheetMode.value === 'join' ? '加入新家庭' : '退出当前家庭',
+  title: sheetMode.value === 'join' ? '加入新家庭'
+    : sheetMode.value === 'leave' ? '退出当前家庭' : '重置邀请码',
   message: sheetMode.value === 'join'
     ? '加入新家庭后，你将退出当前家庭。\n\n仅你创建的宝宝会跟随你，原家庭成员将无法看到它们；其他成员创建的宝宝和记录则留在原家庭。确定继续？'
-    : '退出后，你创建的宝宝将随你离开，原家庭无法再看到它们；其他成员创建的宝宝和记录留在原家庭，你将无法查看。确定继续？',
-  confirmText: sheetMode.value === 'join' ? '加入' : '退出家庭',
+    : sheetMode.value === 'leave'
+      ? '退出后，你创建的宝宝将随你离开，原家庭无法再看到它们；其他成员创建的宝宝和记录留在原家庭，你将无法查看。确定继续？'
+      : '重置后旧邀请码立即失效，已拿到旧码的家人将无法加入，需要把新码重新发给他们。确定继续？',
+  confirmText: sheetMode.value === 'join' ? '加入' : sheetMode.value === 'leave' ? '退出家庭' : '重置',
+  // 加入新家庭不是破坏性操作（默认 danger=true 会把「加入」按钮染成红色）
+  danger: sheetMode.value === 'leave' || sheetMode.value === 'reset',
 }))
 
 async function loadFamily() {
@@ -297,7 +305,6 @@ async function doJoin() {
 function leaveFamily() {
   sheetMode.value = 'leave'
 }
-
 async function doLeave() {
   try {
     await familyAPI.leave()
@@ -313,16 +320,25 @@ async function doLeave() {
 
 function onSheetConfirm() {
   if (sheetMode.value === 'join') void doJoin()
+  else if (sheetMode.value === 'reset') void doRegenerateCode()
   else void doLeave()
 }
 
-async function regenerateCode() {
+// 重置是破坏性操作（旧码立即失效，家人可能正在用），先走 ConfirmSheet 确认
+function requestRegenerateCode() {
+  if (!family.value) return
+  sheetMode.value = 'reset'
+}
+
+async function doRegenerateCode() {
   try {
     const res = await familyAPI.regenerateCode()
     family.value!.invite_code = res.data.invite_code
     app.showToast('邀请码已重置，旧码已失效', 'success')
   } catch (e: any) {
     app.showToast(e.response?.data?.error || '操作失败', 'error')
+  } finally {
+    sheetMode.value = ''
   }
 }
 
