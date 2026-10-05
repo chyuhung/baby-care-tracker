@@ -14,6 +14,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// spanDetail 生成区间型记录（睡眠/户外）的明细文案。
+// 进行中（en 为空）输出「进行中」而非空白或 0 分钟，避免 CSV 里出现
+// 一行没有时长却也没标明状态的睡眠记录。
+func spanDetail(start, end string) string {
+	if end == "" {
+		return "进行中"
+	}
+	t1, t2 := parseTime(start), parseTime(end)
+	if t1.IsZero() || t2.IsZero() {
+		return ""
+	}
+	return fmt.Sprintf("%.0f分钟", t2.Sub(t1).Minutes())
+}
+
 // csvRow CSV 导出的一行
 type csvRow struct {
 	t      time.Time
@@ -45,18 +59,22 @@ func ExportRecords(c *gin.Context) {
 
 	// 时间窗口（可选）
 	startStr := ""
+	endStr := ""
 	if ds := c.Query("days"); ds != "" {
 		if days, err := strconv.Atoi(ds); err == nil && days > 0 && days <= 365 {
-			startStr = daysAgoUTC(tzOffset, days)
+			startStr, endStr = windowRangeUTC(tzOffset, days)
 		}
 	}
 	occurredFilter, occurredArgs := "", []interface{}{babyID}
+	// 睡眠/户外用「区间重叠」而非 started_at >= start：昨天 20:00 开始、
+	// 今天 06:00 结束的记录其今日部分落在窗口内，只比 started_at 会整条丢失。
+	// 进行中（ended_at 为空）视为延伸到无穷远，started_at < end 即算重叠。
 	startedFilter, startedArgs := "", []interface{}{babyID}
 	if startStr != "" {
 		occurredFilter = " AND occurred_at >= ?"
 		occurredArgs = append(occurredArgs, startStr)
-		startedFilter = " AND started_at >= ?"
-		startedArgs = append(startedArgs, startStr)
+		startedFilter = spanOverlapFilter()
+		startedArgs = append(startedArgs, endStr, startStr)
 	}
 
 	var rows []csvRow
@@ -110,17 +128,13 @@ func ExportRecords(c *gin.Context) {
 
 	// 睡眠
 	if rs, err := database.DB.Query(
-		"SELECT started_at, ended_at, note FROM sleep_records WHERE baby_id = ? AND ended_at IS NOT NULL"+startedFilter+" ORDER BY started_at DESC",
+		"SELECT started_at, COALESCE(ended_at, ''), note FROM sleep_records WHERE baby_id = ?"+startedFilter+" ORDER BY started_at DESC",
 		startedArgs...,
 	); err == nil {
 		for rs.Next() {
 			var st, en, note string
 			rs.Scan(&st, &en, &note)
-			detail := ""
-			if t1, t2 := parseTime(st), parseTime(en); !t1.IsZero() && !t2.IsZero() {
-				detail = fmt.Sprintf("%.0f分钟", t2.Sub(t1).Minutes())
-			}
-			rows = append(rows, csvRow{parseTime(st), "睡眠", detail, note})
+			rows = append(rows, csvRow{parseTime(st), "睡眠", spanDetail(st, en), note})
 		}
 		rs.Close()
 	}
@@ -145,17 +159,13 @@ func ExportRecords(c *gin.Context) {
 
 	// 户外
 	if rs, err := database.DB.Query(
-		"SELECT started_at, ended_at, note FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL"+startedFilter+" ORDER BY started_at DESC",
+		"SELECT started_at, COALESCE(ended_at, ''), note FROM outdoor_records WHERE baby_id = ?"+startedFilter+" ORDER BY started_at DESC",
 		startedArgs...,
 	); err == nil {
 		for rs.Next() {
 			var st, en, note string
 			rs.Scan(&st, &en, &note)
-			detail := ""
-			if t1, t2 := parseTime(st), parseTime(en); !t1.IsZero() && !t2.IsZero() {
-				detail = fmt.Sprintf("%.0f分钟", t2.Sub(t1).Minutes())
-			}
-			rows = append(rows, csvRow{parseTime(st), "户外", detail, note})
+			rows = append(rows, csvRow{parseTime(st), "户外", spanDetail(st, en), note})
 		}
 		rs.Close()
 	}

@@ -66,6 +66,11 @@ func GetRecords(c *gin.Context) {
 	tzOffset := getTzOffset(c)
 	args := []interface{}{babyID}
 	daysFilter := ""
+	// 列表按「事件起始时刻」归属日期，故用 started_at >= 窗口起；
+	// 这与统计接口的「区间重叠」窗口有意不同：
+	// 一条 8 天前开始、2 天前结束的睡眠（忘记结束）应计入统计里那两天的分钟数，
+	// 但不能在「最近 7 天」列表里显示成一条日期在窗口外的记录。
+	// 列表一律包含进行中的记录（ended_at 为 NULL），与首页「进行中」实时计时一致。
 	sleepDaysFilter := ""
 	outdoorDaysFilter := ""
 	if daysStr != "" {
@@ -111,7 +116,7 @@ func GetRecords(c *gin.Context) {
 	}
 	if recordType == "" || recordType == "sleep" {
 		sArgs := append([]interface{}{}, args...)
-		database.DB.QueryRow("SELECT COUNT(*) FROM sleep_records WHERE baby_id = ? AND ended_at IS NOT NULL"+sleepDaysFilter, sArgs...).Scan(&sleepCount)
+		database.DB.QueryRow("SELECT COUNT(*) FROM sleep_records WHERE baby_id = ?"+sleepDaysFilter, sArgs...).Scan(&sleepCount)
 	}
 	if recordType == "" || recordType == "temperature" {
 		tArgs := append([]interface{}{}, args...)
@@ -119,7 +124,7 @@ func GetRecords(c *gin.Context) {
 	}
 	if recordType == "" || recordType == "outdoor" {
 		oArgs := append([]interface{}{}, args...)
-		database.DB.QueryRow("SELECT COUNT(*) FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL"+outdoorDaysFilter, oArgs...).Scan(&outdoorCount)
+		database.DB.QueryRow("SELECT COUNT(*) FROM outdoor_records WHERE baby_id = ?"+outdoorDaysFilter, oArgs...).Scan(&outdoorCount)
 	}
 	if recordType == "" || recordType == "supplement" {
 		sArgs := append([]interface{}{}, args...)
@@ -198,7 +203,7 @@ func GetRecords(c *gin.Context) {
 		sArgs := append(append([]interface{}{}, args...), pageArgs...)
 		rows, err := database.DB.Query(
 			`SELECT id, baby_id, user_id, started_at, ended_at, note, created_at
-			FROM sleep_records WHERE baby_id = ? AND ended_at IS NOT NULL`+sleepDaysFilter+` ORDER BY started_at DESC`+pageSQL,
+			FROM sleep_records WHERE baby_id = ?`+sleepDaysFilter+` ORDER BY started_at DESC`+pageSQL,
 			sArgs...,
 		)
 		if err == nil {
@@ -265,7 +270,7 @@ func GetRecords(c *gin.Context) {
 		oArgs := append(append([]interface{}{}, args...), pageArgs...)
 		rows, err := database.DB.Query(
 			`SELECT id, baby_id, user_id, started_at, ended_at, note, created_at
-			FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL`+outdoorDaysFilter+` ORDER BY started_at DESC`+pageSQL,
+			FROM outdoor_records WHERE baby_id = ?`+outdoorDaysFilter+` ORDER BY started_at DESC`+pageSQL,
 			oArgs...,
 		)
 		if err == nil {
@@ -382,13 +387,13 @@ func GetRecordsCount(c *gin.Context) {
 		database.DB.QueryRow("SELECT COUNT(*) FROM diaper_records WHERE baby_id = ?", babyID).Scan(&diaperCount)
 	}
 	if countAll || recordType == "sleep" {
-		database.DB.QueryRow("SELECT COUNT(*) FROM sleep_records WHERE baby_id = ? AND ended_at IS NOT NULL", babyID).Scan(&sleepCount)
+		database.DB.QueryRow("SELECT COUNT(*) FROM sleep_records WHERE baby_id = ?", babyID).Scan(&sleepCount)
 	}
 	if countAll || recordType == "temperature" {
 		database.DB.QueryRow("SELECT COUNT(*) FROM temperature_records WHERE baby_id = ?", babyID).Scan(&temperatureCount)
 	}
 	if countAll || recordType == "outdoor" {
-		database.DB.QueryRow("SELECT COUNT(*) FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL", babyID).Scan(&outdoorCount)
+		database.DB.QueryRow("SELECT COUNT(*) FROM outdoor_records WHERE baby_id = ?", babyID).Scan(&outdoorCount)
 	}
 	if countAll || recordType == "supplement" {
 		database.DB.QueryRow("SELECT COUNT(*) FROM supplement_records WHERE baby_id = ?", babyID).Scan(&supplementCount)

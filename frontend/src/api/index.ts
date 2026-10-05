@@ -94,13 +94,13 @@ export interface BabyStats {
   last_feeding: string
   last_diaper: string
   total_ml_today: number
-  sleep_count: number
+  /** 今日睡眠分钟数（已按本地 0 点切分，跨夜部分计入当日） */
   sleep_duration: number
   last_sleep_end: string
   temperature_count: number
   latest_temperature: number
   last_temperature: string
-  outdoor_count: number
+  /** 今日户外分钟数（同上） */
   outdoor_duration: number
   last_outdoor_end: string
   supplement_count: number

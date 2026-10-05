@@ -225,6 +225,10 @@ func GetStats(c *gin.Context) {
 
 	tzOffset := getTzOffset(c)
 	todayStart, todayEnd := todayDateRange(tzOffset)
+	loc := time.FixedZone("user", tzOffset*60)
+	// 今日日历日键由窗口起点推导，而非二次 time.Now()——否则恰在午夜边界时
+	// 两次取时可能落在不同日期，导致 sleepToday[todayKey] 取到空值。
+	todayKey := parseTime(todayStart).In(loc).Format("2006-01-02")
 
 	var feedingCount int
 	database.DB.QueryRow(
@@ -256,12 +260,11 @@ func GetStats(c *gin.Context) {
 		babyID, todayStart, todayEnd,
 	).Scan(&totalMl)
 
-	var sleepCount int
-	var sleepDuration int
-	database.DB.QueryRow(
-		"SELECT COUNT(*), COALESCE(SUM(CAST((julianday(ended_at) - julianday(started_at)) * 24 * 60 AS INTEGER)), 0) FROM sleep_records WHERE baby_id = ? AND ended_at IS NOT NULL AND started_at >= ? AND started_at < ?",
-		babyID, todayStart, todayEnd,
-	).Scan(&sleepCount, &sleepDuration)
+	sleepToday, err := sumSpansByDay("sleep_records", babyID, todayStart, todayEnd, loc)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
+		return
+	}
 
 	var lastSleepEnd string
 	database.DB.QueryRow(
@@ -287,17 +290,11 @@ func GetStats(c *gin.Context) {
 		babyID,
 	).Scan(&lastTemperature)
 
-	var outdoorCount int
-	database.DB.QueryRow(
-		"SELECT COUNT(*) FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL AND started_at >= ? AND started_at < ?",
-		babyID, todayStart, todayEnd,
-	).Scan(&outdoorCount)
-
-	var outdoorDuration int
-	database.DB.QueryRow(
-		"SELECT COALESCE(SUM(CAST((julianday(ended_at) - julianday(started_at)) * 24 * 60 AS INTEGER)), 0) FROM outdoor_records WHERE baby_id = ? AND ended_at IS NOT NULL AND started_at >= ? AND started_at < ?",
-		babyID, todayStart, todayEnd,
-	).Scan(&outdoorDuration)
+	outdoorToday, err := sumSpansByDay("outdoor_records", babyID, todayStart, todayEnd, loc)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
+		return
+	}
 
 	var lastOutdoorEnd string
 	database.DB.QueryRow(
@@ -318,19 +315,19 @@ func GetStats(c *gin.Context) {
 	).Scan(&lastSupplement)
 
 	c.JSON(http.StatusOK, gin.H{
-		"feeding_count":      feedingCount,
-		"diaper_count":       diaperCount,
-		"last_feeding":       lastFeeding,
-		"last_diaper":        lastDiaper,
-		"total_ml_today":     totalMl,
-		"sleep_count":        sleepCount,
-		"sleep_duration":     sleepDuration,
+		"feeding_count":  feedingCount,
+		"diaper_count":   diaperCount,
+		"last_feeding":   lastFeeding,
+		"last_diaper":    lastDiaper,
+		"total_ml_today": totalMl,
+		// sleep_count / outdoor_count 已删除：前端从不读取，属死字段；
+		// 跨天记录该记在哪一天本身语义不明（按起始日 or 按触及日），不如不算。
+		"sleep_duration":     sleepToday[todayKey],
 		"last_sleep_end":     lastSleepEnd,
 		"temperature_count":  temperatureCount,
 		"latest_temperature": latestTemp,
 		"last_temperature":   lastTemperature,
-		"outdoor_count":      outdoorCount,
-		"outdoor_duration":   outdoorDuration,
+		"outdoor_duration":   outdoorToday[todayKey],
 		"last_outdoor_end":   lastOutdoorEnd,
 		"supplement_count":   supplementCount,
 		"last_supplement":    lastSupplement,
@@ -348,6 +345,62 @@ type DailyStats struct {
 	TemperatureHigh float64 `json:"temperature_high"`
 	OutdoorMinutes  int     `json:"outdoor_duration_minutes"`
 	SupplementCount int     `json:"supplement_count"`
+}
+
+// spanTable 白名单：只允许区间型记录表，杜绝表名拼接注入
+var spanTables = map[string]bool{"sleep_records": true, "outdoor_records": true}
+
+// sumSpansByDay 汇总区间型记录（睡眠/户外）在 [start, end) 窗口内、
+// 按用户时区自然日切分后的分钟数。
+//
+// 为什么不用 SQL julianday 直接聚合：那样只能把整段记到 started_at 所在日，
+// 跨 0 点的记录会让次日统计为 0；且 julianday 走浮点、CAST 为截断，
+// 精确整数时长存在算出 599 而非 600 的边界误差。
+//
+// 进行中（ended_at 为空）的记录以 now 收尾，与首页「进行中」实时计时口径一致；
+// 否则首页显示已睡 3h、趋势图当日为 0，两处数字互相矛盾。
+//
+// 注意返回值**未按窗口裁剪**：区间在窗口外但仍被重叠谓词选中的记录，
+// 其窗口外的那些日期也会作为键出现（如 03-09 开始、03-10 结束的睡眠会同时给出
+// 03-09 与 03-10 两项）。两个调用方都只按自己持有的日期列表取值，不受影响；
+// 调用方切勿直接对返回值求和来代表「窗口内总时长」。
+func sumSpansByDay(table string, babyID int64, start, end string, loc *time.Location) (map[string]int, error) {
+	out := make(map[string]int)
+	if !spanTables[table] {
+		return out, fmt.Errorf("非法区间表: %s", table)
+	}
+	rows, err := database.DB.Query(
+		"SELECT started_at, COALESCE(ended_at, '') FROM "+table+
+			" WHERE baby_id = ?"+spanOverlapFilter(),
+		babyID, end, start,
+	)
+	if err != nil {
+		return out, err
+	}
+	defer rows.Close()
+
+	now := time.Now()
+	for rows.Next() {
+		var startedAt, endedAt string
+		if rows.Scan(&startedAt, &endedAt) != nil {
+			continue
+		}
+		st := parseTime(startedAt)
+		if st.IsZero() {
+			continue
+		}
+		et := now
+		if endedAt != "" {
+			et = parseTime(endedAt)
+			if et.IsZero() {
+				continue
+			}
+		}
+		for d, mins := range splitSpanByLocalDay(st, et, loc) {
+			out[d] += mins
+		}
+	}
+	return out, rows.Err()
 }
 
 // GetTrendStats 获取宝宝趋势统计（最近7天）
@@ -377,14 +430,13 @@ func GetTrendStats(c *gin.Context) {
 		return
 	}
 
-	startDate := daysAgoUTC(tzOffset, days)
-
 	loc := time.FixedZone("user", tzOffset*60)
+	windowStart, windowEnd := windowRangeUTC(tzOffset, days)
 
 	feedingRows, err := database.DB.Query(`
 		SELECT occurred_at, amount_ml FROM feeding_records
 		WHERE baby_id = ? AND occurred_at >= ?
-	`, babyID, startDate)
+	`, babyID, windowStart)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
 		return
@@ -412,7 +464,7 @@ func GetTrendStats(c *gin.Context) {
 	diaperRows, err := database.DB.Query(`
 		SELECT occurred_at FROM diaper_records
 		WHERE baby_id = ? AND occurred_at >= ?
-	`, babyID, startDate)
+	`, babyID, windowStart)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
 		return
@@ -430,36 +482,17 @@ func GetTrendStats(c *gin.Context) {
 		diaperMap[date]++
 	}
 
-	sleepRows, err := database.DB.Query(`
-		SELECT started_at, ended_at FROM sleep_records
-		WHERE baby_id = ? AND ended_at IS NOT NULL AND started_at >= ?
-	`, babyID, startDate)
+	// 睡眠 / 户外：按自然日切分时长，跨 0 点的记录两侧都计入
+	sleepMap, err := sumSpansByDay("sleep_records", babyID, windowStart, windowEnd, loc)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
 		return
-	}
-	defer sleepRows.Close()
-
-	sleepMap := make(map[string]int)
-	for sleepRows.Next() {
-		var startedAt, endedAt string
-		if sleepRows.Scan(&startedAt, &endedAt) != nil {
-			continue
-		}
-		t := parseTime(startedAt).In(loc)
-		date := fmt.Sprintf("%d-%02d-%02d", t.Year(), t.Month(), t.Day())
-		end := parseTime(endedAt)
-		start := parseTime(startedAt)
-		duration := int(end.Sub(start).Minutes())
-		if duration > 0 {
-			sleepMap[date] += duration
-		}
 	}
 
 	tempRows, err := database.DB.Query(`
 		SELECT occurred_at, temperature FROM temperature_records
 		WHERE baby_id = ? AND occurred_at >= ?
-	`, babyID, startDate)
+	`, babyID, windowStart)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
 		return
@@ -492,34 +525,16 @@ func GetTrendStats(c *gin.Context) {
 		}
 	}
 
-	outdoorRows, err := database.DB.Query(`
-		SELECT started_at, ended_at FROM outdoor_records
-		WHERE baby_id = ? AND ended_at IS NOT NULL AND started_at >= ?
-	`, babyID, startDate)
+	outdoorMap, err := sumSpansByDay("outdoor_records", babyID, windowStart, windowEnd, loc)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
 		return
-	}
-	defer outdoorRows.Close()
-
-	outdoorMap := make(map[string]int)
-	for outdoorRows.Next() {
-		var startedAt, endedAt string
-		if outdoorRows.Scan(&startedAt, &endedAt) != nil {
-			continue
-		}
-		t := parseTime(startedAt).In(loc)
-		date := fmt.Sprintf("%d-%02d-%02d", t.Year(), t.Month(), t.Day())
-		duration := int(parseTime(endedAt).Sub(parseTime(startedAt)).Minutes())
-		if duration > 0 {
-			outdoorMap[date] += duration
-		}
 	}
 
 	supplementRows, err := database.DB.Query(`
 		SELECT occurred_at FROM supplement_records
 		WHERE baby_id = ? AND occurred_at >= ?
-	`, babyID, startDate)
+	`, babyID, windowStart)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
 		return

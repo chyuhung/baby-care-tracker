@@ -116,7 +116,9 @@ const valueText = computed(() => {
       if (rd.value.brand) parts.push(rd.value.brand)
       break
     case 'sleep':
-      if (sleepDurationLabel.value && rd.value.ended_at) parts.push(sleepDurationLabel.value)
+      // 进行中：只标状态、不显示时长——本组件没有 tick 计时器（已按 iOS 惯例移除），
+      // 写死一个「已睡 1h30m」会随停留时间越来越不准，宁可不给数字。
+      parts.push(rd.value.ended_at ? sleepDurationLabel.value : '进行中')
       break
     case 'temperature':
       if (rd.value.temperature) parts.push(`${rd.value.temperature}°C`)
@@ -124,6 +126,10 @@ const valueText = computed(() => {
       break
     case 'supplement':
       if (rd.value.dosage_value > 0) parts.push(`${rd.value.dosage_value}${rd.value.dosage_unit || ''}`)
+      break
+    case 'outdoor':
+      // 同 sleep：进行中只标状态，不显示会过期的时长
+      parts.push(rd.value.ended_at ? outdoorDurationLabel.value : '进行中')
       break
   }
   return parts.join(' · ')
