@@ -34,7 +34,7 @@
         {{ error }}
       </div>
 
-      <button type="submit" :disabled="loading"
+      <button type="submit" :disabled="loading || app.offline"
         class="btn-press w-full py-3.5 bg-primary/10 text-primary-deep font-semibold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2">
         <ActivityIndicator v-if="loading" :size="18" class="text-primary-deep" />
         <span>{{ loading ? '处理中...' : (isRegister ? '注册' : '登录') }}</span>
@@ -54,6 +54,7 @@ import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
+import { writeErrorMessage } from '@/api'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
 
 const router = useRouter()
@@ -81,7 +82,9 @@ async function submit() {
     app.connectWebSocket()
     router.push('/')
   } catch (e: any) {
-    error.value = e.response?.data?.error || '操作失败，请重试'
+    // 走统一文案：离线被拦截时 e 只有 { offline:true }、没有 response，
+    // 直接读 e.response?.data?.error 会退化成笼统的「操作失败」
+    error.value = writeErrorMessage(e, '操作失败，请重试')
   } finally {
     loading.value = false
   }

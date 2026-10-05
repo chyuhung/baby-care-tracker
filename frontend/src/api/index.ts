@@ -1,5 +1,11 @@
 import axios from 'axios'
 import { useAuthStore } from '@/stores/auth'
+import {
+  backendReachable,
+  noteResponse,
+  noteNetworkError,
+  offlineWriteError,
+} from '@/utils/reachability'
 
 export interface Baby {
   id: number
@@ -262,18 +268,32 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+// 会改数据的动作。离线时这些请求注定无效（拿不到响应），故在发出前拦掉，
+// 避免用户以为存上了、并避免请求/响应丢失造成的「实际已写入但前端报失败」。
+// 只拦变更类，读取放行——离线时读至少能拿到明确错误而不是静默卡住。
+const MUTATIONS = new Set(['post', 'put', 'patch', 'delete'])
+
 api.interceptors.request.use((config) => {
   const auth = useAuthStore()
   if (auth.token) {
     config.headers.Authorization = `Bearer ${auth.token}`
   }
   config.headers['X-Timezone-Offset'] = String(-new Date().getTimezoneOffset())
+  if (!backendReachable.value && MUTATIONS.has((config.method || 'get').toLowerCase())) {
+    return Promise.reject(offlineWriteError())
+  }
   return config
 })
 
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    noteResponse()
+    return res
+  },
   (err) => {
+    // 有 response（含 4xx/5xx）说明后端在线；只有「连响应都没有」才可能是真离线
+    if (err.response) noteResponse()
+    else noteNetworkError()
     if (err.response?.status === 401) {
       const auth = useAuthStore()
       auth.logout()
@@ -289,6 +309,8 @@ api.interceptors.response.use(
  * 「保存失败」会让用户以为数据已存或可重试，实际记录已经丢失，故明确告知未保存。
  */
 export function writeErrorMessage(e: any, fallback = '保存失败'): string {
+  // 被请求拦截器拦下的「已知离线写入」——不是失败，是根本没发出去
+  if (e?.offline) return '当前离线，无法保存新记录'
   if (!e?.response) return '当前离线或后端不可用，本次操作未生效'
   return e.response?.data?.error || fallback
 }

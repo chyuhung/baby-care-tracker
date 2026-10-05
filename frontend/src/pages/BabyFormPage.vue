@@ -55,7 +55,7 @@
 
     <!-- 固定底部保存栏 -->
     <FormBar>
-      <button type="button" @click="save" :disabled="saving"
+      <button type="button" @click="save" :disabled="saving || app.offline"
         class="btn-press w-full py-3.5 bg-primary/10 text-primary-deep font-semibold rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
         <ActivityIndicator v-if="saving" :size="20" class="text-primary-deep" />
         <span>{{ saving ? '保存中...' : '保存' }}</span>

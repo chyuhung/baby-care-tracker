@@ -71,7 +71,7 @@
               <input v-model="joinCode" placeholder="输入对方的邀请码" maxlength="6"
                 aria-label="邀请码" inputmode="text" autocapitalize="characters" autocomplete="off" enterkeyhint="done"
                 class="flex-1 min-h-[44px] px-3 py-2.5 bg-muted border border-border-color rounded-xl text-base focus:border-primary focus:outline-none transition-colors uppercase" />
-              <button @click="joinFamily" :disabled="!joinCode.trim()"
+              <button @click="joinFamily" :disabled="!joinCode.trim() || app.offline"
                 class="px-4 py-3 bg-primary/10 text-primary-deep text-sm font-medium rounded-xl btn-press min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed">加入</button>
             </div>
           </div>
@@ -100,7 +100,7 @@
                 <span class="text-sm text-text-secondary">邀请码</span>
                 <span class="flex items-center gap-2">
                   <span class="text-base font-bold tracking-widest text-primary-deep select-all">{{ family.invite_code }}</span>
-                  <button @click="requestRegenerateCode" class="-mr-2 text-xs font-medium text-danger py-2 px-2 min-h-[44px] flex items-center btn-press">重置</button>
+                  <button @click="requestRegenerateCode" :disabled="app.offline" class="-mr-2 text-xs font-medium text-danger py-2 px-2 min-h-[44px] flex items-center btn-press disabled:opacity-40">重置</button>
                   <button @click="copyCode" class="-mr-2 text-xs font-medium text-primary-deep py-2 px-2 min-h-[44px] flex items-center">复制</button>
                 </span>
               </div>
@@ -119,13 +119,13 @@
                 <input v-model="joinCode" placeholder="输入对方邀请码" maxlength="6"
                   aria-label="邀请码" inputmode="text" autocapitalize="characters" autocomplete="off" enterkeyhint="done"
                   class="flex-1 min-w-0 min-h-[44px] px-3 py-2.5 bg-muted border border-border-color rounded-xl text-base focus:border-primary focus:outline-none transition-colors uppercase" />
-                <button @click="joinFamily" :disabled="!joinCode.trim()"
+                <button @click="joinFamily" :disabled="!joinCode.trim() || app.offline"
                   class="shrink-0 px-4 py-3 bg-primary/10 text-primary-deep text-sm font-medium rounded-xl btn-press min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed">加入</button>
               </div>
 
               <!-- 退出家庭（破坏性操作挂所属语境，微信退出群聊式卡底居中红字） -->
-              <button v-if="family.members.length > 1" type="button" @click="leaveFamily"
-                class="w-full py-3.5 text-sm font-medium text-danger text-center min-h-[44px] btn-press">
+              <button v-if="family.members.length > 1" type="button" @click="leaveFamily" :disabled="app.offline"
+                class="w-full py-3.5 text-sm font-medium text-danger text-center min-h-[44px] btn-press disabled:opacity-40">
                 退出家庭
               </button>
             </div>

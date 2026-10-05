@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { babyAPI } from '@/api'
 import { useAuthStore } from './auth'
+import { backendReachable, offline, initReachability, probeBackendNow } from '@/utils/reachability'
 
 export interface Baby {
   id: number
@@ -98,17 +99,16 @@ export const useAppStore = defineStore('app', () => {
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
     ws = new WebSocket(`${protocol}//${location.host}/ws?token=${auth.token}`)
     ws.onopen = () => {
-      const reconnected = reconnectAttempts > 0
       wsConnected.value = true
       reconnectAttempts = 0
-      if (reconnected) showToast('已恢复连接', 'success')
     }
     ws.onclose = () => {
       wsConnected.value = false
       ws = null
       if (document.hidden) return
-      // 仅首次断连提示一次：退避重连每轮都会触发 onclose，用 reconnectAttempts 判定避免刷屏
-      if (reconnectAttempts === 0) showToast('当前离线，记录将无法保存', 'error')
+      // 不断线 toast：WS 是纯接收的同步通道，不参与读写判定，
+      // 运营商 NAT 会回收空闲连接——为它报警等于误报。
+      // 真正影响使用的是 HTTP，提示统一由 backendReachable 驱动（见 reachability.ts）。
       const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000)
       reconnectAttempts++
       const jitter = Math.random() * 1000
@@ -142,6 +142,7 @@ export const useAppStore = defineStore('app', () => {
 
   function onVisibilityChange() {
     if (!document.hidden && !ws && useAuthStore().token) {
+      reconnectAttempts = 0 // 回前台重连不背后台累积的退避次数
       connectWebSocket()
     }
   }
@@ -149,9 +150,38 @@ export const useAppStore = defineStore('app', () => {
     document.addEventListener('visibilitychange', onVisibilityChange)
   }
 
+  // 离线提示：延迟 5s 再报，期间恢复就撤销。
+  // 与「立即禁用提交」故意不同步——提交该早封（发出去也是白费），
+  // 而提示不该为一次瞬时抖动惊动用户（这正是启动时那对 toast 的成因）。
+  const OFFLINE_TOAST_DELAY_MS = 5000
+  let offlineToastTimer: ReturnType<typeof setTimeout> | null = null
+  let offlineToastShown = false
+
+  watch(backendReachable, (ok) => {
+    if (offlineToastTimer !== null) {
+      clearTimeout(offlineToastTimer)
+      offlineToastTimer = null
+    }
+    if (!ok) {
+      offlineToastTimer = setTimeout(() => {
+        offlineToastTimer = null
+        if (backendReachable.value) return
+        offlineToastShown = true
+        showToast('当前离线，无法保存新记录', 'error')
+      }, OFFLINE_TOAST_DELAY_MS)
+    } else if (offlineToastShown) {
+      // 只在真的报过离线后才提示恢复，否则又是一次「凭空多出一个 toast」
+      offlineToastShown = false
+      showToast('已重新连接', 'success')
+    }
+  })
+
+  initReachability()
+
   return {
-    babies, currentBabyId, toasts, wsConnected, theme,
+    babies, currentBabyId, toasts, wsConnected, offline, theme,
     currentBaby, loadBabies, setCurrentBaby, showToast, dismissToast,
     connectWebSocket, disconnectWebSocket, defaultAvatarColor,
+    retryBackend: probeBackendNow,
   }
 })

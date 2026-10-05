@@ -25,7 +25,10 @@ defineOptions({ name: 'MainLayout' })
 const app = useAppStore()
 
 onMounted(async () => {
-  await app.loadBabies()
+  // 先连 WS 再拉数据：HomePage 作为子组件先挂载，会一次性发出十来个并行请求，
+  // 而浏览器对同域只有约 6 个并发连接额度。把 WS 升级排在 await 之后就等于让它
+  // 在队列里排队，移动端 Safari 上会被直接丢弃——表现为每次冷启动都「离线→已恢复」。
   app.connectWebSocket()
+  await app.loadBabies()
 })
 </script>

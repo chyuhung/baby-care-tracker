@@ -22,6 +22,12 @@ export function useUndoDelete<T extends DeletableRecord>(
   const app = useAppStore()
 
   function softDelete(r: T) {
+    // 离线时不做乐观删除：先消失一个撤销窗口再回滚，会让人以为已经删掉了。
+    // 这里直接拒绝并说明原因（请求拦截器仍是兜底，防止漏网的路径）。
+    if (app.offline) {
+      app.showToast('当前离线，无法删除记录', 'error')
+      return
+    }
     const index = list.value.findIndex(x => x.id === r.id && x.record_type === r.record_type)
     if (index < 0) return
     // 1) 即时移除

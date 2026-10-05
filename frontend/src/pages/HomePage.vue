@@ -109,12 +109,12 @@
               <span class="text-xs text-text-secondary">平均时长</span>
               <span class="text-xs font-medium text-text-secondary">{{ sleepAvgDuration || '--' }}</span>
             </div>
-            <button v-if="currentSleep" @click.stop="stopSleep" :disabled="loadingAction === 'stop-sleep'"
+            <button v-if="currentSleep" @click.stop="stopSleep" :disabled="loadingAction === 'stop-sleep' || app.offline"
               class="mt-3 w-full min-h-[44px] py-2 bg-danger-fill text-white text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1 disabled:opacity-50">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
               {{ loadingAction === 'stop-sleep' ? '处理中...' : '结束' }}
             </button>
-            <button v-else @click.stop="startSleep" :disabled="loadingAction === 'start-sleep'"
+            <button v-else @click.stop="startSleep" :disabled="loadingAction === 'start-sleep' || app.offline"
               class="mt-3 w-full min-h-[44px] py-2 bg-sleep/10 text-sleep-deep text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1 disabled:opacity-50">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
               {{ loadingAction === 'start-sleep' ? '处理中...' : '开始' }}
@@ -170,12 +170,12 @@
               <span class="text-xs text-text-secondary">平均时长</span>
               <span class="text-xs font-medium text-text-secondary">{{ avgOutdoorDuration || '--' }}</span>
             </div>
-            <button v-if="currentOutdoor" @click.stop="stopOutdoor" :disabled="loadingAction === 'stop-outdoor'"
+            <button v-if="currentOutdoor" @click.stop="stopOutdoor" :disabled="loadingAction === 'stop-outdoor' || app.offline"
               class="mt-3 w-full min-h-[44px] py-2 bg-danger-fill text-white text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1 disabled:opacity-50">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
               {{ loadingAction === 'stop-outdoor' ? '处理中...' : '结束' }}
             </button>
-            <button v-else @click.stop="startOutdoor" :disabled="loadingAction === 'start-outdoor'"
+            <button v-else @click.stop="startOutdoor" :disabled="loadingAction === 'start-outdoor' || app.offline"
               class="mt-3 w-full min-h-[44px] py-2 bg-outdoor/10 text-outdoor-deep text-sm font-medium rounded-xl btn-press flex items-center justify-center gap-1 disabled:opacity-50">
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
               {{ loadingAction === 'start-outdoor' ? '处理中...' : '开始' }}
@@ -350,6 +350,9 @@ let loadGeneration = 0
 const babiesLoadFailed = ref(false)
 async function retryLoadBabies() {
   babiesLoadFailed.value = false
+  // 先探一次可达性：网络恢复的判定不该依赖这一堆业务请求是否恰好成功，
+  // 否则后台轮询要等到下一个 10s 周期才把提交按钮解开
+  await app.retryBackend()
   try {
     await app.loadBabies()
     if (app.babies.length === 0) return

@@ -182,7 +182,7 @@
               <div class="flex gap-2 mt-4">
                 <button type="button" @click="closeForm"
                   class="flex-1 py-3 bg-muted text-text-primary font-medium rounded-xl btn-press">取消</button>
-                <button type="button" @click="submit" :disabled="submitting"
+                <button type="button" @click="submit" :disabled="submitting || app.offline"
                   class="flex-1 py-3 bg-primary/10 text-primary-deep font-semibold rounded-xl btn-press disabled:opacity-50 flex items-center justify-center gap-2">
                   <ActivityIndicator v-if="submitting" :size="18" class="text-primary-deep" />
                   <span>{{ submitting ? '保存中...' : '保存' }}</span>

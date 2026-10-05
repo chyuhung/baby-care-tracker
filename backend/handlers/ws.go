@@ -6,9 +6,19 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+)
+
+// 保活参数：客户端是纯接收、不发任何数据，若不主动 ping，中间设备（运营商 NAT、
+// 代理）的空闲回收会让连接被静默掐掉，而两侧都察觉不到——前端 wsConnected 会一直
+// 谎报已连接。故服务端定期 ping，并给读侧设 pong 超时：收不到 pong 就主动关闭，
+// 让客户端的 onclose 真的触发、重连逻辑跑起来。
+const (
+	wsPongWait   = 60 * time.Second
+	wsPingPeriod = 30 * time.Second
 )
 
 var upgrader = websocket.Upgrader{
@@ -130,17 +140,32 @@ func HandleWebSocket(c *gin.Context) {
 
 	Hub.register <- client
 
-	// 写入协程（唯一调用 conn.WriteMessage 的地方）
+	// 读侧保活：ReadMessage 超时即代表对端/链路已死，break 后走 unregister 关闭连接。
+	// Pong 由浏览器协议栈自动回应，这里只需把截止时间续上。
+	_ = conn.SetReadDeadline(time.Now().Add(wsPongWait))
+	conn.SetPongHandler(func(string) error {
+		return conn.SetReadDeadline(time.Now().Add(wsPongWait))
+	})
+
+	// 写入协程（唯一调用 conn.WriteMessage 的地方 —— gorilla/websocket 不允许并发写）
 	go func() {
 		defer conn.Close()
+		ticker := time.NewTicker(wsPingPeriod)
+		defer ticker.Stop()
 		for {
-			message, ok := <-client.Send
-			if !ok {
-				conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
-			}
-			if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
-				return
+			select {
+			case message, ok := <-client.Send:
+				if !ok {
+					conn.WriteMessage(websocket.CloseMessage, []byte{})
+					return
+				}
+				if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
+					return
+				}
+			case <-ticker.C:
+				if err := conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+					return
+				}
 			}
 		}
 	}()
