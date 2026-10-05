@@ -243,7 +243,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
@@ -266,6 +266,18 @@ import { durationCompactParts, formatDurationCN } from '@/utils'
 
 const tick = ref(0)
 let tickTimer: number | null = null
+
+// 本地日历日键（不使用 toISOString：它按 UTC 切日，东八区会把 08:00 前算成前一天）
+function localDayKey(d: number = Date.now()) {
+  const t = new Date(d)
+  t.setHours(0, 0, 0, 0)
+  return `${t.getFullYear()}-${t.getMonth() + 1}-${t.getDate()}`
+}
+
+// stats 是某一次取数的快照。App 以 keep-alive 常驻，跨过本地午夜后它仍代表昨天，
+// 于是「今日喂奶次数」「今日奶量」「今日体温次数」「今日睡眠」会整体停在昨天。
+// 这里给 stats 打上取数当日的日戳，由 tick 检测跨日并自动重取，避免每个字段各修一遍。
+const statsDay = ref('')
 const router = useRouter()
 const app = useAppStore()
 
@@ -322,6 +334,7 @@ function refreshStatsSoon() {
         recordAPI.getCurrentOutdoor(baby.id),
       ])
       stats.value = statsRes.data
+      statsDay.value = localDayKey()
       currentSleep.value = (curSleep.data as any)?.id ? (curSleep.data as any) : null
       currentOutdoor.value = (curOutdoor.data as any)?.id ? (curOutdoor.data as any) : null
     } catch { /* 静默 */ }
@@ -448,18 +461,56 @@ const lastSupplementAgo = computed(() => {
   return getTimeAgo(recs.length ? recs[recs.length - 1] : null)
 })
 
-// 进行中已持续分钟数
-function elapsedMins(startedAt?: string) {
-  tick.value
-  if (!startedAt) return 0
-  return Math.round((Date.now() - new Date(startedAt).getTime()) / 60000)
+// 时刻在本地日历日 0 点以来、且不早于 startedAt 的分钟数。
+// Math.max(start, midnight) 是跨夜截断的关键：20:00 开始的记录在 02:00 只算 120 分钟，
+// 跨到昨天的部分已由 stats 计入昨日，不该在「今日」里再出现一次。
+// Math.floor 与后端 int(d.Minutes()) 对齐，避免前后端口径差 1 分钟导致数字跳动。
+// now 显式传入：watch 回调里隐式读 tick.value 会让依赖关系不可见。
+function todayMinutesSince(startedAt: string, now: number) {
+  const start = new Date(startedAt).getTime()
+  const d = new Date(now)
+  d.setHours(0, 0, 0, 0)
+  return Math.max(0, Math.floor((now - Math.max(start, d.getTime())) / 60000))
 }
 
-// 睡眠 / 户外主数值：进行中取实时时长，否则取今日总计（统一紧凑 h/m 大数字）
-const sleepParts = computed(() =>
-  durationCompactParts(currentSleep.value ? elapsedMins(currentSleep.value.started_at) : stats.value.sleep_duration))
-const outdoorParts = computed(() =>
-  durationCompactParts(currentOutdoor.value ? elapsedMins(currentOutdoor.value.started_at) : stats.value.outdoor_duration))
+// 进行中记录开始之前、今日已完成的分钟数。
+// stats 是唯一真相源（后端已按 0 点切分、已把进行中记录算到 now），
+// 这里扣掉进行中的那部分，得到基线；显示值 = 基线 + 进行中的今日部分。
+// 于是加载瞬间显示值恰好等于 stats（无跳变），之后每 tick 只加长进行中的部分。
+const sleepBaseMins = ref(0)
+const outdoorBaseMins = ref(0)
+
+// 集中重算，不用在 loadData / refreshStatsSoon / startSleep / onRecordCreated
+// 四处分别赋值——那样必然漏一处，且 stats 与进行中记录是分别异步落地的。
+// Math.max(0, ...) 兜住 allSettled 下 stats 缺失导致的负值。
+watch([stats, currentSleep, currentOutdoor], () => {
+  const now = Date.now()
+  sleepBaseMins.value = currentSleep.value
+    ? Math.max(0, stats.value.sleep_duration - todayMinutesSince(currentSleep.value.started_at, now))
+    : 0
+  outdoorBaseMins.value = currentOutdoor.value
+    ? Math.max(0, stats.value.outdoor_duration - todayMinutesSince(currentOutdoor.value.started_at, now))
+    : 0
+}, { immediate: true })
+
+// 今日睡眠 / 今日户外 = 今日 0 点起的累计时长。
+// 注意是「已完成基线 + 进行中部分」相加而非二选一：
+// 今日已完成两段又有第三段在进行时，旧的三元表达式会把已完成的部分整体丢弃。
+const sleepMinutes = computed(() => {
+  tick.value
+  const cur = currentSleep.value
+  if (!cur) return stats.value.sleep_duration
+  return sleepBaseMins.value + todayMinutesSince(cur.started_at, Date.now())
+})
+const outdoorMinutes = computed(() => {
+  tick.value
+  const cur = currentOutdoor.value
+  if (!cur) return stats.value.outdoor_duration
+  return outdoorBaseMins.value + todayMinutesSince(cur.started_at, Date.now())
+})
+
+const sleepParts = computed(() => durationCompactParts(sleepMinutes.value))
+const outdoorParts = computed(() => durationCompactParts(outdoorMinutes.value))
 
 async function loadData() {
   if (app.babies.length === 0) {
@@ -490,7 +541,7 @@ async function loadData() {
   const val = (i: number): any => (settled[i].status === 'fulfilled' ? settled[i].value : undefined)
 
   const statsRes = val(0)
-  if (statsRes) stats.value = statsRes.data
+  if (statsRes) { stats.value = statsRes.data; statsDay.value = localDayKey() }
 
   const recordsRes = val(1)
   if (recordsRes) {
@@ -715,7 +766,14 @@ onMounted(() => {
   loadData()
   window.addEventListener('record-created', onRecordCreated)
   window.addEventListener('record-deleted', onRecordDeleted)
-  tickTimer = window.setInterval(() => { tick.value++ }, 10000)
+  // 每 10s 推进一次；同时检测本地日界——跨过午夜后 stats 与「今日体温」都已属于昨天，
+  // 自动整页重取一次，让所有「今日」项在最多 10s 内自愈，而不需要用户手动刷新。
+  // 用 loadData 而非 refreshStatsSoon：后者不刷新今日体温卡片；
+  // 代价是重置记录列表到第一页，但一天只发生一次，且此时用户多在睡眠中。
+  tickTimer = window.setInterval(() => {
+    tick.value++
+    if (statsDay.value && statsDay.value !== localDayKey()) loadData()
+  }, 10000)
 })
 onUnmounted(() => {
   window.removeEventListener('record-created', onRecordCreated)
