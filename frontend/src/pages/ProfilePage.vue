@@ -38,8 +38,8 @@
               :aria-current="isCurrentBaby(baby) ? 'true' : undefined"
               class="w-full px-4 py-3.5 flex items-center gap-3 min-h-[44px] text-left press-card"
               @click="switchBaby(baby)">
-              <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold"
-                :style="{ background: baby.avatar_color, color: avatarInk(baby.avatar_color) }">{{ baby.name[0] }}</span>
+              <span                 class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+                :style="{ background: baby.avatar_color }">{{ baby.name[0] }}</span>
               <span class="flex-1 min-w-0">
                 <span class="block font-medium text-text-primary truncate">
                   {{ baby.name }}
@@ -49,7 +49,7 @@
                   </svg>
                 </span>
                 <span class="block text-xs text-text-secondary mt-0.5 truncate">
-                  <template v-if="babyAgeText(baby.birth_date)">{{ babyAgeText(baby.birth_date) }} · </template>{{ formatBirthDate(baby.birth_date) }}
+                  <template v-if="formatBirthDate(baby.birth_date)">{{ formatBirthDate(baby.birth_date) }}<template v-if="babyDays(baby.birth_date)"> · {{ babyDays(baby.birth_date) }}天 · {{ babyMonths(baby.birth_date) }}个月</template></template>
                 </span>
               </span>
               <!-- 当前宝宝也必须有编辑入口：此前此处是 v-else，单宝宝时全 App 无资料编辑入口 -->
@@ -194,7 +194,7 @@ import ConfirmSheet from '@/components/ConfirmSheet.vue'
 
 import NavBar from '@/components/NavBar.vue'
 import ActivityIndicator from '@/components/ActivityIndicator.vue'
-import { parseLocalDate, babyAgeText, avatarInk } from '@/utils'
+import { parseLocalDate, babyDays, babyMonths } from '@/utils'
 
 interface FamilyMember {
   id: number

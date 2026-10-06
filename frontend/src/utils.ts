@@ -68,27 +68,27 @@ function calendarDaysBetween(birth: Date, at: Date): number {
   return Math.round((utc(at) - utc(birth)) / 86400000)
 }
 
-/** 宝宝当前年龄（分段口径）：
-    ≤100 天 → 天数 `86天`；满 100 天至 1 岁 → 月龄 `7个月`；
-    1 岁至满 3 岁 → 年+月 `2岁5个月`；超过 3 岁 → 仅年 `4岁`。
-    边界按「满 N 岁」判定：满 3 岁当天即不再展示月份（3岁0月 与 3岁1月 同显示 `3岁`）。
+/** 出生至今实际天数（任意年龄恒显）：出生当天 0 天、次日 1 天（日历日差；
+    出生日期是纯日期无时刻，「第二天同一时刻算 1 天」只能落在日历日边界）。
     at 缺省取今天；无出生日期或该日早于出生日 → 空串 */
-export function babyAgeText(birthDate: string, at?: string): string {
+export function babyDays(birthDate: string, at?: string): string {
   const birth = parseLocalDate(birthDate)
   const ref = at ? parseLocalDate(at) : new Date()
   if (!birth || !ref) return ''
   if (ref.getTime() < birth.getTime()) return ''
-  const days = calendarDaysBetween(birth, ref)
-  // 出生 100 天内按天更直观（婴儿期变化以天计）
-  if (days <= 100) return `${days}天`
-  let y = ref.getFullYear() - birth.getFullYear()
-  let m = ref.getMonth() - birth.getMonth()
+  return String(calendarDaysBetween(birth, ref))
+}
+
+/** 出生至今完成月数（借位：未到出生日当月则减 1，同 babyDays 的日历口径）。
+    at 缺省取今天；无出生日期或该日早于出生日 → 空串 */
+export function babyMonths(birthDate: string, at?: string): string {
+  const birth = parseLocalDate(birthDate)
+  const ref = at ? parseLocalDate(at) : new Date()
+  if (!birth || !ref) return ''
+  if (ref.getTime() < birth.getTime()) return ''
+  let m = (ref.getFullYear() - birth.getFullYear()) * 12 + (ref.getMonth() - birth.getMonth())
   if (ref.getDate() < birth.getDate()) m--
-  if (m < 0) { m += 12; y-- }
-  // 满 3 岁起不再展示月份（「超过三岁只展示年龄」）
-  if (y >= 3) return `${y}岁`
-  if (y >= 1) return m > 0 ? `${y}岁${m}个月` : `${y}岁`
-  return `${m}个月`
+  return String(Math.max(0, m))
 }
 
 /** 当前本地时间 YYYY-MM-DDTHH:mm（datetime-local 默认值） */
@@ -171,57 +171,4 @@ export function formatDurationCN(mins: number) {
   return m > 0 ? `${h}小时${m}分钟` : `${h}小时`
 }
 
-/* ============================================================
-   头像字色：按底色亮度自动取墨色/白字（WCAG 对比度）
-   ============================================================ */
 
-/** sRGB 相对亮度（WCAG 2.1 定义）。输入 0–1 的线性化前通道值 */
-function channelLum(v: number) {
-  return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
-}
-
-/** 解析 #RGB / #RRGGBB → {r,g,b}（0–255）；解析失败返回 null */
-function parseHex(hex: string): { r: number, g: number, b: number } | null {
-  const h = (hex || '').trim().replace(/^#/, '')
-  if (h.length === 3) {
-    return {
-      r: parseInt(h[0] + h[0], 16),
-      g: parseInt(h[1] + h[1], 16),
-      b: parseInt(h[2] + h[2], 16),
-    }
-  }
-  if (h.length === 6) {
-    return {
-      r: parseInt(h.slice(0, 2), 16),
-      g: parseInt(h.slice(2, 4), 16),
-      b: parseInt(h.slice(4, 6), 16),
-    }
-  }
-  return null
-}
-
-/** 底色相对亮度 0–1；无法解析时按中性灰兜底（倾向返回低亮度 → 白字） */
-export function colorLuminance(hex: string): number {
-  const c = parseHex(hex)
-  if (!c) return 0.2
-  return 0.2126 * channelLum(c.r / 255) + 0.7152 * channelLum(c.g / 255) + 0.0722 * channelLum(c.b / 255)
-}
-
-/**
- * 头像首字母的字色：在「墨色」与「白」之间取对比度更高的一方。
- *
- * 为什么需要：宝宝头像底色是用户从 8 色调色板选的，8 个色配白字有 5 个
- * 不达 WCAG AA（最低 #FFB300 仅 1.79:1 —— 浅黄底白字几乎不可见）。
- * 逐个把底色加深会破坏「选色器所见即所得」且要迁移存量数据，
- * 改为按亮度自动换墨色：8 色实测全部落到墨色，最低对比 5.08:1（全部达 AA）。
- *
- * 墨色是**主题无关**的深墨，不用 --text-primary —— 该 token 在暗色模式是
- * 浅色（#F2F2F7），会在饱和色块上反过来失效。
- */
-export function avatarInk(hex: string): string {
-  const l = colorLuminance(hex)
-  // 白字对比 = 1.05 / (l + 0.05)；墨色(≈#000，对比度 ≈20)对比 = (l + 0.05) / 0.05
-  const vsWhite = 1.05 / (l + 0.05)
-  const vsInk = (l + 0.05) / 0.05
-  return vsInk >= vsWhite ? '#000000' : '#FFFFFF'
-}

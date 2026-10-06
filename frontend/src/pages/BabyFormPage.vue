@@ -15,9 +15,9 @@
         <div class="flex flex-wrap gap-3">
           <button v-for="c in avatarColors" :key="c" type="button" @click="form.avatar_color = c"
             :aria-label="'选择头像颜色'"
-            :class="['w-11 h-11 rounded-full flex items-center justify-center font-bold transition-all btn-press',
-              form.avatar_color === c ? 'ring-2 ring-offset-2 ring-text-primary scale-110' : '']"
-            :style="{ background: c, color: avatarInk(c) }">
+            :class="['w-11 h-11 rounded-full flex items-center justify-center font-bold text-white transition-all btn-press',
+              form.avatar_color === c ? 'ring-2 ring-offset-2 ring-primary-deep ring-offset-bg-main scale-110' : '']"
+            :style="{ background: c }">
             {{ form.name ? form.name[0] : '宝' }}
           </button>
         </div>
@@ -89,8 +89,6 @@ const saving = ref(false)
 const deleting = ref(false)
 const showDelete = ref(false)
 const error = ref('')
-
-import { avatarInk } from '@/utils'
 
 const avatarColors = ['#F25C8C', '#348EED', '#2DB84F', '#F78A06', '#FFB300', '#FF6B53', '#AF52DE', '#2BAEDF']
 
