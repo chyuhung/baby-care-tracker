@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import { babyAPI } from '@/api'
 import { useAuthStore } from './auth'
-import { backendReachable, offline, initReachability, probeBackendNow } from '@/utils/reachability'
+import { backendReachable, offline, initReachability, probeBackendNow, sinceBootMs, BOOT_GRACE_MS } from '@/utils/reachability'
 
 export interface Baby {
   id: number
@@ -153,6 +153,9 @@ export const useAppStore = defineStore('app', () => {
   // 离线提示：延迟 5s 再报，期间恢复就撤销。
   // 与「立即禁用提交」故意不同步——提交该早封（发出去也是白费），
   // 而提示不该为一次瞬时抖动惊动用户（这正是启动时那对 toast 的成因）。
+  // 冷启动例外：宽限期（10s）内不判离线，判定必然发生在 10s 之后；
+  // 此时已等待过整个连接建立窗口，提示按「超出宽限的部分」即时补足（打开后约 10s 出），
+  // 不再叠满 5s（否则真离线要到 15s 才提示）。启动窗口之后的离线仍保留完整 5s 防抖。
   const OFFLINE_TOAST_DELAY_MS = 5000
   let offlineToastTimer: ReturnType<typeof setTimeout> | null = null
   let offlineToastShown = false
@@ -163,12 +166,14 @@ export const useAppStore = defineStore('app', () => {
       offlineToastTimer = null
     }
     if (!ok) {
+      const sinceBoot = sinceBootMs()
+      const delay = Math.min(OFFLINE_TOAST_DELAY_MS, Math.max(0, sinceBoot - BOOT_GRACE_MS))
       offlineToastTimer = setTimeout(() => {
         offlineToastTimer = null
         if (backendReachable.value) return
         offlineToastShown = true
         showToast('当前离线，无法保存新记录', 'error')
-      }, OFFLINE_TOAST_DELAY_MS)
+      }, delay)
     } else if (offlineToastShown) {
       // 只在真的报过离线后才提示恢复，否则又是一次「凭空多出一个 toast」
       offlineToastShown = false

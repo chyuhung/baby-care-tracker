@@ -17,6 +17,10 @@ const HEALTH_URL = '/api/health'
 const PROBE_DELAY_MS = 500
 const PROBE_TIMEOUT_MS = 3000
 const RETRY_INTERVAL_MS = 10000
+// 冷启动宽限期：打开页面时后端连接建立本来就需要几秒（服务未就绪/排队），
+// 宽限期内探测失败只重探、不落离线，否则会把「还在连」误报成「已离线」弹 toast。
+export const BOOT_GRACE_MS = 10000
+const BOOT_RETRY_MS = 2000
 
 export const backendReachable = ref(true)
 export const offline = computed(() => !backendReachable.value)
@@ -25,6 +29,7 @@ let probeTimer: number | null = null
 let retryTimer: number | null = null
 let abort: AbortController | null = null
 let started = false
+let bootAt = 0
 
 function stopPolling() {
   if (retryTimer !== null) {
@@ -42,11 +47,26 @@ function startPolling() {
   }, RETRY_INTERVAL_MS)
 }
 
+function withinBootGrace(): boolean {
+  return bootAt !== 0 && Date.now() - bootAt < BOOT_GRACE_MS
+}
+
 function setReachability(v: boolean) {
   if (backendReachable.value === v) return
+  if (!v && withinBootGrace()) {
+    // 宽限期内的失败不落离线：改排一次重探（复用 probeTimer 互斥槽，防探针风暴）。
+    // 探针失败本身就已确认过一次网络错误，宽限期满后的下一次失败才真正翻转。
+    if (probeTimer === null) probeTimer = window.setTimeout(() => { void runProbe() }, BOOT_RETRY_MS)
+    return
+  }
   backendReachable.value = v
   if (v) stopPolling()
   else startPolling()
+}
+
+/** 距冷启动的毫秒数；未初始化时返回 0（调用方据此套用完整延迟） */
+export function sinceBootMs(): number {
+  return bootAt === 0 ? 0 : Date.now() - bootAt
 }
 
 async function runProbe(): Promise<boolean> {
@@ -100,11 +120,13 @@ export function probeBackendNow(): Promise<boolean> {
 export function initReachability() {
   if (started) return
   started = true
+  bootAt = Date.now()
   window.addEventListener('online', () => { void runProbe() })
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') void runProbe()
   })
-  // 冷启动就探一次：离线打开时能在 ~1s 内进入禁用态，而不是等用户第一次提交失败
+  // 冷启动就探一次：健康时立即转在线；失败则进入宽限期重探（见 setReachability），
+  // 约 10s 后仍连不上才落离线——给连接建立留出时间，不误报「打开即离线」。
   void runProbe()
 }
 

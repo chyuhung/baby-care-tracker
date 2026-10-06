@@ -231,7 +231,12 @@ async function confirmDelete() {
 function onRecordCreated(e: Event) {
   const record = (e as CustomEvent).detail
   if (!record) { loadRecords(); return }
-  if (record.baby_id === app.currentBaby?.id) records.value.unshift(record)
+  if (record.baby_id !== app.currentBaby?.id) return
+  // 按 id+record_type 去重 upsert：同一条记录会到两次（本地 dispatch + WS 回声），
+  // 进行中的睡眠/户外在「结束」事件前也已以进行中行存在——结束必须原位替换，否则重复两行。
+  const i = records.value.findIndex(r => r.id === record.id && r.record_type === record.record_type)
+  if (i >= 0) records.value.splice(i, 1, record)
+  else records.value.unshift(record)
 }
 
 function onRecordDeleted(e: Event) {

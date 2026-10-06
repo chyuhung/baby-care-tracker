@@ -88,7 +88,7 @@
 
           <!-- 睡眠卡片 -->
           <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('sleep')" @click="goToTimeline('sleep')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer press-card">
-            <div class="text-xs text-text-secondary mb-1">今日睡眠</div>
+            <div class="text-xs text-text-secondary mb-1">{{ currentSleep ? '本次睡眠' : '今日睡眠' }}</div>
             <div class="flex items-end justify-between">
               <div class="flex items-center gap-1 min-w-0">
                 <span v-if="currentSleep" class="w-1.5 h-1.5 rounded-full bg-sleep-deep animate-pulse shrink-0"></span>
@@ -149,7 +149,7 @@
 
           <!-- 户外活动卡片 -->
           <div role="button" tabindex="0" @keydown.enter.prevent="goToTimeline('outdoor')" @click="goToTimeline('outdoor')" class="bg-surface rounded-2xl shadow-card p-4 cursor-pointer press-card">
-            <div class="text-xs text-text-secondary mb-1">今日户外活动</div>
+            <div class="text-xs text-text-secondary mb-1">{{ currentOutdoor ? '本次户外活动' : '今日户外活动' }}</div>
             <div class="flex items-end justify-between">
               <div class="flex items-center gap-1 min-w-0">
                 <span v-if="currentOutdoor" class="w-1.5 h-1.5 rounded-full bg-outdoor-deep animate-pulse shrink-0"></span>
@@ -243,7 +243,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
@@ -466,52 +466,21 @@ const lastSupplementAgo = computed(() => {
   return getTimeAgo(recs.length ? recs[recs.length - 1] : null)
 })
 
-// 时刻在本地日历日 0 点以来、且不早于 startedAt 的分钟数。
-// Math.max(start, midnight) 是跨夜截断的关键：20:00 开始的记录在 02:00 只算 120 分钟，
-// 跨到昨天的部分已由 stats 计入昨日，不该在「今日」里再出现一次。
-// Math.floor 与后端 int(d.Minutes()) 对齐，避免前后端口径差 1 分钟导致数字跳动。
-// now 显式传入：watch 回调里隐式读 tick.value 会让依赖关系不可见。
-function todayMinutesSince(startedAt: string, now: number) {
-  const start = new Date(startedAt).getTime()
-  const d = new Date(now)
-  d.setHours(0, 0, 0, 0)
-  return Math.max(0, Math.floor((now - Math.max(start, d.getTime())) / 60000))
-}
-
-// 进行中记录开始之前、今日已完成的分钟数。
-// stats 是唯一真相源（后端已按 0 点切分、已把进行中记录算到 now），
-// 这里扣掉进行中的那部分，得到基线；显示值 = 基线 + 进行中的今日部分。
-// 于是加载瞬间显示值恰好等于 stats（无跳变），之后每 tick 只加长进行中的部分。
-const sleepBaseMins = ref(0)
-const outdoorBaseMins = ref(0)
-
-// 集中重算，不用在 loadData / refreshStatsSoon / startSleep / onRecordCreated
-// 四处分别赋值——那样必然漏一处，且 stats 与进行中记录是分别异步落地的。
-// Math.max(0, ...) 兜住 allSettled 下 stats 缺失导致的负值。
-watch([stats, currentSleep, currentOutdoor], () => {
-  const now = Date.now()
-  sleepBaseMins.value = currentSleep.value
-    ? Math.max(0, stats.value.sleep_duration - todayMinutesSince(currentSleep.value.started_at, now))
-    : 0
-  outdoorBaseMins.value = currentOutdoor.value
-    ? Math.max(0, stats.value.outdoor_duration - todayMinutesSince(currentOutdoor.value.started_at, now))
-    : 0
-}, { immediate: true })
-
-// 今日睡眠 / 今日户外 = 今日 0 点起的累计时长。
-// 注意是「已完成基线 + 进行中部分」相加而非二选一：
-// 今日已完成两段又有第三段在进行时，旧的三元表达式会把已完成的部分整体丢弃。
+// 进行中：显示「当次」累计时长（全程、跨夜不截断——与 RecordCard 进行中行同口径）；
+// 无进行中：显示「当日」0 点起累计（stats 由后端按本地 0 点切分、已含进行中到 now）。
+// stopSleep/stopOutdoor 结束后会 loadData() 刷新 stats，显示值即回落为当日累计。
+// tick 显式读入：10s 一次的时钟推进驱动进行中时长刷新。
 const sleepMinutes = computed(() => {
   tick.value
   const cur = currentSleep.value
   if (!cur) return stats.value.sleep_duration
-  return sleepBaseMins.value + todayMinutesSince(cur.started_at, Date.now())
+  return Math.max(0, Math.floor((Date.now() - new Date(cur.started_at).getTime()) / 60000))
 })
 const outdoorMinutes = computed(() => {
   tick.value
   const cur = currentOutdoor.value
   if (!cur) return stats.value.outdoor_duration
-  return outdoorBaseMins.value + todayMinutesSince(cur.started_at, Date.now())
+  return Math.max(0, Math.floor((Date.now() - new Date(cur.started_at).getTime()) / 60000))
 })
 
 const sleepParts = computed(() => durationCompactParts(sleepMinutes.value))
@@ -724,6 +693,15 @@ async function confirmDelete() {
   refreshStatsSoon()
 }
 
+// 按 id+record_type 去重 upsert：同一条记录可能到达两次（本地 dispatch + WS 回声），
+// 且进行中的睡眠/户外在「结束」事件到达前已以进行中行存在于列表——
+// 结束时必须原位替换，否则 loadData 落地前的短暂窗口里会出现重复行。
+function upsertRecord(rec: any) {
+  const i = allRecords.value.findIndex(r => r.id === rec.id && r.record_type === rec.record_type)
+  if (i >= 0) allRecords.value.splice(i, 1, rec)
+  else allRecords.value.unshift(rec)
+}
+
 function onRecordCreated(e: Event) {
   const record = (e as CustomEvent).detail
   if (!record) { loadData(); return }
@@ -732,15 +710,16 @@ function onRecordCreated(e: Event) {
       if (!record.data?.ended_at) {
         if (record.record_type === 'sleep') currentSleep.value = record.data
         else currentOutdoor.value = record.data
-        return
+      } else {
+        if (record.record_type === 'sleep' && currentSleep.value?.id === record.id) currentSleep.value = null
+        if (record.record_type === 'outdoor' && currentOutdoor.value?.id === record.id) currentOutdoor.value = null
+        loadData()
       }
-      if (record.record_type === 'sleep' && currentSleep.value?.id === record.id) currentSleep.value = null
-      if (record.record_type === 'outdoor' && currentOutdoor.value?.id === record.id) currentOutdoor.value = null
-      allRecords.value.unshift(record)
-      loadData()
+      // 进行中也立即进入「最近记录」（原分支直接 return，要等下次整页刷新才出现）
+      upsertRecord(record)
       return
     }
-    allRecords.value.unshift(record)
+    upsertRecord(record)
     // 同步进该类型的最近窗口，均值/距上次立即跟上（否则要等下次整页刷新）。
     // 睡眠/户外在上面的分支已 return（结束时会整页 loadData），此处只处理即时记录的喂奶/尿布/补剂。
     const t = record.record_type as (typeof AVG_TYPES)[number]
@@ -756,6 +735,9 @@ function onRecordCreated(e: Event) {
 function onRecordDeleted(e: Event) {
   const { id, type } = (e as CustomEvent).detail || {}
   allRecords.value = allRecords.value.filter(r => !(r.id === id && r.record_type === (type || r.record_type)))
+  // 进行中的睡眠/户外被删（本页或家人端）→ 计时器同步停，否则卡片会对已删记录一直走秒
+  if (currentSleep.value?.id === id && (!type || type === 'sleep')) currentSleep.value = null
+  if (currentOutdoor.value?.id === id && (!type || type === 'outdoor')) currentOutdoor.value = null
   const targets = type ? [type] : [...AVG_TYPES]
   const next = { ...recentByType.value }
   let changed = false
