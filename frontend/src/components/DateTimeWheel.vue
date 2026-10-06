@@ -82,19 +82,51 @@ function parseLocal(s: string) {
   return { y: n.getFullYear(), mo: n.getMonth() + 1, d: n.getDate(), h: n.getHours(), mi: n.getMinutes() }
 }
 
-const draft = ref(parseLocal(props.modelValue))
+const draft = ref(clampDraft(parseLocal(props.modelValue)))
 
-/** 日期列表：今天前后各 90 天 */
+/** 日期上下界：min/max 缺省为 今天-10年 ~ 今天+1年（日历日，取整天零点） */
+function bound(s: string, which: 'min' | 'max'): Date {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || '')
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3])
+  const d = new Date()
+  d.setHours(0, 0, 0, 0)
+  d.setFullYear(d.getFullYear() + (which === 'min' ? -10 : 1))
+  return d
+}
+const minDate = computed(() => bound(props.min, 'min'))
+const maxDate = computed(() => {
+  const d = bound(props.max, 'max')
+  // 属性保证 min <= max，否则日期列表会倒着生成
+  return d < minDate.value ? new Date(minDate.value) : d
+})
+
+/** 越界的日期取最近的合法日（按 min/max 裁剪），并同步 draft——
+ *  否则 draft 保留越界值、而高亮索引被 findIndex 兜成 0，二者互相矛盾。 */
+function clampDraft(d: { y: number; mo: number; d: number; h: number; mi: number }) {
+  const dt = new Date(d.y, d.mo - 1, d.d)
+  const lo = bound(props.min, 'min')
+  const hi = bound(props.max, 'max')
+  const hiAdj = hi < lo ? lo : hi
+  if (dt < lo) dt.setTime(lo.getTime())
+  else if (dt > hiAdj) dt.setTime(hiAdj.getTime())
+  return { y: dt.getFullYear(), mo: dt.getMonth() + 1, d: dt.getDate(), h: d.h, mi: d.mi }
+}
+
+/** 日期列表：[min, max] 内每个日历日（升序）。不再固定「今天前后各 90 天」——
+ *  记录补录 90 天前、或宝宝出生日期这类远期日期根本滚不到。 */
 const dateItems = computed(() => {
   const out: { label: string; value: string }[] = []
-  const base = new Date(); base.setHours(0, 0, 0, 0)
-  for (let off = 90; off >= -90; off--) {
-    const dt = new Date(base); dt.setDate(dt.getDate() - off)
-    const v = `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`
-    const wd = ['日', '一', '二', '三', '四', '五', '六'][dt.getDay()]
-    out.push({ label: `${dt.getMonth() + 1}月${dt.getDate()}日 周${wd}`, value: v })
+  const cur = new Date(maxDate.value)
+  const lo = minDate.value
+  // 安全上限：默认区间约 4000 项；props 异常时不至于死循环
+  let guard = 0
+  while (cur >= lo && guard++ < 8000) {
+    const v = `${cur.getFullYear()}-${pad(cur.getMonth() + 1)}-${pad(cur.getDate())}`
+    const wd = ['日', '一', '二', '三', '四', '五', '六'][cur.getDay()]
+    out.push({ label: `${cur.getMonth() + 1}月${cur.getDate()}日 周${wd}`, value: v })
+    cur.setDate(cur.getDate() - 1)
   }
-  return out
+  return out.reverse()
 })
 const hourItems = Array.from({ length: 24 }, (_, i) => ({ label: pad(i), value: String(i) }))
 const minItems = Array.from({ length: 60 }, (_, i) => ({ label: pad(i), value: String(i) }))
@@ -119,7 +151,7 @@ function scrollColTo(ci: number, index: number, smooth = false) {
 }
 
 function syncFromValue() {
-  draft.value = parseLocal(props.modelValue)
+  draft.value = clampDraft(parseLocal(props.modelValue))
   nextTick(() => columns.value.forEach((c, i) => scrollColTo(i, c.index)))
 }
 
@@ -164,21 +196,23 @@ function onKeydown(e: KeyboardEvent) {
   if (e.key === 'Enter') { e.preventDefault(); close(true) }
 }
 
+let prevOverflow = ''
 watch(() => props.open, async (v) => {
   if (v) {
     syncFromValue()
+    prevOverflow = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     window.addEventListener('keydown', onKeydown)
     await nextTick()
     panelRef.value?.focus()
   } else {
-    document.body.style.overflow = ''
+    document.body.style.overflow = prevOverflow
     window.removeEventListener('keydown', onKeydown)
   }
 })
 
 onUnmounted(() => {
-  document.body.style.overflow = ''
+  if (props.open) document.body.style.overflow = prevOverflow
   window.removeEventListener('keydown', onKeydown)
   if (scrollTimer) clearTimeout(scrollTimer)
 })

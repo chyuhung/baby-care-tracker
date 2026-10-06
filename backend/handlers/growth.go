@@ -4,12 +4,28 @@ import (
 	"baby-care-tracker/database"
 	growthdata "baby-care-tracker/data"
 	"baby-care-tracker/models"
+	"database/sql"
 	"math"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
+
+// validateGrowthMetrics 返回空串表示通过。上限拦截 999 这类误输——它们会把曲线 Y 轴撑到上千，
+// 且明显不可能是婴幼儿的测量值。零值字段（未填）不算错误。
+func validateGrowthMetrics(weightKg, heightCm, headCm float64) string {
+	if weightKg < 0 || weightKg > 60 {
+		return "体重需在 0-60kg 之间"
+	}
+	if heightCm < 0 || heightCm > 200 {
+		return "身高需在 0-200cm 之间"
+	}
+	if headCm < 0 || headCm > 100 {
+		return "头围需在 0-100cm 之间"
+	}
+	return ""
+}
 
 // --- 儿童生长百分位（《7岁以下儿童生长标准》WS/T 423-2022）---
 // 数据见 backend/data（内嵌 JSON 百分位表，0-11 月逐月、其后每 3 月一行，
@@ -291,8 +307,8 @@ func CreateGrowthRecord(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "测量日期必填"})
 		return
 	}
-	if req.WeightKg < 0 || req.HeightCm < 0 || req.HeadCm < 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "数值不能为负"})
+	if msg := validateGrowthMetrics(req.WeightKg, req.HeightCm, req.HeadCm); msg != "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": msg})
 		return
 	}
 	res, err := database.DB.Exec(
@@ -304,7 +320,7 @@ func CreateGrowthRecord(c *gin.Context) {
 		return
 	}
 	id, _ := res.LastInsertId()
-	BroadcastMessage(models.WebSocketMessage{Type: "record_created", Payload: gin.H{"id": id, "record_type": "growth"}})
+	BroadcastMessage(models.WebSocketMessage{Type: "record_created", Payload: gin.H{"id": id, "type": "growth", "baby_id": babyID}}, babyFamilyID(babyID))
 	c.JSON(http.StatusOK, gin.H{"id": id})
 }
 
@@ -317,8 +333,15 @@ func UpdateGrowthRecord(c *gin.Context) {
 		return
 	}
 	var babyID int64
-	database.DB.QueryRow("SELECT baby_id FROM growth_records WHERE id = ?", id).Scan(&babyID)
-	if babyID == 0 || !checkBabyFamily(babyID, userID) {
+	if err := database.DB.QueryRow("SELECT baby_id FROM growth_records WHERE id = ?", id).Scan(&babyID); err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{"error": "记录不存在"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
+		}
+		return
+	}
+	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
 		return
 	}
@@ -327,15 +350,18 @@ func UpdateGrowthRecord(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "测量日期必填"})
 		return
 	}
-	if req.WeightKg < 0 || req.HeightCm < 0 || req.HeadCm < 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "数值不能为负"})
+	if msg := validateGrowthMetrics(req.WeightKg, req.HeightCm, req.HeadCm); msg != "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": msg})
 		return
 	}
-	database.DB.Exec(
+	if _, err := database.DB.Exec(
 		"UPDATE growth_records SET measured_at = ?, weight_kg = ?, height_cm = ?, head_cm = ?, note = ? WHERE id = ?",
 		req.MeasuredAt, req.WeightKg, req.HeightCm, req.HeadCm, req.Note, id,
-	)
-	BroadcastMessage(models.WebSocketMessage{Type: "record_updated", Payload: gin.H{"id": id, "record_type": "growth"}})
+	); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "更新失败"})
+		return
+	}
+	BroadcastMessage(models.WebSocketMessage{Type: "record_updated", Payload: gin.H{"id": id, "type": "growth", "baby_id": babyID}}, babyFamilyID(babyID))
 	c.JSON(http.StatusOK, gin.H{"ok": true})
 }
 
@@ -348,12 +374,22 @@ func DeleteGrowthRecord(c *gin.Context) {
 		return
 	}
 	var babyID int64
-	database.DB.QueryRow("SELECT baby_id FROM growth_records WHERE id = ?", id).Scan(&babyID)
-	if babyID == 0 || !checkBabyFamily(babyID, userID) {
+	if err := database.DB.QueryRow("SELECT baby_id FROM growth_records WHERE id = ?", id).Scan(&babyID); err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{"error": "记录不存在"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
+		}
+		return
+	}
+	if !checkBabyFamily(babyID, userID) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
 		return
 	}
-	database.DB.Exec("DELETE FROM growth_records WHERE id = ?", id)
-	BroadcastMessage(models.WebSocketMessage{Type: "record_deleted", Payload: gin.H{"id": id, "record_type": "growth"}})
+	if _, err := database.DB.Exec("DELETE FROM growth_records WHERE id = ?", id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "删除失败"})
+		return
+	}
+	BroadcastMessage(models.WebSocketMessage{Type: "record_deleted", Payload: gin.H{"id": id, "type": "growth", "baby_id": babyID}}, babyFamilyID(babyID))
 	c.JSON(http.StatusOK, gin.H{"ok": true})
 }

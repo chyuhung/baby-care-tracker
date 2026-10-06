@@ -75,7 +75,7 @@ func StartSleep(c *gin.Context) {
 	BroadcastMessage(models.WebSocketMessage{
 		Type:    "record_created",
 		Payload: rec,
-	})
+	}, babyFamilyID(babyID))
 
 	c.JSON(http.StatusCreated, rec)
 }
@@ -107,12 +107,32 @@ func StopSleep(c *gin.Context) {
 		req.EndedAt = time.Now().UTC().Format("2006-01-02T15:04:05Z")
 	}
 
-	_, err = database.DB.Exec(
-		"UPDATE sleep_records SET ended_at = ?, note = COALESCE(NULLIF(?, ''), note) WHERE id = ? AND ended_at IS NULL",
-		req.EndedAt, req.Note, sleepID,
+	// 时序校验：先取 started_at，结束早于开始直接拒绝（避免负时长残次数据进入统计）
+	var sleepStartedAt string
+	qErr := database.DB.QueryRow(
+		"SELECT started_at FROM sleep_records WHERE id = ? AND baby_id = ?",
+		sleepID, babyID,
+	).Scan(&sleepStartedAt)
+	if qErr != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "记录不存在或已结束"})
+		return
+	}
+	if parseTime(req.EndedAt).Before(parseTime(sleepStartedAt)) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "结束时间不能早于开始时间"})
+		return
+	}
+
+	res, err := database.DB.Exec(
+		"UPDATE sleep_records SET ended_at = ?, note = COALESCE(NULLIF(?, ''), note) WHERE id = ? AND baby_id = ? AND ended_at IS NULL",
+		req.EndedAt, req.Note, sleepID, babyID,
 	)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "更新失败"})
+		return
+	}
+	// 谓词含 baby_id：别人宝宝的记录、或已结束的记录，一律视为不存在
+	if n, _ := res.RowsAffected(); n == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "记录不存在或已结束"})
 		return
 	}
 
@@ -137,10 +157,12 @@ func StopSleep(c *gin.Context) {
 		CreatedAt:  record.CreatedAt,
 	}
 
+	// 结束是「更新」不是「新建」：家人端据此原位替换该行并刷新统计（record_created 会让
+	// 消费方当成第二条新记录 upsert）
 	BroadcastMessage(models.WebSocketMessage{
-		Type:    "record_created",
+		Type:    "record_updated",
 		Payload: rec,
-	})
+	}, babyFamilyID(babyID))
 
 	c.JSON(http.StatusOK, rec)
 }

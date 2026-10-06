@@ -713,16 +713,24 @@ async function doDelete() {
   }
 }
 
-function onGrowthUpdated() {
+// 家人端成长记录增/改/删的 WS 广播（本地操作已 await load()，这里只处理回声/家人端）。
+// 同一事件通道也承载普通记录（feeding 等），须按 type === 'growth' 过滤——
+// 否则家人喂一口奶会整页重拉成长曲线。
+function onGrowthEvent(e: Event) {
+  if ((e as CustomEvent).detail?.type !== 'growth') return
   load()
 }
 
 onMounted(() => {
   load()
-  window.addEventListener('record-updated', onGrowthUpdated)
+  window.addEventListener('record-created', onGrowthEvent)
+  window.addEventListener('record-updated', onGrowthEvent)
+  window.addEventListener('record-deleted', onGrowthEvent)
 })
 onUnmounted(() => {
-  window.removeEventListener('record-updated', onGrowthUpdated)
+  window.removeEventListener('record-created', onGrowthEvent)
+  window.removeEventListener('record-updated', onGrowthEvent)
+  window.removeEventListener('record-deleted', onGrowthEvent)
   if (lpTimer !== null) { clearTimeout(lpTimer); lpTimer = null }
 })
 </script>

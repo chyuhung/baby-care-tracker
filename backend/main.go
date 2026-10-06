@@ -150,6 +150,7 @@ func main() {
 			protected.POST("/babies/:id/outdoor/start", handlers.StartOutdoor)
 			protected.PUT("/babies/:id/outdoor/:oid/stop", handlers.StopOutdoor)
 			protected.GET("/babies/:id/outdoor/current", handlers.GetCurrentOutdoor)
+			protected.GET("/records/:id", handlers.GetRecord)
 			protected.PUT("/records/:id", handlers.UpdateRecord)
 			protected.DELETE("/records/:id", handlers.DeleteRecord)
 

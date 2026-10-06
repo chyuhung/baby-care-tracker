@@ -3,10 +3,14 @@ package handlers
 import (
 	"baby-care-tracker/database"
 	"baby-care-tracker/models"
+	"bytes"
 	"crypto/rand"
+	"encoding/base64"
+	"log"
 	"math/big"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -53,11 +57,40 @@ func EnsureUserHasFamily(userID int64) (int64, error) {
 	return familyID, nil
 }
 
+// getJWTSecret 取 JWT 签名密钥：优先 JWT_SECRET 环境变量，否则读取数据目录的
+// 持密钥文件（首次启动随机生成并落盘，与 app.db 同目录，重启不变）。
+// 不提供任何硬编码默认值——仓库内置的默认密钥等于公开密钥，任何拿到代码的人都能签出
+// 有效 token（历史提交里就有一枚用默认密钥签的 demo_token.txt）。
+// 首次部署到本实现后旧 token 全部失效，需重新登录一次。
 func getJWTSecret() []byte {
 	if secret := os.Getenv("JWT_SECRET"); secret != "" {
 		return []byte(secret)
 	}
-	return []byte("baby-care-secret-key-2024")
+	dataDir := os.Getenv("DATA_DIR")
+	if dataDir == "" {
+		dataDir = "/app/data" // 与 main.go getEnv("DATA_DIR", "/app/data") 保持一致
+	}
+	path := filepath.Join(dataDir, "jwt_secret")
+	if b, err := os.ReadFile(path); err == nil {
+		if s := bytes.TrimSpace(b); len(s) >= 32 {
+			return s
+		}
+	}
+	buf := make([]byte, 48)
+	if _, err := rand.Read(buf); err != nil {
+		log.Fatalf("无法生成 JWT 密钥: %v", err)
+	}
+	secret := []byte(base64.RawURLEncoding.EncodeToString(buf))
+	if err := os.MkdirAll(dataDir, 0755); err != nil {
+		log.Printf("⚠️ 无法创建数据目录 %s，本次密钥重启后失效（需重新登录）: %v", dataDir, err)
+		return secret
+	}
+	if err := os.WriteFile(path, secret, 0600); err != nil {
+		log.Printf("⚠️ 无法写入 %s，本次密钥重启后失效（需重新登录）: %v", path, err)
+		return secret
+	}
+	log.Printf("✅ 已生成 JWT 密钥: %s", path)
+	return secret
 }
 
 var JWTSecret = getJWTSecret()

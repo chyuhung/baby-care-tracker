@@ -57,7 +57,14 @@ export const useAppStore = defineStore('app', () => {
     try {
       const res = await babyAPI.list()
       babies.value = res.data
-      if (babies.value.length > 0 && !currentBabyId.value) {
+      // 剪枝记忆的 currentBabyId：宝宝可能已在别处删除（软删除后不在列表里），
+      // 留着失效 id 会让 currentBaby 静默回落到 babies[0] 而 localStorage 仍记着旧值
+      if (babies.value.length === 0) {
+        if (currentBabyId.value !== null) {
+          currentBabyId.value = null
+          localStorage.removeItem('currentBabyId')
+        }
+      } else if (!babies.value.some(b => b.id === currentBabyId.value)) {
         setCurrentBaby(babies.value[0].id)
       }
       return true
@@ -123,10 +130,35 @@ export const useAppStore = defineStore('app', () => {
           window.dispatchEvent(new CustomEvent('record-deleted', { detail: msg.payload }))
         } else if (msg.type === 'record_updated') {
           window.dispatchEvent(new CustomEvent('record-updated', { detail: msg.payload }))
+        } else if (msg.type === 'baby_created') {
+          // WS 已按家庭过滤，收到即本家庭的宝宝。列表顺序与 GetBabies 的 created_at DESC 一致
+          const b = msg.payload as Baby
+          if (b?.id && !babies.value.some(x => x.id === b.id)) {
+            babies.value = [b, ...babies.value]
+            if (!currentBabyId.value) setCurrentBaby(b.id)
+          }
+        } else if (msg.type === 'baby_updated') {
+          const b = msg.payload as Baby
+          const i = babies.value.findIndex(x => x.id === b?.id)
+          if (i >= 0) babies.value.splice(i, 1, b)
+        } else if (msg.type === 'baby_deleted') {
+          const id = (msg.payload as { id?: number })?.id
+          if (id) removeBabyLocal(id)
         }
       } catch (e) {
         console.error('WebSocket 消息解析失败:', e)
       }
+    }
+  }
+
+  // 本地移除宝宝（家人删除广播用）：同步剪 currentBabyId，
+  // currentBaby 计算属性自动落到下一个宝宝，各页 watch(currentBaby.id) 触发重载
+  function removeBabyLocal(id: number) {
+    babies.value = babies.value.filter(x => x.id !== id)
+    if (currentBabyId.value === id) {
+      currentBabyId.value = null
+      localStorage.removeItem('currentBabyId')
+      if (babies.value.length > 0) setCurrentBaby(babies.value[0].id)
     }
   }
 
@@ -136,8 +168,14 @@ export const useAppStore = defineStore('app', () => {
       reconnectTimer = null
     }
     reconnectAttempts = 0
-    ws?.close()
+    const sock = ws
     ws = null
+    if (sock) {
+      // 先摘 onclose 再 close()：close 触发的 onclose 是异步回调，不摘的话 logout 后
+      // 残留的 onclose 会按退避时间把刚断开的 socket 重新连上（登出又重新登录出现了旧连接）。
+      sock.onclose = null
+      sock.close()
+    }
   }
 
   function onVisibilityChange() {

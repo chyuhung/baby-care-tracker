@@ -14,8 +14,12 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const res = await authAPI.getMe()
       user.value = res.data
-    } catch {
-      logout()
+    } catch (e: any) {
+      // 只有认证失败（401/403：token 过期/被撤销）才登出。
+      // 断网或后端重启时 getMe 也会 reject——此时清掉 token 等于把网络抖一下的
+      // 正常用户踢到登录页，本地 token 本来还有效（登录页也进不去反而更糟）。
+      const status = e?.response?.status
+      if (status === 401 || status === 403) logout()
     }
   }
 

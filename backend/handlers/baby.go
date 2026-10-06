@@ -6,18 +6,26 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-// checkBabyFamily 检查宝宝是否属于当前用户的家庭（软删除的宝宝视为不可用）
-func checkBabyFamily(babyID, userID int64) bool {
+// babyFamilyID 返回宝宝所属家庭（0 = 不存在或已软删除）。广播按此投递，越界即不发。
+// 注意：软删除后返回 0，需要在删除动作之前取值。
+func babyFamilyID(babyID int64) int64 {
 	var familyID int64
 	database.DB.QueryRow(
 		"SELECT u.family_id FROM babies b JOIN users u ON b.user_id = u.id WHERE b.id = ? AND b.deleted_at IS NULL",
 		babyID,
 	).Scan(&familyID)
+	return familyID
+}
+
+// checkBabyFamily 检查宝宝是否属于当前用户的家庭（软删除的宝宝视为不可用）
+func checkBabyFamily(babyID, userID int64) bool {
+	familyID := babyFamilyID(babyID)
 	if familyID == 0 {
 		return false
 	}
@@ -130,7 +138,7 @@ func CreateBaby(c *gin.Context) {
 	BroadcastMessage(models.WebSocketMessage{
 		Type:    "baby_created",
 		Payload: baby,
-	})
+	}, babyFamilyID(baby.ID))
 
 	c.JSON(http.StatusCreated, baby)
 }
@@ -154,12 +162,36 @@ func UpdateBaby(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "无权限操作"})
 		return
 	}
-	req.BirthDate = normalizeBirthDate(req.BirthDate, getTzOffset(c))
 
-	_, err = database.DB.Exec(
-		"UPDATE babies SET name = COALESCE(NULLIF(?, ''), name), birth_date = COALESCE(NULLIF(?, ''), birth_date), gender = COALESCE(NULLIF(?, ''), gender), avatar_color = COALESCE(NULLIF(?, ''), avatar_color) WHERE id = ?",
-		req.Name, req.BirthDate, req.Gender, req.AvatarColor, babyID,
-	)
+	// 动态 SET：指针 DTO 下 nil 字段跳过，空串照常写入（出生日期清空、性别改保密可行）
+	normalizedBirth := ""
+	if req.BirthDate != nil {
+		normalizedBirth = normalizeBirthDate(*req.BirthDate, getTzOffset(c))
+	}
+	var sets []string
+	var args []interface{}
+	if req.Name != nil {
+		sets = append(sets, "name = ?")
+		args = append(args, *req.Name)
+	}
+	if req.BirthDate != nil {
+		sets = append(sets, "birth_date = ?")
+		args = append(args, normalizedBirth)
+	}
+	if req.Gender != nil {
+		sets = append(sets, "gender = ?")
+		args = append(args, *req.Gender)
+	}
+	if req.AvatarColor != nil {
+		sets = append(sets, "avatar_color = ?")
+		args = append(args, *req.AvatarColor)
+	}
+	if len(sets) == 0 {
+		c.JSON(http.StatusOK, gin.H{"message": "无字段更新"})
+		return
+	}
+	args = append(args, babyID)
+	_, err = database.DB.Exec("UPDATE babies SET "+strings.Join(sets, ", ")+" WHERE id = ?", args...)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "更新失败"})
 		return
@@ -174,7 +206,7 @@ func UpdateBaby(c *gin.Context) {
 	BroadcastMessage(models.WebSocketMessage{
 		Type:    "baby_updated",
 		Payload: baby,
-	})
+	}, babyFamilyID(babyID))
 
 	c.JSON(http.StatusOK, baby)
 }
@@ -193,7 +225,9 @@ func DeleteBaby(c *gin.Context) {
 		return
 	}
 
-	// 软删除：仅打 deleted_at 标记，行保留，所有记录外键不受影响
+	// 软删除：仅打 deleted_at 标记，行保留，所有记录外键不受影响。
+	// familyID 必须在删除前取——babyFamilyID 忽略已软删除的行。
+	familyID := babyFamilyID(babyID)
 	now := time.Now().UTC().Format(time.RFC3339)
 	_, err = database.DB.Exec("UPDATE babies SET deleted_at = ? WHERE id = ?", now, babyID)
 	if err != nil {
@@ -204,7 +238,7 @@ func DeleteBaby(c *gin.Context) {
 	BroadcastMessage(models.WebSocketMessage{
 		Type:    "baby_deleted",
 		Payload: map[string]int64{"id": babyID},
-	})
+	}, familyID)
 
 	c.JSON(http.StatusOK, gin.H{"message": "删除成功"})
 }

@@ -172,30 +172,26 @@ const diaperForm = reactive({
 
 async function loadRecord() {
   if (!isEdit.value) return
-  const baby = app.currentBaby
-  if (!baby) return
   try {
-    const res = await recordAPI.list(baby.id)
-    const record = (res.data as any[]).find(r => r.id === Number(route.params.id) && r.record_type === recordType.value)
-    if (record) {
-      form.occurred_at = toLocalDatetime(record.occurred_at)
-      form.note = record.data.note || ''
-      if (record.record_type === 'feeding') {
-        feedingForm.type = record.data.type
-        feedingForm.amount_ml = record.data.amount_ml
-        feedingForm.duration_minutes = record.data.duration_minutes
-        feedingForm.side = record.data.side || 'both'
-        feedingForm.brand = record.data.brand || ''
-      } else {
-        diaperForm.type = record.data.type
-      }
+    const res = await recordAPI.get(Number(route.params.id), recordType.value)
+    const record = res.data as any
+    form.occurred_at = toLocalDatetime(record.occurred_at)
+    form.note = record.data.note || ''
+    if (record.record_type === 'feeding') {
+      feedingForm.type = record.data.type
+      feedingForm.amount_ml = record.data.amount_ml
+      feedingForm.duration_minutes = record.data.duration_minutes
+      feedingForm.side = record.data.side || 'both'
+      feedingForm.brand = record.data.brand || ''
+    } else {
+      diaperForm.type = record.data.type
     }
     loadFailed.value = false
-  } catch {
-    // 离线编辑态下不再 router.back() 静默弹回：那会把用户直接踢走，观感等同「点击无反应」。
-    // 改为内联报错并锁定保存，防止用空白默认表单覆盖真实记录。
+  } catch (e) {
+    // 取不到记录时不再静默弹回：内联报错并锁定保存，防止用空白默认表单覆盖真实记录。
+    // 覆盖面靠单条端点保证——列表窗口反查拿不到窗口外的记录，此前会走「有记录」分支之外的空当。
     loadFailed.value = true
-    error.value = '当前离线或后端不可用，本次操作未生效'
+    error.value = writeErrorMessage(e, '记录加载失败')
   }
 }
 

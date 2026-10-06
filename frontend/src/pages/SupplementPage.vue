@@ -158,25 +158,20 @@ async function loadLastSupplement() {
 
 async function loadRecord() {
   if (!isEdit.value) return
-  const baby = app.currentBaby
-  if (!baby) return
   try {
-    const res = await recordAPI.list(baby.id, { type: 'supplement', days: 90 })
-    const record = (res.data as any[]).find(r => r.id === Number(route.params.id))
-    if (record) {
-      form.occurred_at = toLocalDatetime(record.occurred_at)
-      form.name = nameOptions.includes(record.data.name) ? record.data.name : '其他'
-      customName.value = form.name === '其他' ? record.data.name : ''
-      form.dosage_value = record.data.dosage_value > 0 ? record.data.dosage_value : null
-      form.dosage_unit = record.data.dosage_unit || '滴'
-      form.note = record.data.note || ''
-    }
+    const res = await recordAPI.get(Number(route.params.id), 'supplement')
+    const record = res.data as any
+    form.occurred_at = toLocalDatetime(record.occurred_at)
+    form.name = nameOptions.includes(record.data.name) ? record.data.name : '其他'
+    customName.value = form.name === '其他' ? record.data.name : ''
+    form.dosage_value = record.data.dosage_value > 0 ? record.data.dosage_value : null
+    form.dosage_unit = record.data.dosage_unit || '滴'
+    form.note = record.data.note || ''
     loadFailed.value = false
-  } catch {
-    // 离线编辑态下不再 router.back() 静默弹回：那会把用户直接踢走，观感等同「点击无反应」。
-    // 改为内联报错并锁定保存，防止用空白默认表单覆盖真实记录。
+  } catch (e) {
+    // 取不到记录时不再静默弹回：内联报错并锁定保存，防止用空白默认表单覆盖真实记录
     loadFailed.value = true
-    error.value = '当前离线或后端不可用，本次操作未生效'
+    error.value = writeErrorMessage(e, '记录加载失败')
   }
 }
 

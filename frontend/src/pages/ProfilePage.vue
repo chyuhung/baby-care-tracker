@@ -64,8 +64,14 @@
       <div>
         <h2 class="pb-1.5 text-[13px] text-text-secondary">我的家庭</h2>
         <div class="bg-surface rounded-2xl shadow-card overflow-hidden">
+          <!-- 家庭信息加载失败：不能误显示成「无家庭」的加入表单 -->
+          <div v-if="familyLoadFailed" class="p-4 flex items-center justify-between gap-3">
+            <p class="text-xs text-text-secondary">家庭信息加载失败</p>
+            <button @click="loadFamily" class="text-sm font-medium text-primary-deep py-2 px-2 btn-press min-h-[44px]">重试</button>
+          </div>
+
           <!-- 无家庭：直接加入 -->
-          <div v-if="!family" class="p-4 space-y-2">
+          <div v-else-if="!family" class="p-4 space-y-2">
             <p class="text-xs text-text-secondary">加入家庭后，你创建的宝宝会跟随你，可与家人共同记录</p>
             <div class="flex gap-2 pt-1">
               <input v-model="joinCode" placeholder="输入对方的邀请码" maxlength="6"
@@ -188,7 +194,7 @@ import { useAppStore } from '@/stores/app'
 // 显式命名：MainLayout 内层 <keep-alive include="ProfilePage,..."> 命中缓存
 defineOptions({ name: 'ProfilePage' })
 
-import { familyAPI, recordAPI } from '@/api'
+import { familyAPI, recordAPI, writeErrorMessage } from '@/api'
 import PullRefresh from '@/components/PullRefresh.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
 
@@ -240,6 +246,8 @@ async function exportData() {
 const family = ref<Family | null>(null)
 const joinCode = ref('')
 const sheetMode = ref<'' | 'join' | 'leave' | 'reset'>('')
+// 家庭信息加载失败（后端不可达等）单独标记：不要把「没加载出来」误显示成「没有家庭」
+const familyLoadFailed = ref(false)
 
 // 我的家庭折叠展开状态
 const famOpen = ref(false)
@@ -268,8 +276,10 @@ async function loadFamily() {
   try {
     const res = await familyAPI.getMyFamily()
     family.value = { ...res.data.family, members: res.data.members }
+    familyLoadFailed.value = false
   } catch {
-    // family not available
+    // 后端不可达：family 保持原值（可能是 null），单独标记失败态而非当成「无家庭」
+    familyLoadFailed.value = true
   }
 }
 
@@ -296,7 +306,7 @@ async function doJoin() {
     await app.loadBabies()
     app.showToast('已加入家庭', 'success')
   } catch (e: any) {
-    app.showToast(e.response?.data?.error || '加入失败', 'error')
+    app.showToast(writeErrorMessage(e, '加入失败'), 'error')
   } finally {
     sheetMode.value = ''
   }
@@ -312,7 +322,7 @@ async function doLeave() {
     await app.loadBabies()
     app.showToast('已退出家庭', 'success')
   } catch (e: any) {
-    app.showToast(e.response?.data?.error || '退出失败', 'error')
+    app.showToast(writeErrorMessage(e, '退出失败'), 'error')
   } finally {
     sheetMode.value = ''
   }
@@ -336,7 +346,7 @@ async function doRegenerateCode() {
     family.value!.invite_code = res.data.invite_code
     app.showToast('邀请码已重置，旧码已失效', 'success')
   } catch (e: any) {
-    app.showToast(e.response?.data?.error || '操作失败', 'error')
+    app.showToast(writeErrorMessage(e, '操作失败'), 'error')
   } finally {
     sheetMode.value = ''
   }

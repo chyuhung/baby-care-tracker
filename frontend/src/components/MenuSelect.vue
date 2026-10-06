@@ -119,21 +119,27 @@ function onKey(e: KeyboardEvent) {
   }
 }
 
+// 打开时锁定背景滚动 + 监听 Esc/焦点 + 初始聚焦。
+// overflow 保存/恢复而非盲清空：弹层可叠在另一弹层上，内层关闭不能把外层的锁一并解掉。
+let prevOverflow = ''
+
 // 打开时锁定背景滚动 + 监听 Esc/焦点 + 初始聚焦
 watch(open, async (v) => {
   if (typeof document === 'undefined') return
-  document.body.style.overflow = v ? 'hidden' : ''
   if (v) {
+    prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
     window.addEventListener('keydown', onKey)
     await nextTick()
     panelRef.value?.focus()
   } else {
+    document.body.style.overflow = prevOverflow
     window.removeEventListener('keydown', onKey)
   }
 })
 onUnmounted(() => {
   if (typeof document !== 'undefined') {
-    document.body.style.overflow = ''
+    if (open.value) document.body.style.overflow = prevOverflow
     window.removeEventListener('keydown', onKey)
   }
 })

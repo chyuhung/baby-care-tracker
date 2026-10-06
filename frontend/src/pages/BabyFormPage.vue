@@ -89,6 +89,8 @@ const saving = ref(false)
 const deleting = ref(false)
 const showDelete = ref(false)
 const error = ref('')
+// 编辑态取数失败标记：加载失败后禁止保存，避免空表单覆盖真实档案
+const loadFailed = ref(false)
 
 const avatarColors = ['#F25C8C', '#348EED', '#2DB84F', '#F78A06', '#FFB300', '#FF6B53', '#AF52DE', '#2BAEDF']
 
@@ -120,13 +122,20 @@ async function loadBaby() {
     form.birth_date = baby.birth_date ? toLocalDatetime(baby.birth_date) : ''
     form.gender = baby.gender || ''
     form.avatar_color = baby.avatar_color || '#F25C8C'
-  } catch {
-    app.showToast('加载失败', 'error')
-    router.back()
+    loadFailed.value = false
+  } catch (e) {
+    // 不再 toast + 弹回（观感等同「点击没反应」）：内联报错并锁定保存，
+    // 防止用空表单 PUT 覆盖真实档案。
+    loadFailed.value = true
+    error.value = writeErrorMessage(e, '资料加载失败')
   }
 }
 
 async function save() {
+  if (isEdit.value && loadFailed.value) {
+    error.value = '资料未能加载，无法保存，请返回重试'
+    return
+  }
   error.value = ''
   if (!form.name.trim()) { error.value = '请输入姓名'; return }
   if (!form.birth_date) { error.value = '请选择出生日期'; return }

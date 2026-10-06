@@ -77,7 +77,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { recordAPI, writeErrorMessage } from '@/api'
+import { babyAPI, recordAPI, writeErrorMessage } from '@/api'
 import { nowLocalDatetime, toLocalDatetime } from '@/utils'
 import Segmented from '@/components/Segmented.vue'
 import DateTimeField from '@/components/DateTimeField.vue'
@@ -118,13 +118,10 @@ async function loadLastTemperature() {
   const baby = app.currentBaby
   if (!baby) return
   try {
-    const res = await recordAPI.list(baby.id, { type: 'temperature', days: 30 })
-    const records = res.data as any[]
-    if (records.length > 0) {
-      const latest = records[0]
-      form.location = latest.data.location || '腋下'
-      if (latest.data.note) form.note = latest.data.note
-    }
+    const res = await babyAPI.latestTemperature(baby.id)
+    const latest = res.data as { temperature?: number; location?: string; note?: string }
+    if (latest?.location) form.location = latest.location
+    if (latest?.note) form.note = latest.note
   } catch {
     // ignore
   }
@@ -132,23 +129,18 @@ async function loadLastTemperature() {
 
 async function loadRecord() {
   if (!isEdit.value) return
-  const baby = app.currentBaby
-  if (!baby) return
   try {
-    const res = await recordAPI.list(baby.id, { type: 'temperature', days: 90 })
-    const record = (res.data as any[]).find(r => r.id === Number(route.params.id))
-    if (record) {
-      form.occurred_at = toLocalDatetime(record.occurred_at)
-      form.temperature = record.data.temperature
-      form.location = record.data.location || '腋下'
-      form.note = record.data.note || ''
-    }
+    const res = await recordAPI.get(Number(route.params.id), 'temperature')
+    const record = res.data as any
+    form.occurred_at = toLocalDatetime(record.occurred_at)
+    form.temperature = record.data.temperature
+    form.location = record.data.location || '腋下'
+    form.note = record.data.note || ''
     loadFailed.value = false
-  } catch {
-    // 离线编辑态下不再 router.back() 静默弹回：那会把用户直接踢走，观感等同「点击无反应」。
-    // 改为内联报错并锁定保存，防止用空白默认表单覆盖真实记录。
+  } catch (e) {
+    // 取不到记录时不再静默弹回：内联报错并锁定保存，防止用空白默认表单覆盖真实记录
     loadFailed.value = true
-    error.value = '当前离线或后端不可用，本次操作未生效'
+    error.value = writeErrorMessage(e, '记录加载失败')
   }
 }
 

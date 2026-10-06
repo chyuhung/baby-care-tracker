@@ -1,8 +1,9 @@
 <template>
   <!-- 记录卡片：左 emoji 色块 + 左列（标题 17px + 值区「时长/量等」+ 发热/备注）+ 右列时间（上下垂直居中）。
        类型由色块弱着色 + emoji 区分；点按=编辑，删除走长按 ContextMenu（编辑/删除→确认），无常显按钮、无滑动删除 -->
-  <div role="button" tabindex="0" keydown.enter.prevent="$emit('edit')"
+  <div role="button" tabindex="0"
     class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer press-card"
+    @keydown.enter.prevent="$emit('edit')" @keydown.space.prevent="$emit('edit')"
     @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
     <div class="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-lg leading-none" :class="tintClass">{{ emoji }}</div>
     <div class="flex flex-1 min-w-0 items-center justify-between gap-3">

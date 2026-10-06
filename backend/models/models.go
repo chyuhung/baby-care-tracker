@@ -171,11 +171,13 @@ type CreateBabyRequest struct {
 	AvatarColor string `json:"avatar_color"`
 }
 
+// UpdateBabyRequest 指针字段：nil = 不更新该字段，非 nil 包括空串（清空出生日期/性别「保密」）。
+// 原 string + COALESCE(NULLIF) 实现把空串当成「未提供」，导致出生日期一旦填写就无法再清空。
 type UpdateBabyRequest struct {
-	Name        string `json:"name"`
-	BirthDate   string `json:"birth_date"`
-	Gender      string `json:"gender"`
-	AvatarColor string `json:"avatar_color"`
+	Name        *string `json:"name"`
+	BirthDate   *string `json:"birth_date"`
+	Gender      *string `json:"gender"`
+	AvatarColor *string `json:"avatar_color"`
 }
 
 type CreateFeedingRequest struct {
@@ -259,9 +261,11 @@ type WebSocketMessage struct {
 	Payload interface{} `json:"payload"`
 }
 
-// WSClient WebSocket 客户端
+// WSClient WebSocket 客户端。FamilyID 用于按家庭过滤广播——记录属于宝宝、宝宝属于
+// 家庭，跨家庭推送等于泄露隐私，故 hub 只向同 family 的连接投递。
 type WSClient struct {
 	UserID    int64
+	FamilyID  int64
 	Send      chan []byte
 	closeOnce sync.Once
 }

@@ -346,6 +346,9 @@ export const babyAPI = {
 }
 
 export const recordAPI = {
+  // 单条读取（编辑页加载用）——列表窗口反查拿不到窗口外的记录，点编辑会毫无反应
+  get: (id: number, type: string) =>
+    api.get<Record>(`/records/${id}`, { params: { type } }),
   list: (babyId: number, opts: { type?: string; days?: number; offset?: number; limit?: number } = {}) => {
     const params: Record<string, string | number> = {}
     if (opts.type) params.type = opts.type

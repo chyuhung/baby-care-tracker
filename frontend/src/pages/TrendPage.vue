@@ -257,7 +257,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useAppStore } from '@/stores/app'
 
 // 显式命名：MainLayout 内层 <keep-alive include="TrendPage,..."> 命中缓存
@@ -820,16 +820,29 @@ async function loadTrend(silent: boolean = false) {
     trendCur.value = all.slice(-(d + 1), -1)
     trendPrev.value = all.slice(-(2 * d + 1), -(d + 1))
   } catch {
-    trendData.value = []
-    trendCur.value = []
-    trendPrev.value = []
+    // 失败不清空：保留上一轮图数据比闪白屏好，仅提示（切换 7/30 天失败时旧天数的图仍在）
     app.showToast('趋势数据加载失败', 'error')
   } finally {
     loading.value = false
   }
 }
 
-onMounted(() => { if (app.currentBaby) loadTrend() })
+// 家人记录变化 → 静默重取（趋势是后端聚合，无法原位增量）
+function onRecordEvent() {
+  if (app.currentBaby) loadTrend(true)
+}
+
+onMounted(() => {
+  if (app.currentBaby) loadTrend()
+  window.addEventListener('record-created', onRecordEvent)
+  window.addEventListener('record-updated', onRecordEvent)
+  window.addEventListener('record-deleted', onRecordEvent)
+})
+onUnmounted(() => {
+  window.removeEventListener('record-created', onRecordEvent)
+  window.removeEventListener('record-updated', onRecordEvent)
+  window.removeEventListener('record-deleted', onRecordEvent)
+})
 
 // 冷启动/切换宝宝时 currentBaby 可能晚于本页挂载就绪（同 P0）：监听其就绪后补载
 watch(() => app.currentBaby?.id, (id) => {

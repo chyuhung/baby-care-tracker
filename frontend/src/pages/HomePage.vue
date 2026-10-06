@@ -243,7 +243,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
@@ -300,10 +300,27 @@ const todayTempRecords = ref<any[]>([])
 // 且点「加载更多」还会让均值跳变。独立取数后各项均值只取决于真实数据量：有几次算几次（上限 10 次）。
 const AVG_WINDOW = 10
 const AVG_TYPES = ['feeding', 'diaper', 'sleep', 'outdoor', 'supplement'] as const
+// 本页「最近记录」列表实际展示的 6 类。WS 事件可能携带本页不认识的类型（如 growth 的
+// {id, type:'growth', baby_id}），不过滤会把残缺形状 upsert 进列表、渲染成坏卡片。
+const LIST_TYPES = ['feeding', 'diaper', 'sleep', 'temperature', 'outdoor', 'supplement']
 const recentByType = ref<Record<string, any[]>>({})
 const showDeleteConfirm = ref(false)
 const recordToDelete = ref<any>(null)
-const { softDelete } = useUndoDelete(allRecords, { onRestored: () => refreshStatsSoon() })
+const { softDelete } = useUndoDelete(allRecords, {
+  // 乐观删除后分页窗口同步收一格：否则「剩余 N」偏大、下次「加载更多」的 offset 也偏前移
+  onRemoved: () => {
+    if (loadedCount.value > 0) loadedCount.value -= 1
+    if (totalCount.value > 0) totalCount.value -= 1
+    nextOffset.value = Math.max(0, nextOffset.value - 1)
+    refreshStatsSoon()
+  },
+  onRestored: () => {
+    loadedCount.value += 1
+    totalCount.value += 1
+    nextOffset.value += 1
+    refreshStatsSoon()
+  },
+})
 
 // ── 长按上下文菜单 ─────────────────────────────────────────
 const contextOpen = ref(false)
@@ -702,43 +719,64 @@ function upsertRecord(rec: any) {
   else allRecords.value.unshift(rec)
 }
 
+// 应用一条记录到本页状态（创建与更新共用）：类型/宝宝过滤 → 进行中跟踪 →
+// 列表原位 upsert → AVG 窗口同步 → 今日体温卡同步。返回 false = 与本页无关。
+function applyRecord(rec: any): boolean {
+  if (!rec || !LIST_TYPES.includes(rec.record_type) || rec.baby_id !== app.currentBaby?.id) return false
+  if (rec.record_type === 'sleep') {
+    if (!rec.data?.ended_at) currentSleep.value = rec.data
+    else if (currentSleep.value?.id === rec.id) currentSleep.value = null
+  } else if (rec.record_type === 'outdoor') {
+    if (!rec.data?.ended_at) currentOutdoor.value = rec.data
+    else if (currentOutdoor.value?.id === rec.id) currentOutdoor.value = null
+  }
+  upsertRecord(rec)
+  // 同步进该类型的最近窗口，均值/距上次立即跟上（否则要等下次整页刷新）
+  const t = rec.record_type as (typeof AVG_TYPES)[number]
+  if (AVG_TYPES.includes(t)) {
+    const rows = [rec, ...recentOf(t).filter(r => r.id !== rec.id)]
+      .sort((a, b) => (b.occurred_at || '').localeCompare(a.occurred_at || ''))
+      .slice(0, AVG_WINDOW)
+    recentByType.value = { ...recentByType.value, [t]: rows }
+  }
+  // 今日体温卡是独立取数窗口：按日期同步，编辑到非今日时移出窗口
+  if (rec.record_type === 'temperature') {
+    const rows = todayTempRecords.value.filter(r => r.id !== rec.id)
+    if (isToday(rec.occurred_at)) {
+      rows.unshift(rec)
+      rows.sort((a, b) => (b.occurred_at || '').localeCompare(a.occurred_at || ''))
+    }
+    todayTempRecords.value = rows
+  }
+  return true
+}
+
 function onRecordCreated(e: Event) {
   const record = (e as CustomEvent).detail
   if (!record) { loadData(); return }
-  if (record.baby_id === app.currentBaby?.id) {
-    if (record.record_type === 'sleep' || record.record_type === 'outdoor') {
-      if (!record.data?.ended_at) {
-        if (record.record_type === 'sleep') currentSleep.value = record.data
-        else currentOutdoor.value = record.data
-      } else {
-        if (record.record_type === 'sleep' && currentSleep.value?.id === record.id) currentSleep.value = null
-        if (record.record_type === 'outdoor' && currentOutdoor.value?.id === record.id) currentOutdoor.value = null
-        loadData()
-      }
-      // 进行中也立即进入「最近记录」（原分支直接 return，要等下次整页刷新才出现）
-      upsertRecord(record)
-      return
-    }
-    upsertRecord(record)
-    // 同步进该类型的最近窗口，均值/距上次立即跟上（否则要等下次整页刷新）。
-    // 睡眠/户外在上面的分支已 return（结束时会整页 loadData），此处只处理即时记录的喂奶/尿布/补剂。
-    const t = record.record_type as (typeof AVG_TYPES)[number]
-    if (AVG_TYPES.includes(t)) {
-      const rows = [record, ...recentOf(t).filter(r => r.id !== record.id)]
-        .sort((a, b) => (b.occurred_at || '').localeCompare(a.occurred_at || ''))
-        .slice(0, AVG_WINDOW)
-      recentByType.value = { ...recentByType.value, [t]: rows }
-    }
-  }
+  if (!applyRecord(record)) return
+  // 结束睡眠/户外会改变当日时长统计 → 整页刷新；其余统计走 refreshStatsSoon（见 updated）
+  if ((record.record_type === 'sleep' || record.record_type === 'outdoor') && record.data?.ended_at) loadData()
+}
+
+// 家人端编辑（含睡眠/户外结束）：列表已原位替换，统计与进行中状态轻量刷新
+function onRecordUpdated(e: Event) {
+  const rec = (e as CustomEvent).detail
+  if (!applyRecord(rec)) return
+  refreshStatsSoon()
 }
 
 function onRecordDeleted(e: Event) {
-  const { id, type } = (e as CustomEvent).detail || {}
-  allRecords.value = allRecords.value.filter(r => !(r.id === id && r.record_type === (type || r.record_type)))
+  // type 是权威匹配键：所有派发点（含后端 WS）都带 type；record_type 是旧 payload 的兜底。
+  // 缺 type 时才退化为按 id 全类型匹配——否则不同表的自增 id 撞车会误删别人的行。
+  const { id, type, record_type } = (e as CustomEvent).detail || {}
+  const t = type || record_type
+  allRecords.value = allRecords.value.filter(r => !(r.id === id && (!t || r.record_type === t)))
   // 进行中的睡眠/户外被删（本页或家人端）→ 计时器同步停，否则卡片会对已删记录一直走秒
-  if (currentSleep.value?.id === id && (!type || type === 'sleep')) currentSleep.value = null
-  if (currentOutdoor.value?.id === id && (!type || type === 'outdoor')) currentOutdoor.value = null
-  const targets = type ? [type] : [...AVG_TYPES]
+  if (currentSleep.value?.id === id && (!t || t === 'sleep')) currentSleep.value = null
+  if (currentOutdoor.value?.id === id && (!t || t === 'outdoor')) currentOutdoor.value = null
+  if (t === 'temperature') todayTempRecords.value = todayTempRecords.value.filter(r => r.id !== id)
+  const targets = t ? [t] : [...AVG_TYPES]
   const next = { ...recentByType.value }
   let changed = false
   for (const t of targets) {
@@ -749,9 +787,17 @@ function onRecordDeleted(e: Event) {
   if (changed) recentByType.value = next
 }
 
+// 切换当前宝宝后整页重取：本页被 keep-alive 缓存、切 tab 不重挂载，
+// 不监听就会一直显示上一个宝宝的记录/统计。只在「换宝宝」时触发（old 存在）：
+// 冷启动的 undefined→就绪由 onMounted 的 loadData 自己负责，不重复取数。
+watch(() => app.currentBaby?.id, (id, old) => {
+  if (id && old) loadData()
+})
+
 onMounted(() => {
   loadData()
   window.addEventListener('record-created', onRecordCreated)
+  window.addEventListener('record-updated', onRecordUpdated)
   window.addEventListener('record-deleted', onRecordDeleted)
   // 每 10s 推进一次；同时检测本地日界——跨过午夜后 stats 与「今日体温」都已属于昨天，
   // 自动整页重取一次，让所有「今日」项在最多 10s 内自愈，而不需要用户手动刷新。
@@ -764,6 +810,7 @@ onMounted(() => {
 })
 onUnmounted(() => {
   window.removeEventListener('record-created', onRecordCreated)
+  window.removeEventListener('record-updated', onRecordUpdated)
   window.removeEventListener('record-deleted', onRecordDeleted)
   if (tickTimer !== null) clearInterval(tickTimer)
 })

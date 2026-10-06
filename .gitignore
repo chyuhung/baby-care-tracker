@@ -1,6 +1,7 @@
 node_modules/
 frontend/dist/
-backend/dist/
+backend/dist/*
+!backend/dist/**
 /data/
 *.exe
 *.exe~
@@ -12,3 +13,6 @@ backend/dist/
 .env
 .DS_Store
 Thumbs.db
+
+# JWT 密钥文件（数据目录内，不入库；部署时经环境变量或文件注入）
+jwt_secret

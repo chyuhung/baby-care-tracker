@@ -78,16 +78,24 @@ function run(a: ContextAction) {
 
 function onKey(e: KeyboardEvent) { if (e.key === 'Escape') close() }
 
+let prevOverflow = ''
 watch(() => props.open, (v) => {
   if (typeof document === 'undefined') return
-  if (v) openedAt = Date.now()
-  document.body.style.overflow = v ? 'hidden' : ''
-  if (v) window.addEventListener('keydown', onKey)
-  else window.removeEventListener('keydown', onKey)
+  if (v) {
+    openedAt = Date.now()
+    // 保存进入时的 overflow 值再锁定：弹层可能叠在另一弹层之上（此时 body 已是 hidden），
+    // 关闭时必须恢复它而不是无脑清空——否则内层先关会把外层锁也解掉。
+    prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKey)
+  } else {
+    document.body.style.overflow = prevOverflow
+    window.removeEventListener('keydown', onKey)
+  }
 })
 onUnmounted(() => {
   if (typeof document !== 'undefined') {
-    document.body.style.overflow = ''
+    if (props.open) document.body.style.overflow = prevOverflow
     window.removeEventListener('keydown', onKey)
   }
 })

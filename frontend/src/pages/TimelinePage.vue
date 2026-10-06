@@ -78,7 +78,19 @@ const app = useAppStore()
 const router = useRouter()
 const route = useRoute()
 const records = ref<any[]>([])
-const { softDelete } = useUndoDelete(records)
+const { softDelete } = useUndoDelete(records, {
+  // 删除后分页三计数同步收一格（撤销/失败回滚时列表还原，计数不动即可——onRestored 未递减）
+  onRemoved: () => {
+    if (loadedCount.value > 0) loadedCount.value -= 1
+    if (totalCount.value > 0) totalCount.value -= 1
+    nextOffset.value = Math.max(0, nextOffset.value - 1)
+  },
+  onRestored: () => {
+    loadedCount.value += 1
+    totalCount.value += 1
+    nextOffset.value += 1
+  },
+})
 
 // ── 长按上下文菜单 ─────────────────────────────────────────
 const contextOpen = ref(false)
@@ -228,29 +240,46 @@ async function confirmDelete() {
   softDelete(recordToDelete.value)
 }
 
-function onRecordCreated(e: Event) {
-  const record = (e as CustomEvent).detail
-  if (!record) { loadRecords(); return }
-  if (record.baby_id !== app.currentBaby?.id) return
-  // 按 id+record_type 去重 upsert：同一条记录会到两次（本地 dispatch + WS 回声），
-  // 进行中的睡眠/户外在「结束」事件前也已以进行中行存在——结束必须原位替换，否则重复两行。
+// 一条记录进列表（创建与更新共用）：宝宝过滤 + 6 类白名单 + 按 id+record_type 去重 upsert。
+// 白名单是必须的——growth 等事件只带 {id, type, baby_id}，残缺形状 upsert 进列表会渲染成坏卡片；
+// 去重是必须的——同一条记录会到两次（本地 dispatch + WS 回声），编辑/结束必须原位替换，否则重复两行。
+function applyRecord(record: any): boolean {
+  if (!record || record.baby_id !== app.currentBaby?.id) return false
+  if (!['feeding', 'diaper', 'sleep', 'temperature', 'outdoor', 'supplement'].includes(record.record_type)) return false
   const i = records.value.findIndex(r => r.id === record.id && r.record_type === record.record_type)
   if (i >= 0) records.value.splice(i, 1, record)
   else records.value.unshift(record)
+  return true
+}
+
+function onRecordCreated(e: Event) {
+  const record = (e as CustomEvent).detail
+  if (!record) { loadRecords(); return }
+  applyRecord(record)
+}
+
+// 家人端编辑：原位替换（时间线无统计卡，不需要额外刷新）
+function onRecordUpdated(e: Event) {
+  applyRecord((e as CustomEvent).detail)
 }
 
 function onRecordDeleted(e: Event) {
-  const { id, type } = (e as CustomEvent).detail || {}
-  records.value = records.value.filter(r => !(r.id === id && r.record_type === (type || r.record_type)))
+  // type 为权威匹配键（所有派发点都带），record_type 是旧 payload 兜底；
+  // 缺 type 才退化为按 id 全类型匹配，避免不同表自增 id 撞车误删
+  const { id, type, record_type } = (e as CustomEvent).detail || {}
+  const t = type || record_type
+  records.value = records.value.filter(r => !(r.id === id && (!t || r.record_type === t)))
 }
 
 onMounted(() => {
   loadRecords()
   window.addEventListener('record-created', onRecordCreated)
+  window.addEventListener('record-updated', onRecordUpdated)
   window.addEventListener('record-deleted', onRecordDeleted)
 })
 onUnmounted(() => {
   window.removeEventListener('record-created', onRecordCreated)
+  window.removeEventListener('record-updated', onRecordUpdated)
   window.removeEventListener('record-deleted', onRecordDeleted)
 })
 </script>

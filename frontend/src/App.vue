@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-dvh bg-bg-main flex flex-col" :data-theme="app.theme">
+  <div class="min-h-dvh bg-bg-main flex flex-col">
     <Toast />
     <!-- 刻意不加 <transition>：深页 push/pop 与登录切换同样瞬时替换。
          name="page" mode="out-in" + opacity 0.2s 的交接空档（旧页淡出结束 → 新页插入之间必然空一帧）
@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import Toast from '@/components/Toast.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
@@ -26,6 +26,11 @@ const auth = useAuthStore()
 const app = useAppStore()
 
 const cacheInclude = computed(() => (auth.isLoggedIn ? 'MainLayout' : ''))
+
+// data-theme 落在 <html> 上而不是 #app 内的 div：CSS 自定义属性在「声明处」解析后继承——
+// style.css 的 :root 块里凡用 var() 引用其他主题 token 的声明，不会为后代元素上的
+// data-theme 重算，深浅/男女主题切换会残留旧值。裸属性选择器 [data-theme=x] 对 html 同样生效。
+watch(() => app.theme, (t) => document.documentElement.setAttribute('data-theme', t), { immediate: true })
 
 // 状态栏/chrome 颜色由 index.html 的 media-scoped theme-color 处理：
 // 浅色 #FFFFFF / 深色 #1C1C1E = --surface（= NavBar 顶栏色）。

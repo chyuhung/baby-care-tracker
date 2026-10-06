@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "postbuild": "node ./scripts/copy-dist.mjs",
     "typecheck": "vue-tsc --noEmit",
     "preview": "vite preview"
   },

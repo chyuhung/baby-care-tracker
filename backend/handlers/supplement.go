@@ -71,7 +71,7 @@ func CreateSupplement(c *gin.Context) {
 	BroadcastMessage(models.WebSocketMessage{
 		Type:    "record_created",
 		Payload: rec,
-	})
+	}, babyFamilyID(babyID))
 
 	c.JSON(http.StatusCreated, rec)
 }

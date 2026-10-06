@@ -53,7 +53,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
-import { recordAPI, UpdateRecordData } from '@/api'
+import { recordAPI, writeErrorMessage, UpdateRecordData } from '@/api'
 import { toLocalDatetime } from '@/utils'
 import FormBar from './FormBar.vue'
 import NavBar from './NavBar.vue'
@@ -78,29 +78,34 @@ const submitting = ref(false)
 const deleting = ref(false)
 const showDelete = ref(false)
 const error = ref('')
+// 取数失败标记：加载失败后禁止保存，避免空表单覆盖真实记录
+const loadFailed = ref(false)
 const form = ref({ started_at: '', ended_at: '', note: '' })
 
 async function load() {
-  const baby = app.currentBaby
-  if (!baby) { loaded.value = true; return }
   try {
-    const res = await recordAPI.list(baby.id)
-    const record = (res.data as any[]).find(r => r.id === Number(route.params.id) && r.record_type === props.type)
-    if (record) {
-      form.value = {
-        started_at: toLocalDatetime(record.data.started_at),
-        ended_at: record.data.ended_at ? toLocalDatetime(record.data.ended_at) : '',
-        note: record.data.note || '',
-      }
+    const res = await recordAPI.get(Number(route.params.id), props.type)
+    const record = res.data as any
+    form.value = {
+      started_at: toLocalDatetime(record.data.started_at),
+      ended_at: record.data.ended_at ? toLocalDatetime(record.data.ended_at) : '',
+      note: record.data.note || '',
     }
-  } catch {
-    app.showToast('加载失败', 'error')
+    loadFailed.value = false
+  } catch (e) {
+    // 单条端点拿不到记录（不存在/越权/离线）→ 内联报错并锁定保存
+    loadFailed.value = true
+    error.value = writeErrorMessage(e, '记录加载失败')
   } finally {
     loaded.value = true
   }
 }
 
 async function save() {
+  if (loadFailed.value) {
+    error.value = '记录未能加载，无法保存，请返回重试'
+    return
+  }
   error.value = ''
   if (!form.value.started_at) { error.value = '请选择开始时间'; return }
   if (form.value.ended_at && form.value.ended_at < form.value.started_at) {
@@ -118,8 +123,8 @@ async function save() {
     window.dispatchEvent(new CustomEvent('record-created', { detail: null }))
     app.showToast('已保存', 'success')
     router.back()
-  } catch {
-    app.showToast('保存失败', 'error')
+  } catch (e: any) {
+    app.showToast(writeErrorMessage(e, '保存失败'), 'error')
   } finally {
     submitting.value = false
   }
@@ -132,8 +137,8 @@ async function doDelete() {
     window.dispatchEvent(new CustomEvent('record-deleted', { detail: { id: Number(route.params.id), type: props.type } }))
     app.showToast('已删除', 'success')
     router.back()
-  } catch {
-    app.showToast('删除失败', 'error')
+  } catch (e: any) {
+    app.showToast(writeErrorMessage(e, '删除失败'), 'error')
     showDelete.value = false
   } finally {
     deleting.value = false

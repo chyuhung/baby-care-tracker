@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"baby-care-tracker/database"
 	"baby-care-tracker/models"
 	"encoding/json"
 	"log"
@@ -31,15 +32,21 @@ var upgrader = websocket.Upgrader{
 
 type WSHub struct {
 	clients    map[int64]map[*models.WSClient]bool
-	broadcast  chan []byte
+	broadcast  chan wsFrame
 	register   chan *models.WSClient
 	unregister chan *models.WSClient
 	mu         sync.RWMutex
 }
 
+// wsFrame 广播帧：data 是已序列化消息，familyID 决定投递范围（0 = 无家庭，投给任何人）
+type wsFrame struct {
+	data     []byte
+	familyID int64
+}
+
 var Hub = &WSHub{
 	clients:    make(map[int64]map[*models.WSClient]bool),
-	broadcast:  make(chan []byte, 256),
+	broadcast:  make(chan wsFrame, 256),
 	register:   make(chan *models.WSClient),
 	unregister: make(chan *models.WSClient),
 }
@@ -69,13 +76,17 @@ func (h *WSHub) Run() {
 			h.mu.Unlock()
 			log.Printf("WS: 用户 %d 断开", client.UserID)
 
-		case message := <-h.broadcast:
+		case frame := <-h.broadcast:
 			h.mu.Lock()
 			for userID, set := range h.clients {
 				var dead []*models.WSClient
 				for client := range set {
+					// 按家庭过滤：不同家庭的连接不投递（familyID 0 不匹配任何帧）
+					if client.FamilyID == 0 || client.FamilyID != frame.familyID {
+						continue
+					}
 					select {
-					case client.Send <- message:
+					case client.Send <- frame.data:
 					default:
 						client.CloseSend()
 						dead = append(dead, client)
@@ -101,14 +112,18 @@ func (h *WSHub) totalConnections() int {
 	return n
 }
 
-// BroadcastMessage 向所有连接的客户端广播消息
-func BroadcastMessage(msg models.WebSocketMessage) {
+// BroadcastMessage 向 familyID 所属家庭的所有连接广播消息。
+// familyID 必须由调用方显式给出（宝宝所属家庭），0 表示未知——直接丢弃，宁可不推也不越界。
+func BroadcastMessage(msg models.WebSocketMessage, familyID int64) {
+	if familyID == 0 {
+		return
+	}
 	data, err := json.Marshal(msg)
 	if err != nil {
 		return
 	}
 	select {
-	case Hub.broadcast <- data:
+	case Hub.broadcast <- wsFrame{data: data, familyID: familyID}:
 	default:
 		log.Println("WS: 广播队列满，丢弃消息")
 	}
@@ -133,9 +148,14 @@ func HandleWebSocket(c *gin.Context) {
 		return
 	}
 
+	// 连接即带上所属家庭：注册/换家庭后仍以连接建立时的归属投递（重连即刷新）
+	var familyID int64
+	database.DB.QueryRow("SELECT family_id FROM users WHERE id = ?", userID).Scan(&familyID)
+
 	client := &models.WSClient{
-		UserID: userID,
-		Send:   make(chan []byte, 256),
+		UserID:   userID,
+		FamilyID: familyID,
+		Send:     make(chan []byte, 256),
 	}
 
 	Hub.register <- client

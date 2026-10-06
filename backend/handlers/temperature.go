@@ -31,6 +31,11 @@ func CreateTemperature(c *gin.Context) {
 		req.OccurredAt = time.Now().UTC().Format("2006-01-02T15:04:05Z")
 	}
 
+	if req.Temperature < 30 || req.Temperature > 60 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "体温需在 30-60°C 之间"})
+		return
+	}
+
 	result, err := database.DB.Exec(
 		"INSERT INTO temperature_records (baby_id, user_id, temperature, location, note, occurred_at) VALUES (?, ?, ?, ?, ?, ?)",
 		babyID, userID, req.Temperature, req.Location, req.Note, req.OccurredAt,
@@ -70,7 +75,7 @@ func CreateTemperature(c *gin.Context) {
 	BroadcastMessage(models.WebSocketMessage{
 		Type:    "record_created",
 		Payload: rec,
-	})
+	}, babyFamilyID(babyID))
 
 	c.JSON(http.StatusCreated, rec)
 }

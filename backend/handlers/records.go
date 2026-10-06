@@ -44,6 +44,123 @@ func lookupBabyID(recordID int64, recordType string) int64 {
 	return babyID
 }
 
+// recordTables 记录类型 → 表名白名单。表名只能来自本映射，绝不拼接用户输入。
+var recordTables = map[string]string{
+	"feeding":     "feeding_records",
+	"diaper":      "diaper_records",
+	"sleep":       "sleep_records",
+	"temperature": "temperature_records",
+	"outdoor":     "outdoor_records",
+	"supplement":  "supplement_records",
+}
+
+// GetRecord 按 id + type 读取单条记录（编辑页加载用）。
+// 此前编辑页没有单条读取端点，只能从列表窗口反查——记录不在窗口内时点「编辑」毫无反应。
+func GetRecord(c *gin.Context) {
+	userID := c.GetInt64("user_id")
+	id, err := parseInt64(c.Param("id"))
+	if err != nil || id <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return
+	}
+	recordType := c.Query("type")
+	table, ok := recordTables[recordType]
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "type 必须为 feeding, diaper, sleep, temperature, outdoor 或 supplement"})
+		return
+	}
+	var babyID int64
+	if err := database.DB.QueryRow("SELECT baby_id FROM "+table+" WHERE id = ?", id).Scan(&babyID); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "记录不存在"})
+		return
+	}
+	if !checkBabyFamily(babyID, userID) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "无权限"})
+		return
+	}
+	rec, ok := loadSingleRecord(recordType, id)
+	if !ok {
+		c.JSON(http.StatusNotFound, gin.H{"error": "记录不存在"})
+		return
+	}
+	c.JSON(http.StatusOK, rec)
+}
+
+// loadSingleRecord 按类型读取单条记录并组装为统一 Record（扫描逻辑与 GetRecords 列表一致）
+func loadSingleRecord(recordType string, id int64) (models.Record, bool) {
+	var rec models.Record
+	var err error
+	switch recordType {
+	case "feeding":
+		var r models.FeedingRecord
+		err = database.DB.QueryRow(
+			"SELECT id, baby_id, user_id, type, duration_minutes, amount_ml, side, brand, note, occurred_at, created_at FROM feeding_records WHERE id = ?", id,
+		).Scan(&r.ID, &r.BabyID, &r.UserID, &r.Type, &r.DurationMinutes, &r.AmountMl, &r.Side, &r.Brand, &r.Note, &r.OccurredAt, &r.CreatedAt)
+		if err == nil {
+			r.RecordType = "feeding"
+			rec = models.Record{ID: r.ID, BabyID: r.BabyID, UserID: r.UserID, RecordType: "feeding", Data: r, OccurredAt: r.OccurredAt, CreatedAt: r.CreatedAt}
+		}
+	case "diaper":
+		var r models.DiaperRecord
+		err = database.DB.QueryRow(
+			"SELECT id, baby_id, user_id, type, note, occurred_at, created_at FROM diaper_records WHERE id = ?", id,
+		).Scan(&r.ID, &r.BabyID, &r.UserID, &r.Type, &r.Note, &r.OccurredAt, &r.CreatedAt)
+		if err == nil {
+			r.RecordType = "diaper"
+			rec = models.Record{ID: r.ID, BabyID: r.BabyID, UserID: r.UserID, RecordType: "diaper", Data: r, OccurredAt: r.OccurredAt, CreatedAt: r.CreatedAt}
+		}
+	case "sleep", "outdoor":
+		table := recordTables[recordType]
+		var startedAt, note, createdAt string
+		var endedAt sql.NullString
+		var rid, rBabyID, rUserID int64
+		err = database.DB.QueryRow(
+			"SELECT id, baby_id, user_id, started_at, ended_at, note, created_at FROM "+table+" WHERE id = ?", id,
+		).Scan(&rid, &rBabyID, &rUserID, &startedAt, &endedAt, &note, &createdAt)
+		if err == nil {
+			if recordType == "sleep" {
+				r := models.SleepRecord{ID: rid, BabyID: rBabyID, UserID: rUserID, StartedAt: startedAt, Note: note, CreatedAt: createdAt, RecordType: "sleep"}
+				if endedAt.Valid {
+					r.EndedAt = &endedAt.String
+				}
+				rec = models.Record{ID: rid, BabyID: rBabyID, UserID: rUserID, RecordType: "sleep", Data: r, OccurredAt: startedAt, CreatedAt: createdAt}
+			} else {
+				r := models.OutdoorRecord{ID: rid, BabyID: rBabyID, UserID: rUserID, StartedAt: startedAt, Note: note, CreatedAt: createdAt, RecordType: "outdoor"}
+				if endedAt.Valid {
+					r.EndedAt = &endedAt.String
+				}
+				rec = models.Record{ID: rid, BabyID: rBabyID, UserID: rUserID, RecordType: "outdoor", Data: r, OccurredAt: startedAt, CreatedAt: createdAt}
+			}
+		}
+	case "temperature":
+		var r models.TemperatureRecord
+		var location string
+		err = database.DB.QueryRow(
+			"SELECT id, baby_id, user_id, temperature, location, note, occurred_at, created_at FROM temperature_records WHERE id = ?", id,
+		).Scan(&r.ID, &r.BabyID, &r.UserID, &r.Temperature, &location, &r.Note, &r.OccurredAt, &r.CreatedAt)
+		if err == nil {
+			r.Location = location
+			r.RecordType = "temperature"
+			rec = models.Record{ID: r.ID, BabyID: r.BabyID, UserID: r.UserID, RecordType: "temperature", Data: r, OccurredAt: r.OccurredAt, CreatedAt: r.CreatedAt}
+		}
+	case "supplement":
+		var r models.SupplementRecord
+		err = database.DB.QueryRow(
+			"SELECT id, baby_id, user_id, name, dosage_value, dosage_unit, note, occurred_at, created_at FROM supplement_records WHERE id = ?", id,
+		).Scan(&r.ID, &r.BabyID, &r.UserID, &r.Name, &r.DosageValue, &r.DosageUnit, &r.Note, &r.OccurredAt, &r.CreatedAt)
+		if err == nil {
+			r.RecordType = "supplement"
+			rec = models.Record{ID: r.ID, BabyID: r.BabyID, UserID: r.UserID, RecordType: "supplement", Data: r, OccurredAt: r.OccurredAt, CreatedAt: r.CreatedAt}
+		}
+	default:
+		return models.Record{}, false
+	}
+	if err != nil {
+		return models.Record{}, false
+	}
+	return rec, true
+}
+
 // GetRecords 获取某宝宝所有记录（统一时间线）
 func GetRecords(c *gin.Context) {
 	userID := c.GetInt64("user_id")
@@ -141,6 +258,10 @@ func GetRecords(c *gin.Context) {
 			FROM feeding_records WHERE baby_id = ?`+daysFilter+` ORDER BY occurred_at DESC`+pageSQL,
 			fArgs...,
 		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
+			return
+		}
 		if err == nil {
 			defer rows.Close()
 			for rows.Next() {
@@ -176,6 +297,10 @@ func GetRecords(c *gin.Context) {
 			FROM diaper_records WHERE baby_id = ?`+daysFilter+` ORDER BY occurred_at DESC`+pageSQL,
 			dArgs...,
 		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
+			return
+		}
 		if err == nil {
 			defer rows.Close()
 			for rows.Next() {
@@ -206,6 +331,10 @@ func GetRecords(c *gin.Context) {
 			FROM sleep_records WHERE baby_id = ?`+sleepDaysFilter+` ORDER BY started_at DESC`+pageSQL,
 			sArgs...,
 		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
+			return
+		}
 		if err == nil {
 			defer rows.Close()
 			for rows.Next() {
@@ -240,6 +369,10 @@ func GetRecords(c *gin.Context) {
 			FROM temperature_records WHERE baby_id = ?`+daysFilter+` ORDER BY occurred_at DESC`+pageSQL,
 			tArgs...,
 		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
+			return
+		}
 		if err == nil {
 			defer rows.Close()
 			for rows.Next() {
@@ -273,6 +406,10 @@ func GetRecords(c *gin.Context) {
 			FROM outdoor_records WHERE baby_id = ?`+outdoorDaysFilter+` ORDER BY started_at DESC`+pageSQL,
 			oArgs...,
 		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
+			return
+		}
 		if err == nil {
 			defer rows.Close()
 			for rows.Next() {
@@ -307,6 +444,10 @@ func GetRecords(c *gin.Context) {
 			FROM supplement_records WHERE baby_id = ?`+daysFilter+` ORDER BY occurred_at DESC`+pageSQL,
 			sArgs...,
 		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "查询失败"})
+			return
+		}
 		if err == nil {
 			defer rows.Close()
 			for rows.Next() {
@@ -473,7 +614,7 @@ func CreateFeeding(c *gin.Context) {
 	BroadcastMessage(models.WebSocketMessage{
 		Type:    "record_created",
 		Payload: rec,
-	})
+	}, babyFamilyID(babyID))
 
 	c.JSON(http.StatusCreated, rec)
 }
@@ -540,7 +681,7 @@ func CreateDiaper(c *gin.Context) {
 	BroadcastMessage(models.WebSocketMessage{
 		Type:    "record_created",
 		Payload: rec,
-	})
+	}, babyFamilyID(babyID))
 
 	c.JSON(http.StatusCreated, rec)
 }
@@ -553,6 +694,10 @@ func UpdateRecord(c *gin.Context) {
 		return
 	}
 	recordType := c.Query("type")
+	if _, ok := recordTables[recordType]; !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "type 必须为 feeding, diaper, sleep, temperature, outdoor 或 supplement"})
+		return
+	}
 
 	var req models.UpdateRecordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -577,6 +722,10 @@ func UpdateRecord(c *gin.Context) {
 			return
 		}
 	case "sleep":
+		if req.EndedAt != "" && req.StartedAt != "" && parseTime(req.EndedAt).Before(parseTime(req.StartedAt)) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "结束时间不能早于开始时间"})
+			return
+		}
 		_, err := database.DB.Exec(
 			"UPDATE sleep_records SET started_at = ?, ended_at = CASE WHEN ? = '' THEN NULL ELSE ? END, note = ? WHERE id = ?",
 			req.StartedAt, req.EndedAt, req.EndedAt, req.Note, recordID,
@@ -586,6 +735,10 @@ func UpdateRecord(c *gin.Context) {
 			return
 		}
 	case "temperature":
+		if req.Temperature < 30 || req.Temperature > 60 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "体温需在 30-60°C 之间"})
+			return
+		}
 		_, err := database.DB.Exec(
 			"UPDATE temperature_records SET temperature = ?, location = ?, note = ?, occurred_at = ? WHERE id = ?",
 			req.Temperature, req.Location, req.Note, req.OccurredAt, recordID,
@@ -595,6 +748,10 @@ func UpdateRecord(c *gin.Context) {
 			return
 		}
 	case "outdoor":
+		if req.EndedAt != "" && req.StartedAt != "" && parseTime(req.EndedAt).Before(parseTime(req.StartedAt)) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "结束时间不能早于开始时间"})
+			return
+		}
 		_, err := database.DB.Exec(
 			"UPDATE outdoor_records SET started_at = ?, ended_at = CASE WHEN ? = '' THEN NULL ELSE ? END, note = ? WHERE id = ?",
 			req.StartedAt, req.EndedAt, req.EndedAt, req.Note, recordID,
@@ -623,6 +780,19 @@ func UpdateRecord(c *gin.Context) {
 		}
 	}
 
+	// 广播更新后的完整记录：家人端编辑后其他人的页面要能原位刷新。
+	// 空 type 走 default 分支更新的是 feeding，广播须与实际表一致。
+	updatedType := recordType
+	if updatedType == "" {
+		updatedType = "feeding"
+	}
+	if rec, ok := loadSingleRecord(updatedType, recordID); ok {
+		BroadcastMessage(models.WebSocketMessage{
+			Type:    "record_updated",
+			Payload: rec,
+		}, babyFamilyID(babyID))
+	}
+
 	c.JSON(http.StatusOK, gin.H{"message": "更新成功"})
 }
 
@@ -634,6 +804,10 @@ func DeleteRecord(c *gin.Context) {
 		return
 	}
 	recordType := c.Query("type")
+	if _, ok := recordTables[recordType]; !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "type 必须为 feeding, diaper, sleep, temperature, outdoor 或 supplement"})
+		return
+	}
 
 	babyID := lookupBabyID(recordID, recordType)
 	if !checkBabyFamily(babyID, userID) {
@@ -664,7 +838,7 @@ func DeleteRecord(c *gin.Context) {
 	BroadcastMessage(models.WebSocketMessage{
 		Type:    "record_deleted",
 		Payload: map[string]interface{}{"id": recordID, "type": recordType},
-	})
+	}, babyFamilyID(babyID))
 
 	c.JSON(http.StatusOK, gin.H{"message": "删除成功"})
 }
