@@ -1,7 +1,7 @@
 <template>
   <!-- 记录卡片：左 emoji 色块 + 左列（标题 17px + 值区「时长/量等」+ 发热/备注）+ 右列时间（上下垂直居中）。
        类型由色块弱着色 + emoji 区分；点按=编辑，删除走长按 ContextMenu（编辑/删除→确认），无常显按钮、无滑动删除 -->
-  <div role="button" tabindex="0" @keydown.enter.prevent="$emit('edit')"
+  <div role="button" tabindex="0" keydown.enter.prevent="$emit('edit')"
     class="bg-surface rounded-2xl p-4 shadow-card flex items-start gap-3 cursor-pointer press-card"
     @touchstart.passive="lp.onTouchStart" @touchmove="lp.onTouchMove" @touchend="lp.onTouchEnd" @touchcancel="lp.onTouchCancel" @click="onCardClick">
     <div class="w-9 h-9 shrink-0 rounded-xl flex items-center justify-center text-lg leading-none" :class="tintClass">{{ emoji }}</div>
@@ -23,6 +23,7 @@
 import { computed } from 'vue'
 import { formatDurationCompact, formatTimeRangeDay, formatDayTime } from '@/utils'
 import { useLongPress } from '@/composables/useLongPress'
+import { clockTick } from '@/composables/useClock'
 
 const props = withDefaults(defineProps<{ record: any; showDate?: boolean }>(), { showDate: true })
 const emit = defineEmits(['edit', 'context'])
@@ -88,14 +89,20 @@ function rangeMinutes(startedAt: string, endedAt?: string | null) {
 const sleepTimeLabel = computed(() => formatTimeRangeDay(rd.value.started_at, rd.value.ended_at, props.showDate))
 const outdoorTimeLabel = computed(() => formatTimeRangeDay(rd.value.started_at, rd.value.ended_at, props.showDate))
 
-const sleepDurationLabel = computed(() => {
-  const mins = rangeMinutes(rd.value.started_at, rd.value.ended_at)
-  return mins === null ? '进行中' : formatDurationCompact(mins)
-})
-const outdoorDurationLabel = computed(() => {
-  const mins = rangeMinutes(rd.value.started_at, rd.value.ended_at)
-  return mins === null ? '进行中' : formatDurationCompact(mins)
-})
+// 跨度类记录（睡眠/户外）的值区文案：已结束显示实际时长，进行中显示「已持续时长 · 进行中」。
+//
+// 此前进行中只标状态、不给数字，理由是本组件没有计时器，写死的「已睡 1h30m」会越来越不准。
+// 现由 clockTick 提供 10s 实时刷新，两个信息可以同时给：既看得出已经进行多久，
+// 也一眼看得出还在持续。取整用 floor，与后端 int(d.Minutes()) 及首页 sleepMinutes 同口径，
+// 也避免「59 分 30 秒就显示 1h」的提前量。
+function spanValueText() {
+  const { started_at: s, ended_at: e } = rd.value
+  if (!s) return '进行中'
+  if (e) return formatDurationCompact(rangeMinutes(s, e) ?? 0)
+  clockTick.value
+  const mins = Math.max(0, Math.floor((Date.now() - new Date(s).getTime()) / 60000))
+  return `${formatDurationCompact(mins)} · 进行中`
+}
 
 const timeAgo = computed(() => formatDayTime(props.record.occurred_at, props.showDate, false))
 
@@ -116,9 +123,7 @@ const valueText = computed(() => {
       if (rd.value.brand) parts.push(rd.value.brand)
       break
     case 'sleep':
-      // 进行中：只标状态、不显示时长——本组件没有 tick 计时器（已按 iOS 惯例移除），
-      // 写死一个「已睡 1h30m」会随停留时间越来越不准，宁可不给数字。
-      parts.push(rd.value.ended_at ? sleepDurationLabel.value : '进行中')
+      parts.push(spanValueText())
       break
     case 'temperature':
       if (rd.value.temperature) parts.push(`${rd.value.temperature}°C`)
@@ -128,8 +133,7 @@ const valueText = computed(() => {
       if (rd.value.dosage_value > 0) parts.push(`${rd.value.dosage_value}${rd.value.dosage_unit || ''}`)
       break
     case 'outdoor':
-      // 同 sleep：进行中只标状态，不显示会过期的时长
-      parts.push(rd.value.ended_at ? outdoorDurationLabel.value : '进行中')
+      parts.push(spanValueText())
       break
   }
   return parts.join(' · ')

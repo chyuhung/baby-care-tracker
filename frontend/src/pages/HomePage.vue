@@ -263,8 +263,10 @@ import { recordDisplay, CONTEXT_ICONS } from '@/utils/recordDisplay'
 import EmptyState from '@/components/EmptyState.vue'
 import NavBar from '@/components/NavBar.vue'
 import { durationCompactParts, formatDurationCN } from '@/utils'
+import { clockTick } from '@/composables/useClock'
 
-const tick = ref(0)
+// 复用全站唯一时钟（composables/useClock.ts），避免首页与 RecordCard 各自起定时器而漂移。
+const tick = clockTick
 let tickTimer: number | null = null
 
 // 本地日历日键（不使用 toISOString：它按 UTC 切日，东八区会把 08:00 前算成前一天）
@@ -773,8 +775,8 @@ onMounted(() => {
   // 自动整页重取一次，让所有「今日」项在最多 10s 内自愈，而不需要用户手动刷新。
   // 用 loadData 而非 refreshStatsSoon：后者不刷新今日体温卡片；
   // 代价是重置记录列表到第一页，但一天只发生一次，且此时用户多在睡眠中。
+  // tick 的推进已由 useClock 负责，此定时器只做跨本地日界自愈
   tickTimer = window.setInterval(() => {
-    tick.value++
     if (statsDay.value && statsDay.value !== localDayKey()) loadData()
   }, 10000)
 })
