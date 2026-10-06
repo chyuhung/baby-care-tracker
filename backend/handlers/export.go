@@ -14,6 +14,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// guardCSVCell 防 CSV 公式注入：单元格以 = + - @ TAB CR 开头时，Excel/WPS 会把它当公式执行
+// （=HYPERLINK(...)、+cmd|... 等）。前置一个单引号使其按纯文本显示，转义只作用于首个危险字符。
+func guardCSVCell(s string) string {
+	if s == "" {
+		return s
+	}
+	switch s[0] {
+	case '=', '+', '-', '@', '\t', '\r':
+		return "'" + s
+	}
+	return s
+}
+
 // spanDetail 生成区间型记录（睡眠/户外）的明细文案。
 // 进行中（en 为空）输出「进行中」而非空白或 0 分钟，避免 CSV 里出现
 // 一行没有时长却也没标明状态的睡眠记录。
@@ -232,7 +245,8 @@ func ExportRecords(c *gin.Context) {
 		if r.kind != "成长" {
 			val = r.t.In(loc).Format("2006-01-02 15:04")
 		}
-		w.Write([]string{val, r.kind, r.detail, r.note})
+		// detail 与 note 为用户可控内容，过公式注入防护
+		w.Write([]string{val, r.kind, guardCSVCell(r.detail), guardCSVCell(r.note)})
 	}
 	w.Flush()
 }

@@ -10,8 +10,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -96,14 +96,6 @@ func main() {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
-	// CORS
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
-		AllowCredentials: true,
-	}))
-
 	// Health check
 	r.GET("/api/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{"status": "ok", "app": "Baby Care Tracker"})
@@ -112,8 +104,9 @@ func main() {
 	// API routes
 	api := r.Group("/api")
 	{
-		api.POST("/auth/register", handlers.Register)
-		api.POST("/auth/login", handlers.Login)
+		// 认证端点无鉴权保护，且可被脚本滥用（撞库 / 注册垃圾账号），加每 IP 限流
+		api.POST("/auth/register", handlers.RateLimit(10, time.Minute), handlers.Register)
+		api.POST("/auth/login", handlers.RateLimit(20, time.Minute), handlers.Login)
 
 		protected := api.Group("")
 		protected.Use(JWTAuth())
@@ -155,9 +148,9 @@ func main() {
 			protected.DELETE("/records/:id", handlers.DeleteRecord)
 
 			protected.GET("/family", handlers.GetMyFamily)
-			protected.POST("/family/join", handlers.JoinFamily)
+			protected.POST("/family/join", handlers.RateLimit(10, time.Minute), handlers.JoinFamily)
 			protected.POST("/family/leave", handlers.LeaveFamily)
-			protected.POST("/family/regenerate-code", handlers.RegenerateInviteCode)
+			protected.POST("/family/regenerate-code", handlers.RateLimit(5, time.Minute), handlers.RegenerateInviteCode)
 		}
 	}
 
