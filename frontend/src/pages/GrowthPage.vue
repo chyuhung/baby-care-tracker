@@ -33,7 +33,7 @@
                   :class="m.meta.pill">
                   {{ m.meta.label }}
                 </div>
-                <div class="mt-0.5 text-[10px] text-text-secondary font-num">{{ m.meta.range }}</div>
+                <div class="mt-0.5 text-[11px] text-text-secondary font-num">{{ m.meta.range }}</div>
               </template>
               <div v-else class="mt-1.5 text-[11px] text-text-secondary">--</div>
             </div>

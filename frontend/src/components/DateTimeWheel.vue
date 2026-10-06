@@ -9,10 +9,10 @@
             <!-- 顶部工具条 -->
             <div class="flex items-center justify-between px-1 pb-1">
               <button type="button" @click="close(false)"
-                class="min-w-[44px] min-h-[44px] px-3 flex items-center justify-center text-[16px] text-primary-deep btn-press">取消</button>
-              <span class="text-[14px] font-semibold text-text-primary">{{ title }}</span>
+                class="min-w-[44px] min-h-[44px] px-3 flex items-center justify-center text-[17px] text-primary-deep btn-press">取消</button>
+              <span class="text-[15px] font-semibold text-text-primary">{{ title }}</span>
               <button type="button" @click="close(true)"
-                class="min-w-[44px] min-h-[44px] px-3 flex items-center justify-center text-[16px] font-semibold text-primary-deep btn-press">完成</button>
+                class="min-w-[44px] min-h-[44px] px-3 flex items-center justify-center text-[17px] font-semibold text-primary-deep btn-press">完成</button>
             </div>
 
             <!-- 滚轮区 -->

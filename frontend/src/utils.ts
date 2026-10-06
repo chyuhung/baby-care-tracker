@@ -97,13 +97,13 @@ export function nowLocalDatetime() {
 }
 
 /** HH:mm */
-export function formatClock(v: string | Date) {
+function formatClock(v: string | Date) {
   const d = toDate(v)
   return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`
 }
 
 /** 日历日标签：今天 / 昨天 / M-D；markToday=false 时今天返回空串 */
-export function formatDayTag(v: string | Date, markToday = true) {
+function formatDayTag(v: string | Date, markToday = true) {
   const d = toDate(v)
   const now = new Date()
   if (d.toDateString() === now.toDateString()) return markToday ? '今天' : ''
@@ -137,7 +137,6 @@ export function formatTimeRangeDay(startIso: string, endIso?: string | null, wit
   return `${startLabel}~${endLabel}`
 }
 
-export const WEEKDAY_SHORT = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 export const WEEKDAY_LONG = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六']
 
 /* ============================================================

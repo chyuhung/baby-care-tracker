@@ -10,7 +10,6 @@ export default {
         // 主题色（由 CSS 变量驱动，按宝宝性别切换；清透 iOS 风）
         primary: 'rgb(var(--primary) / <alpha-value>)',
         'primary-deep': 'rgb(var(--primary-deep) / <alpha-value>)',
-        'primary-fill': 'rgb(var(--primary-fill) / <alpha-value>)',
         diaper: 'rgb(var(--diaper) / <alpha-value>)',
         'diaper-deep': 'rgb(var(--diaper-deep) / <alpha-value>)',
         temperature: 'rgb(var(--temperature) / <alpha-value>)',

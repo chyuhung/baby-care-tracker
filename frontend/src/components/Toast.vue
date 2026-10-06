@@ -26,10 +26,10 @@
     <div class="fixed bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] left-1/2 -translate-x-1/2 z-[100] w-[92%] max-w-[440px] space-y-2 pointer-events-none flex flex-col items-stretch">
       <transition-group name="toast">
         <div v-for="toast in actionToasts" :key="toast.id" role="status" aria-live="polite"
-          class="pointer-events-auto flex items-center gap-2 pl-4 pr-2 py-2.5 rounded-2xl bg-[rgba(28,28,30,0.9)] backdrop-blur-xl shadow-lg text-white text-[14px] font-medium">
+          class="pointer-events-auto flex items-center gap-2 pl-4 pr-2 py-2.5 rounded-2xl bg-[rgba(28,28,30,0.9)] backdrop-blur-xl shadow-lg text-white text-[13px] font-medium">
           <span class="flex-1 min-w-0 truncate">{{ clean(toast.message) }}</span>
           <button type="button" @click="runAction(toast)"
-            class="shrink-0 px-3 py-1.5 rounded-full text-[14px] font-semibold text-[rgb(var(--primary))] active:opacity-60">
+            class="shrink-0 px-3 py-1.5 rounded-full text-[13px] font-semibold text-[rgb(var(--primary))] active:opacity-60">
             {{ toast.action?.label }}
           </button>
         </div>
