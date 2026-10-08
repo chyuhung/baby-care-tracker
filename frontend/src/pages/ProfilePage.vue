@@ -38,7 +38,7 @@
               :aria-current="isCurrentBaby(baby) ? 'true' : undefined"
               class="w-full px-4 py-3.5 flex items-center gap-3 min-h-[44px] text-left press-card"
               @click="switchBaby(baby)">
-              <span                 class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+              <span                 class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white"
                 :style="{ background: baby.avatar_color }">{{ baby.name[0] }}</span>
               <span class="flex-1 min-w-0">
                 <span class="block font-medium text-text-primary truncate">
@@ -105,7 +105,7 @@
               <div class="px-4 py-3.5 flex items-center justify-between min-h-[44px]">
                 <span class="text-sm text-text-secondary">邀请码</span>
                 <span class="flex items-center gap-2">
-                  <span class="text-base font-bold tracking-widest text-primary-deep select-all">{{ family.invite_code }}</span>
+                  <span class="text-base font-semibold tracking-widest text-primary-deep select-all">{{ family.invite_code }}</span>
                   <button @click="requestRegenerateCode" :disabled="app.offline" class="-mr-2 text-xs font-medium text-danger py-2 px-2 min-h-[44px] flex items-center btn-press disabled:opacity-40">重置</button>
                   <button @click="copyCode" class="-mr-2 text-xs font-medium text-primary-deep py-2 px-2 min-h-[44px] flex items-center">复制</button>
                 </span>
@@ -304,6 +304,10 @@ async function doJoin() {
     joinCode.value = ''
     await loadFamily()
     await app.loadBabies()
+    // 家庭归属已变：重连 WS 让服务端重新读取 users.family_id（连接时固定），
+    // 否则新家庭成员的实时记录推不过来，要等下次自然重连才生效
+    app.disconnectWebSocket()
+    app.connectWebSocket()
     app.showToast('已加入家庭', 'success')
   } catch (e: any) {
     app.showToast(writeErrorMessage(e, '加入失败'), 'error')
@@ -320,6 +324,9 @@ async function doLeave() {
     await familyAPI.leave()
     family.value = null
     await app.loadBabies()
+    // 已退出家庭：重连 WS 解除旧家庭的实时广播（否则还挂着旧 FamilyID 收本不该收的事件）
+    app.disconnectWebSocket()
+    app.connectWebSocket()
     app.showToast('已退出家庭', 'success')
   } catch (e: any) {
     app.showToast(writeErrorMessage(e, '退出失败'), 'error')

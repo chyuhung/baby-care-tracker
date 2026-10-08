@@ -27,7 +27,7 @@
           <div class="grid grid-cols-3 divide-x divide-border-color/60">
             <div v-for="m in metrics" :key="m.key" class="px-3 py-1 text-center">
               <div class="text-xs text-text-secondary">{{ m.label }}</div>
-              <div class="font-num text-xl font-bold text-text-primary mt-0.5">{{ m.value }}</div>
+              <div class="font-num text-xl font-semibold text-text-primary mt-0.5">{{ m.value }}</div>
               <template v-if="m.meta">
                 <div class="mt-1.5 inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full"
                   :class="m.meta.pill">
@@ -156,22 +156,22 @@
 
               <div class="space-y-3">
                 <div>
-                  <label class="text-sm text-text-secondary block mb-1.5">测量日期</label>
+                  <label class="text-[13px] text-text-secondary block mb-1.5">测量日期</label>
                   <DateTimeField v-model="form.measured_at" title="测量日期" aria-label="选择测量日期" date-only />
                 </div>
                 <div class="grid grid-cols-3 gap-2.5">
                   <div>
-                    <label class="text-xs text-text-secondary block mb-1.5">身高 cm</label>
+                    <label class="text-[13px] text-text-secondary block mb-1.5">身高 cm</label>
                     <input v-model.number="form.height_cm" type="number" inputmode="decimal" step="0.1" min="0"
                       class="w-full px-3 py-2.5 bg-muted border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none" />
                   </div>
                   <div>
-                    <label class="text-xs text-text-secondary block mb-1.5">体重 kg</label>
+                    <label class="text-[13px] text-text-secondary block mb-1.5">体重 kg</label>
                     <input v-model.number="form.weight_kg" type="number" inputmode="decimal" step="0.01" min="0"
                       class="w-full px-3 py-2.5 bg-muted border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none" />
                   </div>
                   <div>
-                    <label class="text-xs text-text-secondary block mb-1.5">头围 cm</label>
+                    <label class="text-[13px] text-text-secondary block mb-1.5">头围 cm</label>
                     <input v-model.number="form.head_cm" type="number" inputmode="decimal" step="0.1" min="0"
                       class="w-full px-3 py-2.5 bg-muted border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none" />
                   </div>
@@ -205,7 +205,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { babyAPI, GrowthRecord, GrowthStats, GrowthReference, writeErrorMessage } from '@/api'
@@ -613,6 +613,43 @@ function closeForm() {
   formOpen.value = false
   editingId.value = null
 }
+
+// 弹层可访问性：Escape 关闭 + Tab 焦点陷阱（对齐 MenuSelect/ConfirmSheet 手法）
+function onFormKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') { closeForm(); return }
+  if (e.key !== 'Tab' || !panelRef.value) return
+  const focusables = Array.from(
+    panelRef.value.querySelectorAll<HTMLElement>('button:not([disabled]), input, [tabindex]:not([tabindex="-1"])'),
+  )
+  if (!focusables.length) return
+  const first = focusables[0]
+  const last = focusables[focusables.length - 1]
+  if (e.shiftKey && (document.activeElement === first || document.activeElement === panelRef.value)) {
+    e.preventDefault(); last.focus()
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault(); first.focus()
+  }
+}
+
+// 弹层期间锁滚动 + 挂键盘监听；保存/恢复 prevOverflow（弹层可叠弹层）
+let formPrevOverflow = ''
+watch(formOpen, (v) => {
+  if (typeof document === 'undefined') return
+  if (v) {
+    formPrevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onFormKeydown)
+  } else {
+    document.body.style.overflow = formPrevOverflow
+    window.removeEventListener('keydown', onFormKeydown)
+  }
+})
+onUnmounted(() => {
+  if (typeof document !== 'undefined') {
+    if (formOpen.value) document.body.style.overflow = formPrevOverflow
+    window.removeEventListener('keydown', onFormKeydown)
+  }
+})
 
 // 空串/NaN → 0（0 表示该项未测），数字原样返回
 function numOf(v: number | ''): number {

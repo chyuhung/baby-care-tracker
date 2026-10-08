@@ -3,21 +3,21 @@
     <!-- Logo -->
     <div class="mb-10 text-center">
       <img src="/icon-192.png" alt="宝宝护理记录" class="w-20 h-20 mb-4 mx-auto block drop-shadow-sm" />
-      <h1 class="text-2xl font-bold text-text-primary">宝宝护理记录</h1>
+      <h1 class="text-2xl font-semibold text-text-primary">宝宝护理记录</h1>
       <p class="text-text-secondary text-sm mt-1">记录宝宝成长，每一刻都珍贵</p>
     </div>
 
     <!-- 表单（回车直接提交） -->
     <form class="w-full max-w-xs space-y-4" @submit.prevent="submit">
       <div class="space-y-1">
-        <label class="text-sm text-text-secondary">用户名</label>
+        <label class="text-[13px] text-text-secondary">用户名</label>
         <input v-model="form.username" type="text" :placeholder="isRegister ? '2-20位字符' : '输入用户名'"
           autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next"
             class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary placeholder-text-secondary/50 focus:border-primary focus:outline-none transition-colors" />
       </div>
 
       <div class="space-y-1">
-        <label class="text-sm text-text-secondary">{{ isRegister ? '设置密码' : '密码' }}</label>
+        <label class="text-[13px] text-text-secondary">{{ isRegister ? '设置密码' : '密码' }}</label>
         <div class="relative">
           <input v-model="form.password" :type="showPassword ? 'text' : 'password'" :placeholder="isRegister ? '至少6位' : '输入密码'"
             :autocomplete="isRegister ? 'new-password' : 'current-password'" enterkeyhint="done"

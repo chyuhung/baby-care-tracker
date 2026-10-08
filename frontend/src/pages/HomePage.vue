@@ -35,7 +35,7 @@
             <div class="text-xs text-text-secondary mb-1">今日喂奶</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-0.5">
-                <span class="text-3xl font-bold text-text-primary font-num">{{ stats.total_ml_today }}<sup v-if="stats.feeding_count > 0" class="text-[0.55em] font-bold text-text-secondary font-num leading-none">{{ stats.feeding_count }}</sup></span>
+                <span class="text-3xl font-semibold text-text-primary font-num">{{ stats.total_ml_today }}<sup v-if="stats.feeding_count > 0" class="text-[0.55em] font-semibold text-text-secondary font-num leading-none">{{ stats.feeding_count }}</sup></span>
                 <span :class="UNIT_CLASS">ml</span>
               </div>
               <div class="w-9 h-9 shrink-0 flex items-center justify-center rounded-xl bg-primary/10 text-lg leading-none">🍼</div>
@@ -63,7 +63,7 @@
             <div class="text-xs text-text-secondary mb-1">今日尿布</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-bold font-num text-text-primary">{{ stats.diaper_count }}</span>
+                <span class="text-3xl font-semibold font-num text-text-primary">{{ stats.diaper_count }}</span>
                 <span class="text-sm text-text-secondary">次</span>
               </div>
               <div class="w-9 h-9 shrink-0 flex items-center justify-center rounded-xl bg-diaper/10 text-lg leading-none">🩲</div>
@@ -94,7 +94,7 @@
                 <span v-if="currentSleep" class="w-1.5 h-1.5 rounded-full bg-sleep-deep animate-pulse shrink-0"></span>
                 <div class="flex items-baseline gap-px min-w-0">
                   <template v-for="(part, pi) in sleepParts" :key="pi">
-                    <span class="text-3xl font-bold font-num text-text-primary leading-none">{{ part.val }}</span>
+                    <span class="text-3xl font-semibold font-num text-text-primary leading-none">{{ part.val }}</span>
                     <span :class="UNIT_CLASS">{{ part.unit }}</span>
                   </template>
                 </div>
@@ -126,8 +126,8 @@
             <div class="text-xs text-text-secondary mb-1">今日体温</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-1">
-                <span v-if="todayTemp" class="text-3xl font-bold font-num" :class="todayTemp >= 37.5 ? 'text-danger' : 'text-text-primary'">{{ todayTemp }}</span>
-                <span v-else class="text-3xl font-bold font-num text-text-secondary">--</span>
+                <span v-if="todayTemp" class="text-3xl font-semibold font-num" :class="todayTemp >= 37.5 ? 'text-danger' : 'text-text-primary'">{{ todayTemp }}</span>
+                <span v-else class="text-3xl font-semibold font-num text-text-secondary">--</span>
                 <span class="text-sm text-text-secondary">°C</span>
               </div>
               <div class="w-9 h-9 shrink-0 flex items-center justify-center rounded-xl bg-temperature/10 text-lg leading-none">🌡️</div>
@@ -155,7 +155,7 @@
                 <span v-if="currentOutdoor" class="w-1.5 h-1.5 rounded-full bg-outdoor-deep animate-pulse shrink-0"></span>
                 <div class="flex items-baseline gap-px min-w-0">
                   <template v-for="(part, pi) in outdoorParts" :key="pi">
-                    <span class="text-3xl font-bold font-num text-text-primary leading-none">{{ part.val }}</span>
+                    <span class="text-3xl font-semibold font-num text-text-primary leading-none">{{ part.val }}</span>
                     <span :class="UNIT_CLASS">{{ part.unit }}</span>
                   </template>
                 </div>
@@ -187,7 +187,7 @@
             <div class="text-xs text-text-secondary mb-1">今日补剂</div>
             <div class="flex items-end justify-between">
               <div class="flex items-baseline gap-1">
-                <span class="text-3xl font-bold font-num text-text-primary">{{ stats.supplement_count }}</span>
+                <span class="text-3xl font-semibold font-num text-text-primary">{{ stats.supplement_count }}</span>
                 <span class="text-sm text-text-secondary">次</span>
               </div>
               <div class="w-9 h-9 shrink-0 flex items-center justify-center rounded-xl bg-supplement/10 text-lg leading-none">💊</div>
@@ -753,7 +753,13 @@ function applyRecord(rec: any): boolean {
 
 function onRecordCreated(e: Event) {
   const record = (e as CustomEvent).detail
-  if (!record) { loadData(); return }
+  if (!record) {
+    // 表单页本地兜底事件（无 payload）：联网时 WS 回声会带完整记录驱动 applyRecord（含
+    // 列表 upsert/均值窗口/今日体温），这里只需轻量刷新统计；WS 不可用时整页重取兜底。
+    if (app.wsConnected) refreshStatsSoon()
+    else loadData()
+    return
+  }
   if (!applyRecord(record)) return
   // 结束睡眠/户外会改变当日时长统计 → 整页刷新；其余统计走 refreshStatsSoon（见 updated）
   if ((record.record_type === 'sleep' || record.record_type === 'outdoor') && record.data?.ended_at) loadData()
@@ -762,6 +768,12 @@ function onRecordCreated(e: Event) {
 // 家人端编辑（含睡眠/户外结束）：列表已原位替换，统计与进行中状态轻量刷新
 function onRecordUpdated(e: Event) {
   const rec = (e as CustomEvent).detail
+  if (!rec) {
+    // 本地编辑兜底事件（无 payload）：联网时 WS 回声 record_updated 带完整记录原位替换
+    // + 统计刷新；WS 不可用时整页重取兜底。
+    if (!app.wsConnected) loadData()
+    return
+  }
   if (!applyRecord(rec)) return
   refreshStatsSoon()
 }
@@ -771,7 +783,15 @@ function onRecordDeleted(e: Event) {
   // 缺 type 时才退化为按 id 全类型匹配——否则不同表的自增 id 撞车会误删别人的行。
   const { id, type, record_type } = (e as CustomEvent).detail || {}
   const t = type || record_type
+  const existed = allRecords.value.some(r => r.id === id && (!t || r.record_type === t))
   allRecords.value = allRecords.value.filter(r => !(r.id === id && (!t || r.record_type === t)))
+  // 本地乐观删除已在 softDelete 时移出该行并收过计数（existed=false 不会重复减）；
+  // existed 仍为 true 的只有家人端删除（WS 事件）→ 补收分页三计数，消除漂移与 load-more 跳条
+  if (existed) {
+    if (loadedCount.value > 0) loadedCount.value -= 1
+    if (totalCount.value > 0) totalCount.value -= 1
+    nextOffset.value = Math.max(0, nextOffset.value - 1)
+  }
   // 进行中的睡眠/户外被删（本页或家人端）→ 计时器同步停，否则卡片会对已删记录一直走秒
   if (currentSleep.value?.id === id && (!t || t === 'sleep')) currentSleep.value = null
   if (currentOutdoor.value?.id === id && (!t || t === 'outdoor')) currentOutdoor.value = null

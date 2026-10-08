@@ -15,28 +15,28 @@
 
       <!-- 时间 -->
       <div>
-        <label class="text-sm text-text-secondary block mb-2">测量时间</label>
+        <label class="text-[13px] text-text-secondary block mb-2">测量时间</label>
         <DateTimeField v-model="form.occurred_at" title="测量时间" aria-label="选择测量时间" />
       </div>
 
       <!-- 体温 -->
       <div>
-        <label class="text-sm text-text-secondary block mb-2">体温（°C）</label>
+        <label class="text-[13px] text-text-secondary block mb-2">体温（°C）</label>
         <input v-model.number="form.temperature" type="number" step="0.1" min="30" max="45" inputmode="decimal"
           placeholder="36.5"
-          class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-3xl text-center font-num font-bold focus:border-primary focus:outline-none transition-colors" />
+          class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-3xl text-center font-num font-semibold focus:border-primary focus:outline-none transition-colors" />
       </div>
 
       <!-- 测量位置（iOS 分段控件，单行 5 段） -->
       <div>
-        <label class="text-sm text-text-secondary block mb-2">测量位置</label>
+        <label class="text-[13px] text-text-secondary block mb-2">测量位置</label>
         <Segmented :model-value="form.location" :options="locationOptions" compact
           @update:model-value="(v: string) => form.location = v" />
       </div>
 
       <!-- 备注 -->
       <div>
-        <label class="text-sm text-text-secondary block mb-2">备注</label>
+        <label class="text-[13px] text-text-secondary block mb-2">备注</label>
         <textarea v-model="form.note" rows="3" placeholder="如：吃奶后、哭闹等"
           class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary resize-none focus:border-primary focus:outline-none transition-colors"></textarea>
       </div>
@@ -178,7 +178,7 @@ async function save() {
       await recordAPI.createTemperature(baby.id, payload)
       try { localStorage.setItem('temp_last_location', form.location) } catch { /* ignore */ }
     }
-    window.dispatchEvent(new CustomEvent('record-created', { detail: null }))
+    window.dispatchEvent(new CustomEvent(isEdit.value ? 'record-updated' : 'record-created', { detail: null }))
     app.showToast(isEdit.value ? '已保存' : '体温已记录', 'success')
     router.back()
   } catch (e: any) {

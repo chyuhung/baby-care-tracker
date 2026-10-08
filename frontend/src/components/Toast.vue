@@ -29,7 +29,7 @@
           class="pointer-events-auto flex items-center gap-2 pl-4 pr-2 py-2.5 rounded-2xl bg-[rgba(28,28,30,0.9)] backdrop-blur-xl shadow-lg text-white text-[13px] font-medium">
           <span class="flex-1 min-w-0 truncate">{{ clean(toast.message) }}</span>
           <button type="button" @click="runAction(toast)"
-            class="shrink-0 px-3 py-1.5 rounded-full text-[13px] font-semibold text-[rgb(var(--primary))] active:opacity-60">
+            class="shrink-0 flex items-center justify-center min-h-[36px] px-4 rounded-full text-[13px] font-semibold text-[rgb(var(--primary))] active:opacity-60">
             {{ toast.action?.label }}
           </button>
         </div>

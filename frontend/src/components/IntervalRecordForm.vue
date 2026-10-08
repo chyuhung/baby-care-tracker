@@ -14,15 +14,15 @@
       </div>
       <template v-else>
         <div>
-          <label class="text-sm text-text-secondary block mb-2">开始时间</label>
+          <label class="text-[13px] text-text-secondary block mb-2">开始时间</label>
           <DateTimeField v-model="form.started_at" title="开始时间" aria-label="选择开始时间" />
         </div>
         <div>
-          <label class="text-sm text-text-secondary block mb-2">结束时间</label>
+          <label class="text-[13px] text-text-secondary block mb-2">结束时间</label>
           <DateTimeField v-model="form.ended_at" title="结束时间" aria-label="选择结束时间" />
         </div>
         <div>
-          <label class="text-sm text-text-secondary block mb-2">备注</label>
+          <label class="text-[13px] text-text-secondary block mb-2">备注</label>
           <textarea v-model="form.note" rows="3" placeholder="可选"
             class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary resize-none focus:border-primary focus:outline-none transition-colors"></textarea>
         </div>
@@ -120,7 +120,7 @@ async function save() {
     }
     if (form.value.ended_at) payload.ended_at = new Date(form.value.ended_at).toISOString()
     await recordAPI.update(Number(route.params.id), props.type, payload)
-    window.dispatchEvent(new CustomEvent('record-created', { detail: null }))
+    window.dispatchEvent(new CustomEvent('record-updated', { detail: null }))
     app.showToast('已保存', 'success')
     router.back()
   } catch (e: any) {

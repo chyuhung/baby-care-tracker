@@ -315,16 +315,17 @@ input, textarea, [contenteditable] {
    命名优先用 Tailwind 预设，不再新增任意值：
    Caption2 11 = text-[11px]（时间戳辅助位，仅个别）
    Caption1 12 = text-xs（记录卡时间/角标，全站主流）
-   Footnote 13 = text-[13px]（弹层副文案/说明，个别）
+   Footnote 13 = text-[13px]（表单标签/弹层副文案/说明）
    Callout  16 = text-base（输入值/空态标题未设字号的默认）
    Subhead  15 = text-[15px]（卡内标题，仅个别）
-   Body     17 = text-[17px] / text-sm 升级目标（页标题/导航标题 600）
+   Body     17 = text-[17px]（页标题/导航标题 600）
    Headline 17 = 页标题 font-semibold（表单页/表单头部）
    Title3   20 = text-xl（图表大数）
-   Title2   22 = text-2xl（登录品牌）
-   Title1   28 = text-3xl（统计大数字，仅个别）
-   规则：全站字号只允许来自上表；标题一律 font-semibold(600)，
-   不用 font-bold(700)；正文为默认 400。
+   Title2   24 = text-2xl（登录品牌；Tailwind 默认 1.5rem=24px）
+   Title1   30 = text-3xl（统计大数字，仅个别；Tailwind 默认 1.875rem=30px）
+   规则：新文案字号优先取自上表；text-sm(14px) 无 HIG 档位、不入尺规表，
+   保留为按钮/错误提示等既有默认档，表单标签已统一改 13px，勿用于新文案。
+   标题一律 font-semibold(600)，不用 font-bold(700)；正文为默认 400。
    ============================================================ */
 
 /* ============================================================

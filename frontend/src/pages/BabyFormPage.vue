@@ -11,11 +11,11 @@
     <main class="flex-1 px-4 py-6 space-y-5 mx-auto w-full max-w-[480px] pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
       <!-- 头像颜色 -->
       <div>
-        <label class="text-sm text-text-secondary block mb-2">头像颜色</label>
+        <label class="text-[13px] text-text-secondary block mb-2">头像颜色</label>
         <div class="flex flex-wrap gap-3">
           <button v-for="c in avatarColors" :key="c" type="button" @click="form.avatar_color = c"
             :aria-label="'选择头像颜色'"
-            :class="['w-11 h-11 rounded-full flex items-center justify-center font-bold text-white transition-all btn-press',
+            :class="['w-11 h-11 rounded-full flex items-center justify-center font-semibold text-white transition-all btn-press',
               form.avatar_color === c ? 'ring-2 ring-offset-2 ring-primary-deep ring-offset-bg-main scale-110' : '']"
             :style="{ background: c }">
             {{ form.name ? form.name[0] : '宝' }}
@@ -25,20 +25,20 @@
 
       <!-- 姓名 -->
       <div>
-        <label class="text-sm text-text-secondary block mb-2">姓名 *</label>
+        <label class="text-[13px] text-text-secondary block mb-2">姓名 *</label>
         <input v-model="form.name" type="text" placeholder="宝宝的名字" enterkeyhint="done" autocomplete="off"
           class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
       </div>
 
       <!-- 出生日期 -->
       <div>
-        <label class="text-sm text-text-secondary block mb-2">出生日期 *</label>
+        <label class="text-[13px] text-text-secondary block mb-2">出生日期 *</label>
         <DateTimeField v-model="form.birth_date" title="出生日期" aria-label="选择出生日期" date-only />
       </div>
 
       <!-- 性别（iOS 分段控件） -->
       <div>
-        <label class="text-sm text-text-secondary block mb-2">性别</label>
+        <label class="text-[13px] text-text-secondary block mb-2">性别</label>
         <Segmented :model-value="form.gender" :options="genderOptions" @update:model-value="selectGender" />
       </div>
 

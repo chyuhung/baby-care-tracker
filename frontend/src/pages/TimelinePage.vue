@@ -254,13 +254,18 @@ function applyRecord(record: any): boolean {
 
 function onRecordCreated(e: Event) {
   const record = (e as CustomEvent).detail
-  if (!record) { loadRecords(); return }
+  // 表单页本地兜底事件（无 payload）：联网时 WS 回声会带完整记录驱动 upsert；
+  // WS 不可用时整页重取，保证新建记录不丢。
+  if (!record) { if (!app.wsConnected) loadRecords(); return }
   applyRecord(record)
 }
 
-// 家人端编辑：原位替换（时间线无统计卡，不需要额外刷新）
+// 家人端编辑：原位替换（时间线无统计卡，不需要额外刷新）；
+// 表单页本地编辑兜底事件同样只当 WS 不可用时重取
 function onRecordUpdated(e: Event) {
-  applyRecord((e as CustomEvent).detail)
+  const rec = (e as CustomEvent).detail
+  if (!rec) { if (!app.wsConnected) loadRecords(); return }
+  applyRecord(rec)
 }
 
 function onRecordDeleted(e: Event) {
@@ -268,7 +273,15 @@ function onRecordDeleted(e: Event) {
   // 缺 type 才退化为按 id 全类型匹配，避免不同表自增 id 撞车误删
   const { id, type, record_type } = (e as CustomEvent).detail || {}
   const t = type || record_type
+  const existed = records.value.some(r => r.id === id && (!t || r.record_type === t))
   records.value = records.value.filter(r => !(r.id === id && (!t || r.record_type === t)))
+  // 本地乐观删除路径已在 softDelete 时移出该行并收过计数（existed=false 不会重复减）；
+  // existed 仍为 true 的只有家人端删除（WS 事件）→ 补收分页三计数，消除「剩余 N」漂移与 load-more 跳条
+  if (existed) {
+    if (loadedCount.value > 0) loadedCount.value -= 1
+    if (totalCount.value > 0) totalCount.value -= 1
+    nextOffset.value = Math.max(0, nextOffset.value - 1)
+  }
 }
 
 onMounted(() => {

@@ -11,14 +11,14 @@
     <main class="flex-1 px-4 py-6 space-y-5 mx-auto w-full max-w-[480px] pb-[calc(6.5rem+env(safe-area-inset-bottom))]">
       <!-- 时间 -->
       <div>
-        <label class="text-sm text-text-secondary block mb-2">记录时间</label>
+        <label class="text-[13px] text-text-secondary block mb-2">记录时间</label>
         <DateTimeField v-model="form.occurred_at" title="记录时间" aria-label="选择记录时间" />
       </div>
 
       <!-- 喂奶 -->
       <template v-if="recordType === 'feeding'">
         <div>
-          <label class="text-sm text-text-secondary block mb-2">喂奶方式</label>
+          <label class="text-[13px] text-text-secondary block mb-2">喂奶方式</label>
           <Segmented :model-value="feedingForm.type" :options="feedingOptions"
             @update:model-value="(v: string) => feedingForm.type = v" />
         </div>
@@ -26,12 +26,12 @@
         <!-- 母乳亲喂：时长 + 侧 -->
         <template v-if="feedingForm.type === 'breast'">
           <div>
-            <label class="text-sm text-text-secondary block mb-2">时长（分钟）</label>
+            <label class="text-[13px] text-text-secondary block mb-2">时长（分钟）</label>
             <input v-model.number="feedingForm.duration_minutes" type="number" min="0" inputmode="numeric" placeholder="如 15"
               class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
           </div>
           <div>
-            <label class="text-sm text-text-secondary block mb-2">喂养侧</label>
+            <label class="text-[13px] text-text-secondary block mb-2">喂养侧</label>
             <Segmented :model-value="feedingForm.side" :options="sideOptions"
               @update:model-value="(v: string) => feedingForm.side = v" />
           </div>
@@ -40,12 +40,12 @@
         <!-- 瓶喂：奶量 -->
         <template v-else>
           <div>
-            <label class="text-sm text-text-secondary block mb-2">奶量（ml）</label>
+            <label class="text-[13px] text-text-secondary block mb-2">奶量（ml）</label>
             <input v-model.number="feedingForm.amount_ml" type="number" min="0" inputmode="numeric" placeholder="如 120"
               class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
           </div>
           <div v-if="feedingForm.type === 'formula'">
-            <label class="text-sm text-text-secondary block mb-2">品牌（可选）</label>
+            <label class="text-[13px] text-text-secondary block mb-2">品牌（可选）</label>
             <input v-model="feedingForm.brand" type="text" placeholder="奶粉品牌" enterkeyhint="done" autocomplete="off"
               class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary focus:border-primary focus:outline-none transition-colors" />
           </div>
@@ -55,7 +55,7 @@
       <!-- 尿布：大卡片选择（保留彩色 emoji） -->
       <template v-else>
         <div>
-          <label class="text-sm text-text-secondary block mb-2">尿布类型</label>
+          <label class="text-[13px] text-text-secondary block mb-2">尿布类型</label>
           <div class="grid grid-cols-3 gap-3">
             <button type="button" @click="diaperForm.type = 'pee'"
               :class="['flex flex-col items-center justify-center gap-1 py-4 rounded-xl border-2 transition-all btn-press min-h-[88px]',
@@ -81,7 +81,7 @@
 
       <!-- 备注 -->
       <div>
-        <label class="text-sm text-text-secondary block mb-2">备注</label>
+        <label class="text-[13px] text-text-secondary block mb-2">备注</label>
         <textarea v-model="form.note" rows="3" placeholder="可选"
           class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary resize-none focus:border-primary focus:outline-none transition-colors"></textarea>
       </div>
@@ -253,7 +253,7 @@ async function save() {
       }
     }
 
-    window.dispatchEvent(new CustomEvent('record-created', { detail: null }))
+    window.dispatchEvent(new CustomEvent(isEdit.value ? 'record-updated' : 'record-created', { detail: null }))
     app.showToast(isEdit.value ? '已保存' : '记录成功', 'success')
     router.back()
   } catch (e: any) {

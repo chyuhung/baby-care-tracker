@@ -245,6 +245,10 @@ func round1(v float64) float64 {
 
 func buildReferenceMetric(metric, sex, unit string) GrowthReferenceMetric {
 	rows := growthdata.Table(metric, sex)
+	if len(rows) == 0 {
+		// 内嵌标准表缺失时防御性返回空曲线，避免 rows[len-1] 越界 panic（理论上不可达）
+		return GrowthReferenceMetric{Unit: unit}
+	}
 	max := len(rows) - 1
 	points := make([]GrowthReferencePoint, 0, int(rows[max].M)+1)
 	for m := 0; m <= int(rows[max].M); m++ {

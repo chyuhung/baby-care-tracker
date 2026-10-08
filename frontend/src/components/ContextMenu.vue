@@ -3,8 +3,8 @@
     <transition name="sheet-mask">
       <div v-if="open" class="fixed inset-0 z-[95] bg-black/35" @click.self="onBackdrop">
         <transition name="sheet-panel" appear>
-          <div v-if="open"
-            class="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] px-3 pb-safe pt-2 space-y-2"
+          <div v-if="open" ref="panelRef" tabindex="-1"
+            class="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] px-3 pb-safe pt-2 space-y-2 outline-none"
             role="dialog" aria-modal="true" :aria-label="title">
             <!-- 预览头（iOS 上下文菜单顶部信息行） -->
             <div v-if="title || subtitle" class="flex items-center gap-3 px-4 py-3 bg-surface rounded-2xl shadow-sheet">
@@ -76,7 +76,23 @@ function run(a: ContextAction) {
   emit('update:open', false)
 }
 
-function onKey(e: KeyboardEvent) { if (e.key === 'Escape') close() }
+// Escape 关闭 + Tab 焦点陷阱（对齐 ConfirmSheet/MenuSelect 手法）
+const panelRef = ref<HTMLElement | null>(null)
+function onKey(e: KeyboardEvent) {
+  if (e.key === 'Escape') { close(); return }
+  if (e.key !== 'Tab' || !panelRef.value) return
+  const focusables = Array.from(
+    panelRef.value.querySelectorAll<HTMLElement>('button:not([disabled]), [tabindex]:not([tabindex="-1"])'),
+  )
+  if (!focusables.length) return
+  const first = focusables[0]
+  const last = focusables[focusables.length - 1]
+  if (e.shiftKey && (document.activeElement === first || document.activeElement === panelRef.value)) {
+    e.preventDefault(); last.focus()
+  } else if (!e.shiftKey && document.activeElement === last) {
+    e.preventDefault(); first.focus()
+  }
+}
 
 let prevOverflow = ''
 watch(() => props.open, (v) => {

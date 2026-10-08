@@ -241,7 +241,7 @@
             <div v-for="c in summary.cards" :key="c.label" class="min-w-0">
               <div class="text-xs text-text-secondary">{{ c.label }}</div>
               <div class="flex items-baseline gap-1 mt-1">
-                <span class="text-xl font-bold font-num text-text-primary">{{ c.value }}</span>
+                <span class="text-xl font-semibold font-num text-text-primary">{{ c.value }}</span>
                 <span v-if="c.unit" class="text-xs text-text-secondary">{{ c.unit }}</span>
               </div>
               <div class="flex items-center gap-1 mt-1">

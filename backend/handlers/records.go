@@ -781,12 +781,8 @@ func UpdateRecord(c *gin.Context) {
 	}
 
 	// 广播更新后的完整记录：家人端编辑后其他人的页面要能原位刷新。
-	// 空 type 走 default 分支更新的是 feeding，广播须与实际表一致。
-	updatedType := recordType
-	if updatedType == "" {
-		updatedType = "feeding"
-	}
-	if rec, ok := loadSingleRecord(updatedType, recordID); ok {
+	// recordType 已被上方 recordTables 白名单约束为非空，default 分支即 feeding。
+	if rec, ok := loadSingleRecord(recordType, recordID); ok {
 		BroadcastMessage(models.WebSocketMessage{
 			Type:    "record_updated",
 			Payload: rec,

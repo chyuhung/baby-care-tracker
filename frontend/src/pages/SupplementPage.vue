@@ -15,7 +15,7 @@
 
       <!-- 补剂名称 -->
       <div>
-        <label class="text-sm text-text-secondary block mb-2">补剂名称</label>
+        <label class="text-[13px] text-text-secondary block mb-2">补剂名称</label>
         <div class="flex flex-wrap gap-2">
           <button v-for="opt in nameOptions" :key="opt"
             type="button"
@@ -31,28 +31,28 @@
 
       <!-- 剂量 -->
       <div>
-        <label class="text-sm text-text-secondary block mb-2">剂量</label>
+        <label class="text-[13px] text-text-secondary block mb-2">剂量</label>
         <input v-model.number="form.dosage_value" type="number" step="0.1" min="0" inputmode="decimal"
           placeholder="如 1 或 2.5"
-          class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-xl text-center font-num font-bold focus:border-primary focus:outline-none transition-colors" />
+          class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-xl text-center font-num font-semibold focus:border-primary focus:outline-none transition-colors" />
       </div>
 
       <!-- 剂量单位（iOS 分段控件） -->
       <div>
-        <label class="text-sm text-text-secondary block mb-2">剂量单位</label>
+        <label class="text-[13px] text-text-secondary block mb-2">剂量单位</label>
         <Segmented :model-value="form.dosage_unit" :options="unitOptions" compact
           @update:model-value="(v: string) => form.dosage_unit = v" />
       </div>
 
       <!-- 时间 -->
       <div>
-        <label class="text-sm text-text-secondary block mb-2">记录时间</label>
+        <label class="text-[13px] text-text-secondary block mb-2">记录时间</label>
         <DateTimeField v-model="form.occurred_at" title="记录时间" aria-label="选择记录时间" />
       </div>
 
       <!-- 备注 -->
       <div>
-        <label class="text-sm text-text-secondary block mb-2">备注</label>
+        <label class="text-[13px] text-text-secondary block mb-2">备注</label>
         <textarea v-model="form.note" rows="3" placeholder="如：晚上睡前、随奶服用等"
           class="w-full px-4 py-3 bg-surface border border-border-color rounded-xl text-text-primary resize-none focus:border-primary focus:outline-none transition-colors"></textarea>
       </div>
@@ -206,7 +206,7 @@ async function save() {
     } else {
       await recordAPI.createSupplement(baby.id, payload)
     }
-    window.dispatchEvent(new CustomEvent('record-created', { detail: null }))
+    window.dispatchEvent(new CustomEvent(isEdit.value ? 'record-updated' : 'record-created', { detail: null }))
     app.showToast(isEdit.value ? '已保存' : '补剂已记录', 'success')
     router.back()
   } catch (e: any) {

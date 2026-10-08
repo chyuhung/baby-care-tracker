@@ -95,6 +95,9 @@ func main() {
 	// Config Gin
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
+	// 单实例直连、无反向代理：不信任任何代理头，c.ClientIP() 只取 RemoteAddr，
+	// 杜绝伪造 X-Forwarded-For 绕过 /auth 与 /family 的每 IP 限流。
+	_ = r.SetTrustedProxies(nil)
 
 	// Health check
 	r.GET("/api/health", func(c *gin.Context) {
