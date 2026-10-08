@@ -156,7 +156,7 @@
             <svg class="w-5 h-5 text-text-secondary/50 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5l7 7-7 7"/></svg>
           </router-link>
 
-          <button type="button" @click="exportData" :disabled="exporting || app.babies.length === 0"
+          <button type="button" @click="exportOpen = true" :disabled="exportBusy !== '' || app.babies.length === 0"
             class="w-full px-4 py-3.5 flex items-center gap-3 min-h-[44px] text-left press-card disabled:opacity-40">
             <span class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
               <svg class="w-5 h-5 text-primary-deep" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,10 +164,10 @@
               </svg>
             </span>
             <span class="flex-1 min-w-0">
-              <span class="block font-medium text-text-primary">导出全部记录（CSV）</span>
-              <span class="block text-xs text-text-secondary mt-0.5">Excel / 医生可直接打开，用于就诊或备份</span>
+              <span class="block font-medium text-text-primary">导出数据</span>
+              <span class="block text-xs text-text-secondary mt-0.5">可选 Excel（CSV）或排版版 PDF 报告</span>
             </span>
-            <ActivityIndicator v-if="exporting" :size="18" class="text-text-secondary" />
+            <svg class="w-5 h-5 text-text-secondary/50 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5l7 7-7 7"/></svg>
           </button>
         </div>
       </div>
@@ -182,6 +182,10 @@
     <!-- 加入 / 退出家庭确认（iOS 底部操作表） -->
     <ConfirmSheet :open="sheet.open" :title="sheet.title" :message="sheet.message"
       :confirm-text="sheet.confirmText" :danger="sheet.danger" @confirm="onSheetConfirm" @cancel="sheetMode = ''" />
+
+    <!-- 导出类型选择（iOS 底部操作表） -->
+    <ActionSheet :open="exportOpen" title="导出数据" description="选择导出格式，下载到本机"
+      :options="exportOptions" :loading="exportBusy" @select="exportData" @cancel="exportOpen = false" />
   </div>
 </template>
 
@@ -197,9 +201,9 @@ defineOptions({ name: 'ProfilePage' })
 import { familyAPI, recordAPI, writeErrorMessage } from '@/api'
 import PullRefresh from '@/components/PullRefresh.vue'
 import ConfirmSheet from '@/components/ConfirmSheet.vue'
+import ActionSheet, { type ActionSheetOption } from '@/components/ActionSheet.vue'
 
 import NavBar from '@/components/NavBar.vue'
-import ActivityIndicator from '@/components/ActivityIndicator.vue'
 import { parseLocalDate, babyDays, babyMonths } from '@/utils'
 
 interface FamilyMember {
@@ -216,30 +220,48 @@ interface Family {
 const router = useRouter()
 const auth = useAuthStore()
 const app = useAppStore()
-const exporting = ref(false)
+const exportOpen = ref(false)
+const exportBusy = ref<'csv' | 'pdf' | ''>('')
 
-async function exportData() {
+const exportOptions: ActionSheetOption[] = [
+  {
+    value: 'csv',
+    label: '导出 CSV',
+    sub: 'Excel / 医生可直接打开，用于就诊或备份',
+    icon: 'M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2',
+  },
+  {
+    value: 'pdf',
+    label: '导出 PDF 报告',
+    sub: '排版版报告 · 含档案、概览、明细与成长对照',
+    icon: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M9 13h6M9 17h6',
+  },
+]
+
+async function exportData(format: string) {
   const baby = app.currentBaby
   if (!baby) { app.showToast('请先添加宝宝', 'error'); return }
-  exporting.value = true
+  const fmt = format as 'csv' | 'pdf'
+  exportBusy.value = fmt
   try {
-    const res = await recordAPI.exportRecords(baby.id)
-    const blob = new Blob([res.data], { type: 'text/csv;charset=utf-8' })
+    const res = await recordAPI.exportRecords(baby.id, undefined, fmt)
+    const blob = new Blob([res.data as BlobPart], { type: fmt === 'pdf' ? 'application/pdf' : 'text/csv;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     const d = new Date()
     const p2 = (n: number) => String(n).padStart(2, '0')
     a.href = url
-    a.download = `${baby.name}-${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}.csv`
+    a.download = `${baby.name}-${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}.${format}`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
     setTimeout(() => URL.revokeObjectURL(url), 1000)
+    exportOpen.value = false
     app.showToast('已导出', 'success')
   } catch {
     app.showToast('导出失败', 'error')
   } finally {
-    exporting.value = false
+    exportBusy.value = ''
   }
 }
 

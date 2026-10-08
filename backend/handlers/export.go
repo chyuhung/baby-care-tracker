@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"baby-care-tracker/database"
 	"encoding/csv"
 	"fmt"
 	"net/http"
@@ -49,8 +48,84 @@ type csvRow struct {
 	note   string
 }
 
-// ExportRecords 导出某宝宝的全部记录为 CSV（带 UTF-8 BOM，Excel 直接可读）
-// GET /api/babies/:id/export?days=7
+// csvRows 把共享取数层的数据渲染成 CSV 行（新→旧，全类型按时间合并）。
+// detail 文案与历史实现逐字一致，防止导出回归。
+func (d *reportData) csvRows() []csvRow {
+	var rows []csvRow
+	for _, f := range d.Feeding {
+		detail := map[string]string{"breast": "母乳", "bottle": "瓶喂", "formula": "配方奶"}[f.Type]
+		if detail == "" {
+			detail = f.Type
+		}
+		if f.Amt > 0 {
+			detail += fmt.Sprintf(" %dml", f.Amt)
+		}
+		if f.Dur > 0 {
+			detail += fmt.Sprintf(" %d分钟", f.Dur)
+		}
+		if f.Side != "" {
+			detail += fmt.Sprintf(" (%s)", map[string]string{"left": "左", "right": "右", "both": "双侧"}[f.Side])
+		}
+		if f.Brand != "" {
+			detail += " " + f.Brand
+		}
+		rows = append(rows, csvRow{f.T, "喂奶", detail, f.Note})
+	}
+	for _, x := range d.Diaper {
+		detail := map[string]string{"pee": "小便", "poop": "大便", "mixed": "混合"}[x.Type]
+		if detail == "" {
+			detail = x.Type
+		}
+		rows = append(rows, csvRow{x.T, "尿布", detail, x.Note})
+	}
+	for _, s := range d.Sleep {
+		rows = append(rows, csvRow{s.Start, "睡眠", spanOf(s), s.Note})
+	}
+	for _, t := range d.Temp {
+		detail := fmt.Sprintf("%.1f°C", t.Val)
+		if t.Loc != "" {
+			detail += " " + t.Loc
+		}
+		rows = append(rows, csvRow{t.T, "体温", detail, t.Note})
+	}
+	for _, s := range d.Outdoor {
+		rows = append(rows, csvRow{s.Start, "户外", spanOf(s), s.Note})
+	}
+	for _, su := range d.Supplement {
+		detail := su.Name
+		if su.Val > 0 {
+			detail += fmt.Sprintf(" %.1f%s", su.Val, su.Unit)
+		}
+		rows = append(rows, csvRow{su.T, "补剂", detail, su.Note})
+	}
+	for _, g := range d.Growth {
+		var parts []string
+		if g.H > 0 {
+			parts = append(parts, fmt.Sprintf("身高 %.1fcm", g.H))
+		}
+		if g.W > 0 {
+			parts = append(parts, fmt.Sprintf("体重 %.2fkg", g.W))
+		}
+		if g.Hd > 0 {
+			parts = append(parts, fmt.Sprintf("头围 %.1fcm", g.Hd))
+		}
+		rows = append(rows, csvRow{g.T, "成长", strings.Join(parts, " "), g.Note})
+	}
+
+	sort.Slice(rows, func(i, j int) bool { return rows[i].t.After(rows[j].t) })
+	return rows
+}
+
+// spanOf 区间记录（睡眠/户外）的明细文案；进行中输出「进行中」而非空白/0 分钟。
+func spanOf(s spanRow) string {
+	if s.Ongoing {
+		return "进行中"
+	}
+	return spanDetail(s.Start.Format(time.RFC3339), s.End.Format(time.RFC3339))
+}
+
+// ExportRecords 导出某宝宝的全部记录。
+// GET /api/babies/:id/export?days=7&format=csv|pdf（默认 csv）
 func ExportRecords(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	babyID, ok := parseID(c)
@@ -62,171 +137,27 @@ func ExportRecords(c *gin.Context) {
 		return
 	}
 
-	var babyName string
-	database.DB.QueryRow("SELECT name FROM babies WHERE id = ?", babyID).Scan(&babyName)
-	if babyName == "" {
-		babyName = "baby"
-	}
-
 	tzOffset := getTzOffset(c)
 
 	// 时间窗口（可选）
-	startStr := ""
-	endStr := ""
+	days := 0
 	if ds := c.Query("days"); ds != "" {
-		if days, err := strconv.Atoi(ds); err == nil && days > 0 && days <= 365 {
-			startStr, endStr = windowRangeUTC(tzOffset, days)
+		if v, err := strconv.Atoi(ds); err == nil && v > 0 && v <= 365 {
+			days = v
 		}
 	}
-	occurredFilter, occurredArgs := "", []interface{}{babyID}
-	// 睡眠/户外用「区间重叠」而非 started_at >= start：昨天 20:00 开始、
-	// 今天 06:00 结束的记录其今日部分落在窗口内，只比 started_at 会整条丢失。
-	// 进行中（ended_at 为空）视为延伸到无穷远，started_at < end 即算重叠。
-	startedFilter, startedArgs := "", []interface{}{babyID}
-	if startStr != "" {
-		occurredFilter = " AND occurred_at >= ?"
-		occurredArgs = append(occurredArgs, startStr)
-		startedFilter = spanOverlapFilter()
-		startedArgs = append(startedArgs, endStr, startStr)
+
+	if c.Query("format") == "pdf" {
+		writePDF(c, babyID, userID, tzOffset, days)
+		return
 	}
 
-	var rows []csvRow
-
-	// 喂奶
-	if rs, err := database.DB.Query(
-		"SELECT type, duration_minutes, amount_ml, side, brand, note, occurred_at FROM feeding_records WHERE baby_id = ?"+occurredFilter+" ORDER BY occurred_at DESC",
-		occurredArgs...,
-	); err == nil {
-		for rs.Next() {
-			var typ, side, brand, note, occ string
-			var dur, amt int
-			rs.Scan(&typ, &dur, &amt, &side, &brand, &note, &occ)
-			detail := map[string]string{"breast": "母乳", "bottle": "瓶喂", "formula": "配方奶"}[typ]
-			if detail == "" {
-				detail = typ
-			}
-			if amt > 0 {
-				detail += fmt.Sprintf(" %dml", amt)
-			}
-			if dur > 0 {
-				detail += fmt.Sprintf(" %d分钟", dur)
-			}
-			if side != "" {
-				detail += fmt.Sprintf(" (%s)", map[string]string{"left": "左", "right": "右", "both": "双侧"}[side])
-			}
-			if brand != "" {
-				detail += " " + brand
-			}
-			rows = append(rows, csvRow{parseTime(occ), "喂奶", detail, note})
-		}
-		rs.Close()
+	d := queryReportData(babyID, userID, tzOffset, days)
+	babyName := d.BabyName
+	if babyName == "" {
+		babyName = "baby"
 	}
-
-	// 尿布
-	if rs, err := database.DB.Query(
-		"SELECT type, note, occurred_at FROM diaper_records WHERE baby_id = ?"+occurredFilter+" ORDER BY occurred_at DESC",
-		occurredArgs...,
-	); err == nil {
-		for rs.Next() {
-			var typ, note, occ string
-			rs.Scan(&typ, &note, &occ)
-			detail := map[string]string{"pee": "小便", "poop": "大便", "mixed": "混合"}[typ]
-			if detail == "" {
-				detail = typ
-			}
-			rows = append(rows, csvRow{parseTime(occ), "尿布", detail, note})
-		}
-		rs.Close()
-	}
-
-	// 睡眠
-	if rs, err := database.DB.Query(
-		"SELECT started_at, COALESCE(ended_at, ''), note FROM sleep_records WHERE baby_id = ?"+startedFilter+" ORDER BY started_at DESC",
-		startedArgs...,
-	); err == nil {
-		for rs.Next() {
-			var st, en, note string
-			rs.Scan(&st, &en, &note)
-			rows = append(rows, csvRow{parseTime(st), "睡眠", spanDetail(st, en), note})
-		}
-		rs.Close()
-	}
-
-	// 体温
-	if rs, err := database.DB.Query(
-		"SELECT temperature, location, note, occurred_at FROM temperature_records WHERE baby_id = ?"+occurredFilter+" ORDER BY occurred_at DESC",
-		occurredArgs...,
-	); err == nil {
-		for rs.Next() {
-			var temp float64
-			var loc, note, occ string
-			rs.Scan(&temp, &loc, &note, &occ)
-			detail := fmt.Sprintf("%.1f°C", temp)
-			if loc != "" {
-				detail += " " + loc
-			}
-			rows = append(rows, csvRow{parseTime(occ), "体温", detail, note})
-		}
-		rs.Close()
-	}
-
-	// 户外
-	if rs, err := database.DB.Query(
-		"SELECT started_at, COALESCE(ended_at, ''), note FROM outdoor_records WHERE baby_id = ?"+startedFilter+" ORDER BY started_at DESC",
-		startedArgs...,
-	); err == nil {
-		for rs.Next() {
-			var st, en, note string
-			rs.Scan(&st, &en, &note)
-			rows = append(rows, csvRow{parseTime(st), "户外", spanDetail(st, en), note})
-		}
-		rs.Close()
-	}
-
-	// 补剂
-	if rs, err := database.DB.Query(
-		"SELECT name, dosage_value, dosage_unit, note, occurred_at FROM supplement_records WHERE baby_id = ?"+occurredFilter+" ORDER BY occurred_at DESC",
-		occurredArgs...,
-	); err == nil {
-		for rs.Next() {
-			var name, unit, note, occ string
-			var val float64
-			rs.Scan(&name, &val, &unit, &note, &occ)
-			detail := name
-			if val > 0 {
-				detail += fmt.Sprintf(" %.1f%s", val, unit)
-			}
-			rows = append(rows, csvRow{parseTime(occ), "补剂", detail, note})
-		}
-		rs.Close()
-	}
-
-	// 成长（身高/体重/头围）
-	if rs, err := database.DB.Query(
-		"SELECT measured_at, height_cm, weight_kg, head_cm, note FROM growth_records WHERE baby_id = ? ORDER BY measured_at DESC",
-		babyID,
-	); err == nil {
-		for rs.Next() {
-			var occ, note string
-			var h, w, hd float64
-			rs.Scan(&occ, &h, &w, &hd, &note)
-			var parts []string
-			if h > 0 {
-				parts = append(parts, fmt.Sprintf("身高 %.1fcm", h))
-			}
-			if w > 0 {
-				parts = append(parts, fmt.Sprintf("体重 %.2fkg", w))
-			}
-			if hd > 0 {
-				parts = append(parts, fmt.Sprintf("头围 %.1fcm", hd))
-			}
-			detail := strings.Join(parts, " ")
-			rows = append(rows, csvRow{measuredTimeFromDB(occ), "成长", detail, note})
-		}
-		rs.Close()
-	}
-
-	sort.Slice(rows, func(i, j int) bool { return rows[i].t.After(rows[j].t) })
+	rows := d.csvRows()
 
 	loc := time.FixedZone("user", tzOffset*60)
 	filename := fmt.Sprintf("%s-%s.csv", babyName, time.Now().In(loc).Format("20060102"))

@@ -382,9 +382,10 @@ export const recordAPI = {
     api.put<Record>(`/babies/${babyId}/outdoor/${outdoorId}/stop`, data),
   getCurrentOutdoor: (babyId: number) =>
     api.get<OutdoorRecord | Record<string, never>>(`/babies/${babyId}/outdoor/current`),
-  exportRecords: async (babyId: number, days?: number) => {
+  exportRecords: async (babyId: number, days?: number, format?: 'csv' | 'pdf') => {
     const params: Record<string, string | number> = {}
     if (days) params.days = days
+    if (format) params.format = format
     return api.get(`/babies/${babyId}/export`, { params, responseType: 'blob' })
   },
   update: (id: number, type: string, data: UpdateRecordData) =>

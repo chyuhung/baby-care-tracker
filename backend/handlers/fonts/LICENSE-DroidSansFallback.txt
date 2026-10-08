@@ -1,0 +1,16 @@
+DroidSansFallbackFull.ttf
+=========================
+
+Source: Android Open Source Project (AOSP) Droid Sans Fallback font,
+mirrored at https://github.com/RPi-Distro/fonts-android (master branch).
+
+License: Apache License 2.0
+https://www.apache.org/licenses/LICENSE-2.0
+
+Used for CJK text rendering in the PDF export report
+(backend/handlers/export_pdf.go).
+
+Apache License 2.0 summary:
+  - Redistribution and use permitted, with attribution / license notice
+  - Commercial use permitted
+  - No warranty
