@@ -74,7 +74,13 @@ func buildPDF(d *reportData) ([]byte, error) {
 	genText := d.Generated.Format("2006-01-02 15:04")
 	loc := d.Generated.Location()
 
-	pdf.SetHeaderFunc(func() {
+	// SetHeaderFuncMode(..., true)：AddPage/自动分页调用 header 后把当前点重置回
+	// 左上边距（tMargin），否则 header 里 SetXY(...,8) 会把 Y 留在 8mm——低于
+	// tMargin(16mm)，紧接的内容会压到页眉线上。
+	// v0.9.0 没有 SetFooterFuncMode（仅 SetHeaderFuncMode），但 footer 是在旧页
+	// endpage 之前调用，新页 Y 由 beginpage 置为 tMargin，故 footer 不受影响；
+	// footer 内部一律用相对底部的负 Y，不外泄当前点。
+	pdf.SetHeaderFuncMode(func() {
 		pdf.SetFont("droid", "", 8.5)
 		pdf.SetTextColor(pdfAccDeep[0], pdfAccDeep[1], pdfAccDeep[2])
 		pdf.SetXY(pdfMarginX, 8)
@@ -84,7 +90,7 @@ func buildPDF(d *reportData) ([]byte, error) {
 		pdf.SetDrawColor(pdfHair[0], pdfHair[1], pdfHair[2])
 		pdf.SetLineWidth(0.2)
 		pdf.Line(pdfMarginX, 14.5, pageW-pdfMarginX, 14.5)
-	})
+	}, true)
 	pdf.SetFooterFunc(func() {
 		pdf.SetY(-16)
 		pdf.SetDrawColor(pdfHair[0], pdfHair[1], pdfHair[2])
@@ -95,27 +101,34 @@ func buildPDF(d *reportData) ([]byte, error) {
 		pdf.SetTextColor(pdfSub[0], pdfSub[1], pdfSub[2])
 		pdf.CellFormat(0, 4, fmt.Sprintf("导出时间 %s · 第 %d / {nb} 页", genText, pdf.PageNo()), "", 0, "C", false, 0, "")
 	})
+	// 必须在首个 AddPage 之前注册，否则页脚里的 {nb} 不会被替换成总页数（原样输出）。
+	pdf.AliasNbPages("")
 
 	pdf.AddPage()
 
-	// 标题
+	// 标题块：宝宝名 + 性别 pill + 副标题。整块显式跟踪 y，算出块底后再交给
+	// 下一块，避免靠 Cell/Ln 的隐式推进（w=0 的 Cell 会把 X 顶到右边距，pill
+	// 会被推出页外）与 drawBabyCard 重叠。
+	titleY := pdf.GetY() + 2
+	titleH := 16.0
 	pdf.SetFont("droid", "", 20)
 	pdf.SetTextColor(pdfInk[0], pdfInk[1], pdfInk[2])
-	pdf.SetXY(pdfMarginX, pdf.GetY()+2)
-	pdf.CellFormat(0, 10, name, "", 0, "L", false, 0, "")
-	// 性别 pill
+	nameW := pdf.GetStringWidth(name)
+	pdf.SetXY(pdfMarginX, titleY)
+	pdf.CellFormat(nameW, 10, name, "", 0, "L", false, 0, "")
+	// 性别 pill 紧贴名称右侧
 	pdf.SetFont("droid", "", 8)
 	pdf.SetFillColor(pdfAcc[0], pdfAcc[1], pdfAcc[2])
 	pdf.SetTextColor(255, 255, 255)
 	gw := pdf.GetStringWidth(genderText(d.Gender)) + 5
-	pdf.SetX(pdf.GetX() + 3)
+	pdf.SetXY(pdfMarginX+nameW+3, titleY+2)
 	pdf.CellFormat(gw, 6, genderText(d.Gender), "", 0, "C", true, 0, "")
 	// 副标题
 	pdf.SetFont("droid", "", 9)
 	pdf.SetTextColor(pdfSub[0], pdfSub[1], pdfSub[2])
-	pdf.SetXY(pdfMarginX, pdf.GetY()+5)
+	pdf.SetXY(pdfMarginX, titleY+11)
 	pdf.CellFormat(0, 5, "数据报告 · 全面记录宝宝日常", "", 0, "L", false, 0, "")
-	pdf.Ln(6)
+	pdf.SetY(titleY + titleH)
 
 	drawBabyCard(pdf, d, pageW, pageH)
 	pdf.Ln(5)
@@ -180,12 +193,24 @@ func writeSection(pdf *fpdf.Fpdf, pageW, pageH float64, title string, count int,
 	pdf.Ln(3)
 }
 
-// drawTable 画一张带表头重复的表格：交替浅灰行 + hairline 网格，
-// 长文本用 MultiCell 换行，跨页自动 AddPage + 重绘表头。
+// drawTable 画一张带表头重复的表格：交替浅灰行 + hairline 网格，跨页自动
+// AddPage + 重绘表头并重置斑马纹。
+//
+// 单元格渲染不用 MultiCell：MultiCell 会在内部推进 Y，多列同排时相互干扰。
+// 改为先按列用 SplitText 拆成行数组，再逐行 SetXY + CellFormat 精确落点。
 func drawTable(pdf *fpdf.Fpdf, pageW, pageH float64, cols []pdfCol, rows [][]string) {
 	tableW := pageW - 2*pdfMarginX
+	const (
+		cellFont = 8.5
+		padX     = 1.5
+		padY     = 0.8
+		headerH  = 6.0
+	)
+	// 行高取「原基准」与「字体自然行高」的较大者（PointConvert 把 pt 换成 mm）。
 	lineH := 4.2
-	headerH := 6.0
+	if fh := pdf.PointConvert(cellFont * 1.2); fh > lineH {
+		lineH = fh
+	}
 
 	drawHeader := func() {
 		if pdf.GetY()+headerH+2 > pageH-pdfBottom {
@@ -198,8 +223,8 @@ func drawTable(pdf *fpdf.Fpdf, pageW, pageH float64, cols []pdfCol, rows [][]str
 		pdf.SetFont("droid", "", 8)
 		pdf.SetTextColor(pdfSub[0], pdfSub[1], pdfSub[2])
 		for _, col := range cols {
-			pdf.SetXY(x+1.5, y0+1.4)
-			pdf.CellFormat(col.width-3, headerH-2.8, col.header, "", 0, "L", false, 0, "")
+			pdf.SetXY(x+padX, y0+1.4)
+			pdf.CellFormat(col.width-2*padX, headerH-2.8, col.header, "", 0, "L", false, 0, "")
 			x += col.width
 		}
 		pdf.SetY(y0 + headerH)
@@ -216,22 +241,26 @@ func drawTable(pdf *fpdf.Fpdf, pageW, pageH float64, cols []pdfCol, rows [][]str
 
 	drawHeader()
 	alt := false
+	pdf.SetFont("droid", "", cellFont)
 	for _, r := range rows {
+		// 逐列拆行，记录每列的行数组与全行最大行数
+		lines := make([][]string, len(r))
 		maxLines := 1
-		pdf.SetFont("droid", "", 8.5)
 		for i, cell := range r {
-			n := len(pdf.SplitText(cell, cols[i].width-3))
-			if n < 1 {
-				n = 1
+			ls := pdf.SplitText(cell, cols[i].width-2*padX)
+			if len(ls) == 0 {
+				ls = []string{""}
 			}
-			if n > maxLines {
-				maxLines = n
+			lines[i] = ls
+			if len(ls) > maxLines {
+				maxLines = len(ls)
 			}
 		}
-		rowH := float64(maxLines)*lineH + 1.6
+		rowH := float64(maxLines)*lineH + 2*padY
 		if pdf.GetY()+rowH > pageH-pdfBottom {
 			pdf.AddPage()
 			drawHeader()
+			alt = false // 新页斑马纹从头开始
 		}
 		y0 := pdf.GetY()
 		if alt {
@@ -239,12 +268,14 @@ func drawTable(pdf *fpdf.Fpdf, pageW, pageH float64, cols []pdfCol, rows [][]str
 			pdf.Rect(pdfMarginX, y0, tableW, rowH, "F")
 		}
 		alt = !alt
+		pdf.SetTextColor(pdfInk[0], pdfInk[1], pdfInk[2])
 		x := pdfMarginX
-		for i, cell := range r {
-			pdf.SetFont("droid", "", 8.5)
-			pdf.SetTextColor(pdfInk[0], pdfInk[1], pdfInk[2])
-			pdf.SetXY(x+1.5, y0+0.8)
-			pdf.MultiCell(cols[i].width-3, lineH, cell, "", "L", false)
+		for i := range r {
+			for li, ln := range lines[i] {
+				pdf.SetFont("droid", "", cellFont)
+				pdf.SetXY(x+padX, y0+padY+float64(li)*lineH)
+				pdf.CellFormat(cols[i].width-2*padX, lineH, ln, "", 0, "L", false, 0, "")
+			}
 			x += cols[i].width
 		}
 		pdf.SetDrawColor(pdfHair[0], pdfHair[1], pdfHair[2])
@@ -369,26 +400,24 @@ func drawGrowthCompare(pdf *fpdf.Fpdf, d *reportData, pageW, pageH float64) {
 		return
 	}
 
-	ensureSpace(pdf, 26, pageH)
-	w := pageW - 2*pdfMarginX
-	y0 := pdf.GetY()
-	pdf.SetFillColor(pdfTile[0], pdfTile[1], pdfTile[2])
-	pdf.RoundedRect(pdfMarginX, y0, w, 24, 3, "1111", "F")
-	ins := pdfMarginX + 6
-
-	pdf.SetFont("droid", "", 8)
-	pdf.SetTextColor(pdfInk[0], pdfInk[1], pdfInk[2])
-	pdf.SetXY(ins, y0+3.5)
 	sub := fmt.Sprintf("最新测量生长对照 · 测量月龄 %s", ageMonthText(month))
 	if d.Gender != "male" && d.Gender != "female" {
 		sub += "（性别保密，暂按女宝标准）"
 	}
-	pdf.CellFormat(w-12, 4.5, sub, "", 0, "L", false, 0, "")
 
-	x := ins
+	// 先把各指标文案量好，按可用宽度预排出行数，据此决定卡片高度；渲染时用
+	// 显式 itemY/xi 落点，避免此前 subtitle 与指标共用同一 GetY() 造成的重叠。
+	innerW := pageW - 2*pdfMarginX - 12
+	type metricLine struct {
+		it  item
+		txt string
+		w   float64
+	}
+	var metrics []metricLine
+	rowCount := 1
+	acc := 0.0
 	for _, it := range items {
 		pdf.SetFont("droid", "", 10)
-		pdf.SetTextColor(pdfInk[0], pdfInk[1], pdfInk[2])
 		txt := fmt.Sprintf("%s %.*f%s", it.label, it.prec, it.value, it.unit)
 		if it.grade == "" {
 			txt += " · 无对照区间"
@@ -397,20 +426,46 @@ func drawGrowthCompare(pdf *fpdf.Fpdf, d *reportData, pageW, pageH float64) {
 		} else {
 			txt += " · " + it.grade
 		}
-		cw := pdf.GetStringWidth(txt) + 4
-		if x+cw > pdfMarginX+w-6 {
-			x = ins
-			pdf.SetY(pdf.GetY() + 7)
+		ml := metricLine{it: it, txt: txt, w: pdf.GetStringWidth(txt) + 4}
+		metrics = append(metrics, ml)
+		if acc > 0 && acc+ml.w > innerW {
+			rowCount++
+			acc = 0
 		}
-		if it.grade != "" {
-			pdf.SetFillColor(gradeColor(it.grade)[0], gradeColor(it.grade)[1], gradeColor(it.grade)[2])
-			pdf.Rect(x, pdf.GetY()+2, 2.2, 2.2, "F")
-		}
-		pdf.SetXY(x+3, pdf.GetY())
-		pdf.CellFormat(cw, 5, txt, "", 0, "L", false, 0, "")
-		x += cw + 2
+		acc += ml.w + 2
 	}
-	pdf.SetY(y0 + 26)
+	cardH := 12.0 + float64(rowCount)*6.5 + 2.0
+
+	ensureSpace(pdf, cardH+2, pageH)
+	w := pageW - 2*pdfMarginX
+	y0 := pdf.GetY()
+	pdf.SetFillColor(pdfTile[0], pdfTile[1], pdfTile[2])
+	pdf.RoundedRect(pdfMarginX, y0, w, cardH, 3, "1111", "F")
+	ins := pdfMarginX + 6
+
+	pdf.SetFont("droid", "", 8)
+	pdf.SetTextColor(pdfInk[0], pdfInk[1], pdfInk[2])
+	pdf.SetXY(ins, y0+4)
+	pdf.CellFormat(innerW, 4.5, sub, "", 0, "L", false, 0, "")
+
+	xi := ins
+	itemY := y0 + 12
+	for _, ml := range metrics {
+		if xi > ins && xi+ml.w > ins+innerW {
+			xi = ins
+			itemY += 6.5
+		}
+		if ml.it.grade != "" {
+			pdf.SetFillColor(gradeColor(ml.it.grade)[0], gradeColor(ml.it.grade)[1], gradeColor(ml.it.grade)[2])
+			pdf.Rect(xi, itemY+1.6, 2.2, 2.2, "F")
+		}
+		pdf.SetFont("droid", "", 10)
+		pdf.SetTextColor(pdfInk[0], pdfInk[1], pdfInk[2])
+		pdf.SetXY(xi+3, itemY)
+		pdf.CellFormat(ml.w, 5, ml.txt, "", 0, "L", false, 0, "")
+		xi += ml.w + 2
+	}
+	pdf.SetY(y0 + cardH + 2)
 }
 
 func gradeColor(g string) [3]int {
